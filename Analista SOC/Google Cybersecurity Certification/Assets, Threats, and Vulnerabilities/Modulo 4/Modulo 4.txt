@@ -1,0 +1,990 @@
+Welcome to module 4
+Transcript
+00:00
+Here we are!
+00:00
+The final section of the course.
+00:04
+What are amazing job you've done so far!
+00:06
+Putting in the time, dedication, and hard work to get to this point is definitely something to celebrate.
+00:12
+But we're not through yet.
+00:14
+As we near the end of this course, now's the time to focus and finish strong.
+00:18
+Let's turn our attention to threats.
+00:21
+We've already explored assets, vulnerabilities, and the controls used to protect both.
+00:26
+A common theme between those two topics has been the wide range of assets and vulnerabilities out there.
+00:32
+The world of threats is no different.
+00:36
+If you recall, threats are any circumstance or event that can negatively impact assets.
+00:41
+In this part of the course, you're going to expand your security mindset by getting a high-level view of the most dangerous threats facing organizations today.
+00:51
+First, we're going to begin by exploring social engineering tactics, psychological tricks that attackers use to gain unauthorized access to assets.
+01:00
+Next, we'll explore a common type of threat that's been around since the start of personal computers, malware.
+01:06
+We're going to spend some time investigating the major types of malware.
+01:12
+After that, we'll turn our attention to web-based exploits.
+01:14
+Most organizations these days operate in a digital space, and many of them are new to it.
+01:20
+In this section of the course, you're going to learn about some of the most common threats that organizations face online.
+01:27
+Finally, after exploring common threats that organizations deal with, we're going to wrap up by exploring the threat modeling process.
+01:35
+Understanding threats is essential for a security analyst, and there's a lot to cover.
+01:39
+So, let's get started!
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+The criminal art of persuasión
+Transcript
+00:00
+When you hear the word "cybercriminal", what comes to mind?
+00:04
+You may imagine a hacker hunched over a computer in a dark room.
+00:08
+If this is what came to mind, you're not alone.
+00:11
+In fact, this is what most people outside of security think of.
+00:15
+But online criminals aren't always that different from those operating in the real world.
+00:21
+Malicious hackers are just one type of online criminal.
+00:23
+They are a specific kind that relies on sophisticated computer programming skills to pull off their attacks.
+00:30
+There are other ways to commit crimes that don't require programming skills.
+00:34
+Sometimes, criminals rely on a more traditional approach, manipulation.
+00:40
+Social engineering is a manipulation technique that exploits human error to gain private information, access, or valuables.
+00:48
+These tactics trick people into breaking normal security procedures on the attacker's behalf.
+00:53
+This can lead to data exposures, widespread malware infections, or unauthorized access to restricted systems.
+01:00
+Social engineering attacks can happen anywhere.
+01:03
+They happen online, in-person, and through other interactions.
+01:08
+Threat actors use many different tactics to carry out their attacks.
+01:13
+Some attacks can take a matter of seconds to perform.
+01:15
+For example, someone impersonating tech support asks an employee for their password to fix their computer.
+01:23
+Other attacks can take months or longer, such as threat actors monitoring an employee's social media.
+01:29
+The employee might post a comment saying they've gotten a temporary position in a new role at the company.
+01:35
+An attacker might use an opportunity like this to target the temporary worker, who is likely to be less knowledgeable about security procedures.
+01:45
+Regardless of the timeframe, knowing what to look for can help you quickly identify and stop an attack in its tracks.
+01:52
+There are multiple stages of social engineering attacks.
+01:55
+The first is usually to prepare.
+01:57
+At this stage, attackers gather information about their target.
+02:01
+Using the intel, they'll determine the best way to exploit them.
+02:06
+In the next stage, attackers establish trust.
+02:08
+This is often referred to as pretexting.
+02:11
+Here, attackers use the information they gathered earlier to open a line of communication.
+02:16
+They'll typically disguise themselves to trick their target into a false sense of trust.
+02:23
+After that, attackers use persuasion tactics.
+02:25
+This stage is where the earlier preparation really matters.
+02:29
+This is when the attacker manipulates their target into volunteering information.
+02:34
+Sometimes they do this by using specific vocabulary that makes them sound like a member of the organization.
+02:41
+The final stage of the process is to disconnect from the target.
+02:43
+After they collect the information they want, attackers break communication with their target.
+02:48
+They disappear to cover their tracks.
+02:52
+Criminals who use social engineering are stealthy.
+02:54
+The digital world has expanded their capabilities.
+02:58
+It's also created more ways for them to go unnoticed.
+03:01
+Still, there are ways that we can prevent their attacks.
+03:06
+Implementing managerial controls like policies, standards, and procedures, are one of the first lines of defense.
+03:12
+For example, businesses often follow the patch management standard defined in NIST Special Publication 800-40.
+03:19
+These standards are used to create procedures for updating operating systems, applications, and firmware that can be exploited.
+03:28
+Staying informed of trends is also a major priority for any security professional.
+03:32
+An even better defense against social engineering attacks is sharing what you know with others.
+03:38
+Attackers play on our natural curiosity and desire to help one another.
+03:42
+Their hope is that targets won't think too hard about what's going on.
+03:46
+Teaching the signs of attack to others goes a long way towards preventing threats.
+03:51
+Social engineering is a threat to the assets and privacy of both individuals and organizations.
+03:57
+Malicious attackers use a variety of tactics to confuse and manipulate their targets.
+04:02
+When we get back together next time, we're going to explore one of the most commonly used techniques that's a major problem for organizations of all sizes.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Phishing for information
+Transcript
+00:00
+Cybercriminals prefer attacks that do the most amount of damage with the least amount of effort.
+00:06
+One of the most popular forms of social engineering that meets this description is phishing.
+00:12
+Phishing is the use of digital communications to trick people into revealing sensitive data or deploying malicious software.
+00:18
+Phishing leverages many communication technologies, but the term is mainly used to describe attacks that arrive by email.
+00:27
+Phishing attacks don't just affect individuals.
+00:29
+They are also harmful to organizations.
+00:31
+A single employee that falls for one of these tricks can give malicious attackers access to systems.
+00:38
+Once inside, attackers can exploit sensitive data like customer names and product secrets.
+00:45
+Attackers who carry out these attacks commonly use phishing kits.
+00:48
+A phishing kit is a collection of software tools needed to launch a phishing campaign.
+00:54
+People with little technical background can use one of these kits.
+00:59
+Each of the tools inside are designed to avoid detection.
+01:02
+As a security professional, you should be aware of the three main tools inside a phishing
+01:05
+kit, so that you can quickly identify when they're being used and put a stop to it.
+01:12
+The first is malicious attachments.
+01:14
+These are files that are infected and can cause harm to the organization's systems.
+01:20
+Phishing kits also include fake-data collection forms.
+01:22
+These forms look like legitimate forms, like a survey.
+01:26
+Unlike a real survey, they ask for sensitive information that isn't normally asked for in an email.
+01:33
+The third resource they include are fraudulent web links.
+01:36
+These open to malicious web pages that are designed to look like trusted brands.
+01:40
+Unlike actual websites, these fraudulent sites are built to steal information, like login credentials.
+01:49
+Cybercriminals can use these tools to launch a phishing attack in many forms.
+01:53
+The most common is through malicious emails.
+01:55
+However, they can use them in other forms of communication too.
+02:00
+Most recently, cybercriminals are using smishing and vishing to trick people into revealing private information.
+02:09
+Smishing is the use of text messages to obtain sensitive information or to impersonate a known source.
+02:14
+You've probably received these types of messages before.
+02:17
+Not only are smishing messages annoying to receive, they're also difficult to prevent.
+02:22
+That's why some attackers send them.
+02:25
+Some smishing messages are easy to detect.
+02:28
+They might show signs of being malicious like promising a cash reward for clicking an attached link that shouldn't be clicked.
+02:34
+Other times, smishing is hard to spot.
+02:38
+Attackers sometimes use local area codes to appear legitimate.
+02:42
+Some hackers can even send messages disguised as friends and families of their target to fool them into disclosing sensitive information.
+02:52
+Vishing is the exploitation of electronic voice communication to obtain sensitive information or impersonate a known source.
+02:58
+During vishing attacks, criminals pretend to be someone they're not.
+03:02
+For example, attackers might call pretending to be a company representative.
+03:07
+They might claim that there's a problem with your account.
+03:10
+And they can offer to fix it if you provide them with sensitive information.
+03:14
+Most organizations use a few basic security measures to prevent these and any other types of phishing attacks from becoming a problem.
+03:21
+For example, anti-phishing policies spread awareness and encourage users to follow data security procedures correctly.
+03:28
+Employee training resources also help inform employees about things to look for when an email looks suspicious.
+03:35
+Another line of defense against phishing is securing email inboxes.
+03:39
+Email filters are commonly used to keep harmful messages from reaching users.
+03:44
+For example, specific email addresses can be blocked using a blocklist.
+03:49
+Organizations often use other filters, like allowlists, to specify IP addresses that are approved to send mail within the company.
+03:58
+Organizations also use intrusion prevention systems to look for unusual patterns in email traffic.
+04:03
+Security analysts use monitoring tools like this to spot suspicious emails, quarantine them, and produce a log of events.
+04:12
+Phishing campaigns are popular and dangerous forms of social engineering that organizations of all sizes need to deal with.
+04:18
+Just a single compromised password that an attacker can get their hands on can lead to a costly data breach.
+04:25
+Now that you're familiar with the tools these attackers use, you're better equipped to spot phishing and prevent it.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Malicious software
+Transcript
+00:00
+People and computers are very different from one another.
+00:04
+There's one way that we're alike.
+00:06
+You know how?
+00:06
+We're both vulnerable to getting an infection.
+00:10
+While humans can be infected by a virus that causes a cold or flu, computers can be infected by malware.
+00:18
+Malware is software designed to harm devices or networks.
+00:22
+Malware, which is short for malicious software, can be spread in many ways.
+00:27
+For example, it can be spread through an infected USB drive.
+00:32
+Or also commonly spread between computers online.
+00:37
+Devices and systems that are connected to the internet are especially vulnerable to infection.
+00:41
+When a device becomes infected, malware interferes with its normal operations.
+00:46
+Attackers use malware to take control of the infected system without the user's knowledge or permission.
+00:52
+Malware has been a threat to people and organizations for a long time.
+00:57
+Attackers have created many different strains of malware.
+01:00
+They all vary in how they're spread.
+01:04
+Five of the most common types of malware are a virus, worm, trojan, ransomware, and spyware.
+01:11
+Let's take a look at how each of them work.
+01:14
+A virus is malicious code written to interfere with computer operations and cause damage to data and software.
+01:21
+Viruses typically hide inside of trusted applications.
+01:25
+When the infected program is launched, the virus clones itself and spreads to other files on the device.
+01:32
+An important characteristic of viruses is that they have to be activated by the user to start the infection.
+01:39
+The next kind of malware doesn't have this limitation.
+01:42
+A worm is malware that can duplicate and spread itself across systems on its own.
+01:47
+While viruses require users to perform an action like opening a file to duplicate, worms use an infected device as a host.
+01:56
+They scan the connected network for other devices.
+01:59
+Worms then infect everything on the network without requiring an action to trigger the spread.
+02:06
+Viruses and worms are delivered through phishing emails and other methods before they infect a device.
+02:11
+Making sure you click links only from trusted sources is one way to avoid these types of infection.
+02:17
+However, attackers have designed another form of malware that can get past this precaution.
+02:25
+A trojan, or Trojan horse, is malware that looks like a legitimate file or program.
+02:30
+The name is a reference to an ancient Greek legend that's set in the city of Troy.
+02:35
+In Troy, a group of soldiers hid inside a giant wooden horse that was presented as a gift to their enemies.
+02:42
+It was accepted and brought inside the city walls.
+02:46
+Later that evening, the soldiers inside of the horse climbed out and attacked the city.
+02:51
+Like this ancient tale, attackers design trojans to appear harmless.
+02:56
+This type of malware is typically disguised as files or useful applications to trick their target into installing them.
+03:05
+Attackers often use trojans to gain access and install another kind of malware called ransomware.
+03:11
+Ransomware is a type of malicious attack where attackers encrypt an organization's data and demand payment to restore access.
+03:19
+These kind of attacks have become very common these days.
+03:23
+A unique feature of ransomware attacks is that they make themselves known to their targets.
+03:28
+Without doing this, they couldn't collect the money they demand.
+03:32
+Normally, they decrypt the hidden data as soon as the sum of money is paid.
+03:37
+Unfortunately, there's no guarantee they won't return to demand more.
+03:43
+The last type of malware I want to mention is spyware.
+03:45
+Spyware is malware that's used to gather and sell information without consent.
+03:50
+Consent is a keyword in this case.
+03:54
+Organizations also collect information about their customers, like their browsing habits and purchase history.
+03:59
+However, they always give their customers the ability to opt out.
+04:03
+Cybercriminals, on the other hand, use spyware to steal information.
+04:07
+They use spyware attacks to collect data like login credentials, account PINs, and other types of sensitive information for their own personal gain.
+04:17
+There are many other types of malware besides these and new forms are always evolving.
+04:22
+They all pose a serious risk to individuals and organizations.
+04:26
+Next time, we'll explore how security teams detect and remove these kinds of threats.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+The rise of cryptojacking
+Transcript
+00:00
+Malware has been around nearly as long as computers.
+00:04
+In its earliest forms, it was used by troublemakers as a form of digital vandalism.
+00:09
+In today's digital world, malware has become a profitable crime that attackers use for their own financial gain.
+00:17
+As a security professional, it's important that you remain aware of the latest evolutions.
+00:21
+Let's take a closer look at one way malware has evolved.
+00:25
+We'll then use this example to consider how malware can be spotted and how you can proactively protect against malware.
+00:32
+Ransomware is one of the types of malware attackers use to steal money.
+00:37
+Another more recent type of malware is cryptojacking.
+00:40
+Cryptojacking is a form of malware that installs software to illegally mine cryptocurrencies.
+00:46
+You may be familiar with cryptocurrency from the news.
+00:49
+If you're new to the topic, cryptocurrencies are a form of digital money that have real-world value.
+00:55
+Like physical forms of currency, there are many different types.
+01:00
+For the most part, they're referred to as coins or tokens.
+01:06
+In simple terms, crypto mining is a process used to obtain new coins.
+01:10
+Crypto mining is similar to the process for mining for other resources, like gold.
+01:15
+Mining for something like gold involves machinery, such as trucks and bulldozers, that can dig through the Earth.
+01:21
+Crypto coins, on the other hand, use computers instead.
+01:24
+Rather than digging through the Earth, the computers run software that dig through billions of lines of encrypted code.
+01:31
+When enough code is processed, a crypto coin can be found.
+01:36
+Generally, more computers mining for coins mean more cryptocurrency can be discovered.
+01:41
+Criminals unfortunately figured this out.
+01:43
+Beginning in 2017, cryptojacking malware started being used to gain unauthorized control of personal computers to mine cryptocurrency.
+01:54
+Since that time, cryptojacking techniques have become more sophisticated.
+01:57
+Criminals now regularly target vulnerable servers to spread their mining software.
+02:02
+Devices that communicate with the infected server become infected themselves.
+02:06
+The malicious code then runs in the background, mining for coins unknown to anyone.
+02:13
+Cryptojacking software is hard to detect.
+02:15
+Luckily, security professionals have sophisticated tools that can help.
+02:19
+An intrusion detection system, or IDS, is an application that monitors system activity and alerts some possible intrusions.
+02:28
+When abnormal activity is detected like, malware mining for coins, the IDS alerts security personnel.
+02:36
+Despite their usefulness, detection systems have a major drawback.
+02:39
+New forms of malware can remain undetected.
+02:42
+Fortunately, there are subtle signs that indicate a device is infected with cryptojacking software or other forms of malware.
+02:51
+By far the most telling sign of a cryptojacking infection is slowdown.
+02:55
+Other signs include increased CPU usage, sudden system crashes, and fast draining batteries.
+03:02
+Another sign is unusually high electricity costs related to the resource- intensive process of crypto mining.
+03:10
+It's also good to know that there are certain measures you can take to reduce the likelihood of experiencing a malware attack like cryptojacking.
+03:16
+These defenses include things like using browser extensions designed to block malware, using ad blockers, disabling JavaScript, and staying alert on the latest trends.
+03:27
+Security analysts can also educate others in their organizations on malware attacks.
+03:33
+While cryptojacking is still relatively new, attacks are becoming more common.
+03:37
+The type of malicious code cybercriminals spread is continually evolving.
+03:41
+It takes many years of experience to analyze new forms of malware.
+03:45
+Nevertheless, you're well on your way towards helping defend against these threats.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Cross-site scripting (XSS)
+Transcript
+00:01
+Previously, we explored a few types of malware.
+00:04
+Whether it's installed on an individual computer or a network server, all malicious software needs to be delivered to the target before it can work.
+00:12
+Phishing and other social engineering techniques are common ways for malware to be delivered.
+00:18
+Another way it's spread is using a broad class of threats known as web based exploits.
+00:24
+Web-based exploits are malicious code or behavior that's used to take advantage of coding flaws in a web application.
+00:31
+Cybercriminals target web-based exploits to obtain sensitive personal information.
+00:37
+Attacks occur because web applications interact with multiple users across multiple networks.
+00:43
+Malicious hackers commonly exploit this high level of interaction using injection attacks.
+00:50
+An injection attack is malicious code inserted into a vulnerable application.
+00:55
+The infected application often appears to work normally.
+00:58
+That's because the injected code runs in the background, unknown to the user.
+01:03
+Applications are vulnerable to injection attacks because they are programmed to receive data inputs.
+01:08
+This could be something the user types, clicks, or something one program is sharing with another.
+01:14
+When coded correctly, applications should be able to interpret and handle user inputs.
+01:19
+For example, let's say an application is expecting the user to enter a phone number.
+01:25
+This application should validate the input from the user to make sure the data is all numbers and not more than ten digits.
+01:31
+If the input from the user doesn't meet these requirements, the application should know how to handle it.
+01:38
+Web apps interact with multiple users across many platforms.
+01:42
+They also have a lot of interactive objects like images and buttons.
+01:46
+This makes it challenging for developers to think of all the ways they should sanitize their input.
+01:52
+A common and dangerous type of injection attack that's a threat to web apps is cross-site scripting.
+01:59
+Cross site scripting, or XSS, is an injection attack that inserts code into a vulnerable website or web application.
+02:07
+These attacks are often delivered by exploiting the two languages used by most websites, HTML and JavaScript.
+02:15
+Both can give cybercriminals access to everything that loads on the infected web page.
+02:20
+This can include session cookies, geolocation, and even webcams and microphones.
+02:26
+There are three main types of cross-site scripting attacks reflected, stored, and DOM-based.
+02:34
+A reflected XSS attack is an instance where a malicious script is sent to the server and activated during the server's response.
+02:42
+A common example of this is the search bar of a website.
+02:46
+In a reflected XSS attack, criminals send their target a web link that appears to go to a trusted site.
+02:53
+When they click the link, it sends a HTTP request to the vulnerable site server.
+02:59
+The attacker script is then returned or reflected back to the innocent user's browser.
+03:05
+Here, the browser loads the malicious script because it trusts the server's response.
+03:10
+With the script loaded, information like session cookies are sent back to the attacker.
+03:16
+In a stored XSS attack, the malicious script isn't hidden in a link that needs to be sent to the server.
+03:22
+Instead a stored XSS attack is an instance when malicious script is injected directly on the server.
+03:30
+Here, attackers target elements of a site that are served to the user.
+03:34
+This could be things like images and buttons that load when the site is visited.
+03:39
+Infected elements activate the malicious code when a user simply visits the site.
+03:44
+Stored XSS attacks can be damaging because the user has no way of knowing the site is infected beforehand.
+03:51
+Finally there's DOM-based XSS.
+03:54
+DOM stands for Document Object Model, which is basically the source code of a website.
+04:02
+A DOM-based XSS attack is an instance when malicious script exists in the web page a browser loads.
+04:09
+Unlike reflected XSS, these attacks don't need to be sent to the server to activate.
+04:16
+In a DOM-based attack, a malicious script can be seen in the URL.
+04:22
+In this example, the website's URL contains parameter values.
+04:27
+The parameter values reflect input from the user.
+04:31
+Here, the site allows users to select color themes.
+04:35
+When the user makes a selection, it appears as part of the URL.
+04:39
+In a DOM-based attack, criminals change the parameter that's expecting an input.
+04:45
+For example, they could hide malicious JavaScript in the HTML tags.
+04:50
+The browser would process the HTML and execute the JavaScript.
+04:55
+Hackers use these methods of cross-site scripting to steal sensitive information.
+05:00
+Security analysts should be familiar with this group of injection attacks.
+05:04
+However, they're not the only ones, as we'll discover next time.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Exploitable gaps in databases
+Transcript
+00:01
+Let's keep exploring injection and attacks by investigating another common type of web based exploit.
+00:07
+The next one we're going to discuss exploits the way websites access information from databases.
+00:14
+Early in the program, you may have learned about SQL.
+00:17
+You may recall, SQL is a programming language used to create, interact with, and request information from a database.
+00:27
+SQL is used by most web applications.
+00:29
+For example, shopping websites use it a lot.
+00:34
+Imagine the databases of an online clothing store It likely contains a full inventory of all the items the company sells.
+00:42
+Websites don't normally make users enter the SQL queries manually.
+00:47
+Instead, they use things like menus, images, and buttons to show users information in a meaningful way.
+00:54
+For example, when an online shopper clicks a button to add a sweater to their cart, it triggers a SQL query.
+01:00
+The query runs in the background where no one can see it.
+01:06
+You'd never know from using the menus and buttons of a website, but sometimes those back inquiries are vulnerable to injection attacks.
+01:15
+A SQL injection is an attack that executes unexpected queries on a database.
+01:20
+Like cross-site scripting, SQL injection occurs due to a lack of sanitized input.
+01:26
+The injections take place in the area of the website that are designed to accept user input.
+01:31
+A common example is the login form to access a site.
+01:36
+One of these forms might trigger a backend SQL statement like this when a user enters their credentials.
+01:43
+Web forms, like this one, are designed to copy user input into the statement exactly as they're written.
+01:51
+The statement then sends a request to the server, which runs the query.
+01:55
+Websites that are vulnerable to SQL injection insert the user's input exactly as it's entered before running the code.
+02:03
+Unfortunately, this is a serious design flaw.
+02:07
+It commonly happens because web developers expect people to use these inputs correctly.
+02:13
+They don't anticipate attackers exploiting them.
+02:15
+For example, an attacker might insert additional SQL code.
+02:20
+This could cause the server to run a harmful query of code that it wasn't expecting.
+02:26
+Malicious hackers can target these attack vectors to obtain sensitive information, modify tables and even gain administrative rights to the database.
+02:37
+The best way to defend against SQL injection is code that will sanitize the input.
+02:43
+Developers can write code to search for specific SQL characters.
+02:47
+This gives the server a clearer idea of what inputs to expect.
+02:51
+One way this is done is with prepared statements.
+02:56
+A prepared statement is a coding technique that executes SQL statements before passing them onto the database.
+03:03
+When the user's input is unknown, the best practice is to use these prepared statements.
+03:09
+With just a few extra lines of code, a prepared statement executes the code before passing it on to the server.
+03:16
+This means the code can be validated before performing the query.
+03:21
+Having well written code is one of the keys to preventing SQL injection.
+03:26
+Security teams work with program developers to test applications for these sort of vulnerabilities.
+03:32
+Like a lot of security tasks, it's a team effort.
+03:35
+Injection attacks are just one of many types of web-based exploits that security teams deal with.
+03:41
+We're going to explore how security teams prepare for injection attacks and other kinds of threats.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+A proactive approach to security
+Transcript
+00:01
+Preparing for attacks is an important job that the entire security team is responsible for.
+00:06
+Threat actors have many tools they can use depending on their target.
+00:10
+For example, attacking a small business can be different from attacking a public utility.
+00:16
+Each have different assets and specific defenses to keep them safe.
+00:21
+In all cases, anticipating attacks is the key to preparing for them.
+00:26
+In security, we do that by performing an activity known as threat modeling.
+00:33
+Threat modeling is a process of identifying assets, their vulnerabilities, and how each is exposed to threats.
+00:39
+We apply threat modeling to everything we protect.
+00:41
+Entire systems, applications, or business processes all get examined from this security-related perspective.
+00:51
+Creating threat models is a lengthy and detailed activity.
+00:54
+They're normally performed by a collection of individuals with years of experience in the field.
+00:59
+Because of that, it's considered to be an advanced skill in security.
+01:04
+However, that doesn't mean you won't be involved.
+01:08
+There are several threat modeling frameworks used in the field.
+01:11
+Some are better suited for network security.
+01:12
+Others are better for things like information security, or application development.
+01:19
+In general, there are six steps of a threat model.
+01:22
+The first is to define the scope of the model.
+01:25
+At this stage, the team determines what they're building by creating an inventory of assets and classifying them.
+01:33
+The second step is to identify threats.
+01:35
+Here, the team defines all potential threat actors.
+01:39
+A threat actor is any person or group who presents a security risk.
+01:44
+Threat actors are characterized as being internal or external.
+01:49
+For example, an internal threat actor could be an employee who intentionally expose an asset to harm.
+01:56
+An example of an external threat actor could be a malicious hacker, or a competing business.
+02:03
+After threat actors have been identified, the team puts together what's known as an attack tree.
+02:07
+An attack tree is a diagram that maps threats to assets.
+02:12
+The team tries to be as detailed as possible when constructing this diagram before moving on.
+02:18
+Step three of the threat modeling process is to characterize the environment.
+02:22
+Here, the team applies an attacker mindset to the business.
+02:26
+They consider how the customers and employees interact with the environment.
+02:30
+Other factors they consider are external partners and third party vendors.
+02:36
+At step four, their objective is to analyze threats.
+02:38
+Here, the team works together to examine existing protections and identify gaps.
+02:44
+They then rank threats according to their risk score that they assign.
+02:49
+During step five, the team decides how to mitigate risk.
+02:53
+At this point, the group creates their plan for defending against threats.
+02:57
+The choices here are to avoid risk, transfer it, reduce it, or accept it.
+03:04
+The sixth and final step is to evaluate findings.
+03:05
+At this stage, everything that was done during the exercise is documented, fixes are applied, and the team makes note of any successes they had.
+03:15
+They also record any lessons learned, so they can inform how they approach future threat models.
+03:21
+That's an overview of the general threat modeling process.
+03:23
+What we've explored was just one of many methods that exist.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Chantelle: The value of diversity in cybersecurity
+Transcript
+00:03
+My name is Chantelle.
+00:05
+I'm a Security Engineer here at Google, and I am part of the security and implement, and scaling team.
+00:12
+We secure and monitor systems that contain sensitive information.
+00:18
+My background, initially I was going to be a heart surgeon and then I took chemistry, I took chem 1, and I was like, no that's not happening.
+00:28
+My interest in cybersecurity came from a TV show called Mr. Robot.
+00:32
+It's about a vigilante hacker trying to save the world.
+00:37
+And from there, that kind of piqued my interest in security, and so that's a great foundation.
+00:43
+Valuing diversity in security is important because we're exposed to a broad range of thinking.
+00:50
+That helps to inspire a lot of creative ideas and different perspectives and different ways
+00:57
+of tackling a problem and that kind of leads us forward into being better security engineers.
+01:03
+Our Manager, Laureen always steps in to tell us, "Don't be so quick to find a solution. Don't be so quick to solve the problems yourselves."
+01:12
+We have a wide range of security engineers and connections to our disposal, and she encourages us to go out and seek them out, and then
+01:22
+to come back and then have us settle in and brainstorm all of these ideas that we've collected after we've went out and tried to find it.
+01:31
+We've ultimately almost always come up with the best possible outcome that we can ever come up with.
+01:37
+My advice for people to get into the industry is get out there and be proactive.
+01:42
+I definitely recommend joining up the security community on Twitter.
+01:47
+There's a huge security community on Twitter right now.
+01:49
+That shares a bunch of resources, opportunities, job positions, and are definitely open to talking to anyone that's interested in getting into the field but just don't know how.
+02:01
+I recommend security as a career.
+02:05
+Definitely, I think that for me personally, I was able to tap into my rebel side a lot in security.
+02:16
+I found I was able to express myself a bit more in security.
+02:20
+It's just a whole ball of goodness.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PASTA: The Process for Attack Simulation and Threat Analysis
+Transcript
+00:00
+Let's finish exploring threat modeling by taking a look at real-world scenarios.
+00:05
+This time, we'll use a standard threat modeling process called PASTA.
+00:11
+Imagine that a fitness company is getting ready to launch their first mobile app.
+00:15
+Before we can go live, the company asks their security team to ensure the app will protect customer data.
+00:21
+The team decides to perform a threat model using the PASTA framework.
+00:26
+PASTA is a popular threat modeling framework that's used across many industries.
+00:30
+PASTA is short for Process for Attack Simulation and Threat Analysis.
+00:35
+There are seven stages of the PASTA framework.
+00:38
+Let's go through each of them to help this fitness company get their app ready.
+00:42
+Stage one of the PASTA threat model framework is to define business and security objectives.
+00:47
+Before starting the threat model, the team needs to decide what their goals are.
+00:52
+The main objective in our example with the fitness company app is protecting customer data.
+00:57
+The team starts by asking a lot of questions at this stage.
+01:01
+They'll need to understand things like how personally identifiable information is handled.
+01:06
+Answering these questions is a key to evaluate the impact of threats that they'll find along the way.
+01:12
+Stage two of the PASTA framework is to define the technical scope.
+01:16
+Here, the team's focus is to identify the application components that must be evaluated.
+01:21
+This is what we discussed earlier as the attack surface.
+01:25
+For a mobile app, this will include technology that's involved while data is at rest and in use.
+01:31
+This includes network protocols, security controls, and other data interactions.
+01:37
+At stage three of PASTA, the team's job is to decompose the application.
+01:41
+In other words, we need to identify the existing controls that will protect user data from threats.
+01:47
+This normally means working with the application developers to produce a data flow diagram.
+01:53
+A diagram like this will show how data gets from a user's device to the company's database.
+01:59
+It would also identify the controls in place to protect this data along the way.
+02:05
+Stage four of PASTA is next.
+02:06
+The focus here is to perform a threat analysis.
+02:09
+This is where the team gets into their attacker mindset.
+02:12
+Here, research is done to collect the most up-to-date information on the type of attacks being used.
+02:19
+Like other technologies, mobile apps have many attack vectors.
+02:23
+These change regularly, so the team would reference resources to stay up-to-date.
+02:29
+Stage five of PASTA is performing a vulnerability analysis.
+02:32
+In this stage, the team more deeply investigates potential vulnerabilities by considering the root of the problem.
+02:40
+Next is stage six of PASTA, where the team conducts attack modeling.
+02:43
+This is where the team tests the vulnerabilities that were analyzed in stage five by simulating attacks.
+02:50
+The team does this by creating an attack tree, which looks like a flow chart.
+02:55
+For example, an attack tree for our mobile app might look like this.
+02:59
+Customer information, like user names and passwords, is a target.
+03:04
+This data is normally stored in a database.
+03:07
+We've learned that databases are vulnerable to attacks like SQL injection.
+03:11
+So we will add this attack vector to our attack tree.
+03:15
+A threat actor might exploit vulnerabilities caused by unsanitized inputs to attack this vector.
+03:22
+The security team uses attack trees like this to identify attack vectors that need to be tested to validate threats.
+03:29
+This is just one branch of this attack tree.
+03:32
+An application, like a fitness app, typically has lots of branches with a number of other attack vectors.
+03:40
+Stage seven of PASTA is to analyze risk and impact.
+03:43
+Here, the team assembles all the information they've collected in stages one through six.
+03:48
+By this stage, the team is in position to make informed risk management recommendations to business stakeholders that align with their goals.
+03:57
+And with that, we made it all the way through a threat modeling exercise based on the PASTA framework!
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Wrap-up
+Transcript
+00:00
+Managing threats is a major part of what security professionals do.
+00:04
+In this part of the course, we've explored some common types of cyber threats that you'll likely encounter in the field.
+00:11
+Let's review.
+00:14
+We started off discussing social engineering.
+00:16
+You learned that attackers have a variety of ways to trick their targets into sharing private information.
+00:22
+Social engineering techniques rely on exploiting people's trust and willingness to help.
+00:28
+Phishing attacks are one of the most common ways that attackers go about manipulating their targets.
+00:35
+Next, we explored malware.
+00:36
+Here, we discussed the major classes of malware, like viruses, trojans, and worms.
+00:42
+You learned how to spot signs of infection.
+00:44
+You also learned how malware has evolved and become more sophisticated over the years.
+00:51
+After that, we turned our attention to web-based exploits, specifically injection attacks.
+00:57
+You learned about cross-site scripting and SQL injection, two of the most common types of attacks facing organizations online.
+01:04
+We discussed how each of these attacks are carried out.
+01:07
+You also learned about how web applications can be protected from malicious code.
+01:12
+Finally, we explored the threat modeling process.
+01:15
+You learned the process that security teams use to perform these exercises.
+01:21
+Unfortunately, cyberattacks and security breaches are a reality that we're challenged with on a regular basis.
+01:27
+However, being aware of the type of threats that exist and the threat modeling process provides an important foundation for your work as a security analyst.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Course wrap-up
+Transcript
+00:00
+Congratulations on making it through the end of this course!
+00:04
+I can hardly believe our time together is over.
+00:07
+Before moving on in the certificate program, I'd like to reflect on all the amazing progress you've made.
+00:14
+When we started, you were introduced to a wide range of assets organizations protect.
+00:18
+Our primary focus was information security, specifically digital information.
+00:25
+Here, you learned how asset classification helps security teams focus their efforts and prioritize resources.
+00:32
+We explored digital assets in the three states of data.
+00:35
+We also learned how policies, standards, and procedures can mitigate organizational risk.
+00:41
+Our focus on the NIST cybersecurity framework introduced you to a commonly used framework for managing risk.
+00:48
+Afterwards, you learned about fundamental security systems and controls.
+00:54
+You got to explore technology, like encryption, that's used to protect data in all its states.
+00:58
+You also learned how technologies like public key infrastructure and digital certificates are used to maintain the confidentiality, integrity, and availability of information online.
+01:10
+And you also explored access controls that make up the authentication, authorization, and accounting framework.
+01:18
+Next, we explored common vulnerabilities and systems.
+01:20
+During this part of the course, you got an inside look into how security teams position themselves ahead of attacks.
+01:28
+We explored the defense in depth strategy that's applied to protect information as it's exchanged between parties online.
+01:34
+You also learned about the common vulnerability and exposures list, the vulnerability assessment process, and attack surfaces and attack vectors.
+01:43
+We then explored the major threats to asset security, like social engineering, malware, and web-based exploits.
+01:51
+Together, we discussed how these attacks are carried out and the way security teams prevent them from doing damage.
+01:57
+We then finished up by exploring the process of threat modeling.
+02:01
+We covered so much!
+02:02
+I really appreciate your effort throughout it all.
+02:05
+When I first started my career in security, my goal was to learn, network, and embrace any opportunity.
+02:12
+I was able to attend security conferences, receive job tips, earned references, and volunteered to gain experience.
+02:20
+At that time, I would have never imagined that I'd be here teaching what I've learned to others.
+02:25
+That just goes to show you, your security journey is only just beginning.
+02:28
+While our time together is over, we covered a lot of complex topics, many of which are areas of specialization in security.
+02:37
+With the foundation you've built here, you have a wide range of possibilities to continue growing in the field.
+02:44
+I'm so glad to have played a part in this step along your journey into the world of security.
+02:48
+And I wish you all the best as you continue forward along your path.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

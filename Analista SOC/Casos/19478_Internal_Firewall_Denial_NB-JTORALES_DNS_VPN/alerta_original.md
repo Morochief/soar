@@ -1,0 +1,837 @@
+# Alerta Original - Raw JSON Interflow (Lote de 4 Eventos)
+**ID de Secuencia Principal:** `19478` (Rango: `19478` - `19590`)  
+**Fecha de Ingesta:** 2026-09-24  
+**Tenant:** `Technoma` (`cf73a415c8794884a0c35b458b7c73ae`)  
+
+```json
+{
+    "data": {
+        "docs": [
+            {
+                "_index": "stellar-index-v1-ser-cf73a415c8794884a0c35b458b7c73ae-68e4cbd80c1098a3aec33727-2026.09.17-000033",
+                "_type": "_doc",
+                "_id": "5808b49f-4d91-4275-b2d2-c5969394ed241790262606598-YWVsbGEtc2VyLTIwMjYuMDkuMjQtZTUxMWMzZmM1NGNkNGQ2NjhiYjY3NjEyYzJlZjRiMDQ=",
+                "_version": 1,
+                "_seq_no": 19478,
+                "_primary_term": 1,
+                "found": true,
+                "_source": {
+                    "action": "deny",
+                    "actual": 2159,
+                    "aella_tuples": "192.168.169.64.192.168.3.214.53.4",
+                    "anomaly_id": "9_zx06ABI3UnQyDONqax",
+                    "appid": 4,
+                    "appid_family": "Standard",
+                    "appid_name": "DNS",
+                    "appid_stdport": "yes",
+                    "detected_fields": [
+                        "srcip_host"
+                    ],
+                    "detected_values": [
+                        "192.168.169.64"
+                    ],
+                    "detector_index": 0,
+                    "dev_class": "firewall",
+                    "dev_type": "fw_fortigate",
+                    "device": {
+                        "name": "FG-Technoma"
+                    },
+                    "domain_creation": 1790262079063,
+                    "dscp_name": "Best Effort",
+                    "dst_tuples": "00:00:00:00:00:00.0.192.168.3.214",
+                    "dstip": "192.168.3.214",
+                    "dstip_geo": {
+                        "city": "Unknown",
+                        "countryCode": "PY",
+                        "countryName": "Paraguay",
+                        "latitude": -25.2869,
+                        "longitude": -57.6511,
+                        "region": "Asuncion"
+                    },
+                    "dstip_geo_point": "-25.2869,-57.6511",
+                    "dstip_host": "192.168.3.214",
+                    "dstip_reputation": "Good",
+                    "dstip_type": "private",
+                    "dstip_version": "ipv4",
+                    "dstmac": "00:00:00:00:00:00",
+                    "dstport": 53,
+                    "duration": 0,
+                    "end_bucket_time": 1790262300000,
+                    "engid": "4e3eab0649114a80a089a5d5a078994d",
+                    "engid_gateway": "181.103.4.178",
+                    "engid_name": "technoma-sensor",
+                    "event": {
+                        "timestamp": 1790262079063
+                    },
+                    "event_category": "network",
+                    "event_name": "fw_action",
+                    "event_score": 71,
+                    "event_source": "new_ml",
+                    "event_status": "New",
+                    "event_summary": {
+                        "fw_utm_action": []
+                    },
+                    "event_type": "conn",
+                    "fidelity": 99.97,
+                    "fortinet": {
+                        "appcat": "unscanned",
+                        "craction": "131072",
+                        "crlevel": "high",
+                        "crscore": "30",
+                        "date": "2026-09-24",
+                        "dev_name": "FG-Technoma",
+                        "devid": "FG120GTK24022543",
+                        "dstcountry": "Reserved",
+                        "dstintf": "ROGGIO_PRI",
+                        "dstintfrole": "undefined",
+                        "event_time": "2026-09-24 12:01:18",
+                        "eventtime": "1790262079063493146",
+                        "level": "notice",
+                        "logid": "0000000013",
+                        "mastersrcmac": "a0:29:42:e4:ee:7c",
+                        "osname": "Windows",
+                        "policytype": "policy",
+                        "rule_id": 0,
+                        "service": "DNS",
+                        "sessionid": "9129168",
+                        "srccountry": "Reserved",
+                        "srcintf": "WiFi_Corp",
+                        "srcintfrole": "lan",
+                        "srcname": "NB-JTORALES",
+                        "srcserver": "0",
+                        "srcswversion": "10/11",
+                        "subtype": "forward",
+                        "time": "12:01:18",
+                        "trandisp": "noop",
+                        "type": "traffic",
+                        "tz": "-0300",
+                        "unauthuser": "josetorales",
+                        "unauthusersource": "kerberos",
+                        "vd": "root",
+                        "vpntype": "ipsecvpn"
+                    },
+                    "fw_policy_id": "FG-Technoma_0",
+                    "inbytes_total": 0,
+                    "inpkts_delta": 0,
+                    "is_dga": "no",
+                    "lateral": true,
+                    "locid": "unassigned location",
+                    "log": {
+                        "syslog": {
+                            "priority": 189
+                        }
+                    },
+                    "msg_class": "firewall",
+                    "msg_origin": {
+                        "category": "firewall",
+                        "processor": {
+                            "name": "in_udp,parser-stellar,filter_stellar_parser-forti_fortigate",
+                            "type": "log_forwarder"
+                        },
+                        "source": "fw_fortigate"
+                    },
+                    "msgtype": 4,
+                    "msgtype_name": "startend",
+                    "netid": 0,
+                    "netid_name": "vlan0",
+                    "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+                    "org_name": "Technoma",
+                    "orig_id": "9_zx06ABI3UnQyDONqax",
+                    "orig_index": "aella-adr-2026.09.24-e511c3fc54cd4d668bb67612c2ef4b04",
+                    "outbytes_total": 0,
+                    "outpkts_delta": 0,
+                    "parser_raw_msg": "<189>date=2026-09-24 time=12:01:18 devname=\"FG-Technoma\" devid=\"FG120GTK24022543\" eventtime=1790262079063493146 tz=\"-0300\" logid=\"0000000013\" type=\"traffic\" subtype=\"forward\" level=\"notice\" vd=\"root\" srcip=192.168.169.64 srcname=\"NB-JTORALES     \" srcport=50564 srcintf=\"WiFi_Corp\" srcintfrole=\"lan\" dstip=192.168.3.214 dstport=53 dstintf=\"ROGGIO_PRI\" dstintfrole=\"undefined\" srccountry=\"Reserved\" dstcountry=\"Reserved\" sessionid=9129168 proto=17 action=\"deny\" policyid=0 policytype=\"policy\" service=\"DNS\" trandisp=\"noop\" appcat=\"unscanned\" duration=0 sentbyte=0 rcvdbyte=0 sentpkt=0 rcvdpkt=0 vpntype=\"ipsecvpn\" crscore=30 craction=131072 crlevel=\"high\" osname=\"Windows\" srcswversion=\"10/11\" unauthuser=\"josetorales\" unauthusersource=\"kerberos\" mastersrcmac=\"a0:29:42:e4:ee:7c\" srcmac=\"a0:29:42:e4:ee:7c\" srcserver=0",
+                    "proto": 17,
+                    "proto_name": "udp",
+                    "receive_time": 1790262187087,
+                    "run_every": 5,
+                    "severity": 60,
+                    "src_tuples": "a0:29:42:e4:ee:7c.0.192.168.169.64",
+                    "srcip": "192.168.169.64",
+                    "srcip_assetid": "8cfa8ff2-b5d9-11f1-ae9e-dae70fadb173",
+                    "srcip_geo": {
+                        "city": "Unknown",
+                        "countryCode": "PY",
+                        "countryName": "Paraguay",
+                        "latitude": -25.2869,
+                        "longitude": -57.6511,
+                        "region": "Asuncion"
+                    },
+                    "srcip_geo_point": "-25.2869,-57.6511",
+                    "srcip_geo_source": "maxmind",
+                    "srcip_host": "192.168.169.64",
+                    "srcip_reputation": "Good",
+                    "srcip_type": "private",
+                    "srcip_version": "ipv4",
+                    "srcmac": "a0:29:42:e4:ee:7c",
+                    "srcport": 50564,
+                    "start_bucket_time": 1790262000000,
+                    "state": "Closed",
+                    "stellar": {
+                        "alert_time": 1790262606223,
+                        "alert_timestamp_field": "timestamp",
+                        "detection_time": 414511,
+                        "status": "New"
+                    },
+                    "stellar_client_addr": "127.0.0.1",
+                    "stellar_da_input": 2592,
+                    "stellar_index_id": "aella-ser-2026.09.24-e511c3fc54cd4d668bb67612c2ef4b04",
+                    "stellar_ingestion_port": 5149,
+                    "stellar_uuid": "5808b49f-4d91-4275-b2d2-c5969394ed241790262606598-YWVsbGEtc2VyLTIwMjYuMDkuMjQtZTUxMWMzZmM1NGNkNGQ2NjhiYjY3NjEyYzJlZjRiMDQ=",
+                    "tenant_name": "technoma",
+                    "tenantid": "e511c3fc54cd4d668bb67612c2ef4b04",
+                    "threat_score": 0,
+                    "timestamp": 1790262079063,
+                    "timestamp_utc": "2026-09-24T15:01:19.000Z",
+                    "totalbytes": 0,
+                    "totalpackets": 0,
+                    "typical": 28,
+                    "vlan": 0,
+                    "write_by": "sef",
+                    "write_time": 1790262606598,
+                    "xdr_event": {
+                        "description": "In internal traffic, a source host (IP/name: 192.168.169.64 private) has had actions blocked by a firewall too many times (#: 2159), compared to the typical number of blocks (#: 28), measured in a 5.0-minute interval.",
+                        "display_name": "Internal Firewall Denial Anomaly",
+                        "framework_version": "v8",
+                        "name": "internal_fw_action",
+                        "scope": "Internal",
+                        "tactic": {
+                            "id": "XTA0002",
+                            "name": "XDR NBA"
+                        },
+                        "tags": [
+                            "Internal",
+                            "Network Traffic Analysis",
+                            "Firewall Anomalies"
+                        ],
+                        "technique": {
+                            "id": "XT2002",
+                            "name": "XDR Firewall Anomaly"
+                        },
+                        "xdr_killchain_stage": "Exploration",
+                        "xdr_killchain_version": "v1"
+                    }
+                }
+            },
+            {
+                "_index": "stellar-index-v1-ser-cf73a415c8794884a0c35b458b7c73ae-68e4cbd80c1098a3aec33727-2026.09.17-000033",
+                "_type": "_doc",
+                "_id": "41ad2405-2f32-4c62-a09b-d89f67076f911790262903664-YWVsbGEtc2VyLTIwMjYuMDkuMjQtZTUxMWMzZmM1NGNkNGQ2NjhiYjY3NjEyYzJlZjRiMDQ=",
+                "_version": 1,
+                "_seq_no": 19491,
+                "_primary_term": 1,
+                "found": true,
+                "_source": {
+                    "action": "deny",
+                    "actual": 3173,
+                    "aella_tuples": "192.168.169.64.192.168.3.1.53.4",
+                    "anomaly_id": "9f3006ABI3UnQyDOYiip",
+                    "appid": 4,
+                    "appid_family": "Standard",
+                    "appid_name": "DNS",
+                    "appid_stdport": "yes",
+                    "detected_fields": [
+                        "srcip_host"
+                    ],
+                    "detected_values": [
+                        "192.168.169.64"
+                    ],
+                    "detector_index": 0,
+                    "dev_class": "firewall",
+                    "dev_type": "fw_fortigate",
+                    "device": {
+                        "name": "FG-Technoma"
+                    },
+                    "domain_creation": 1790262300062,
+                    "dscp_name": "Best Effort",
+                    "dst_tuples": "00:00:00:00:00:00.0.192.168.3.1",
+                    "dstip": "192.168.3.1",
+                    "dstip_geo": {
+                        "city": "Unknown",
+                        "countryCode": "PY",
+                        "countryName": "Paraguay",
+                        "latitude": -25.2869,
+                        "longitude": -57.6511,
+                        "region": "Asuncion"
+                    },
+                    "dstip_geo_point": "-25.2869,-57.6511",
+                    "dstip_host": "192.168.3.1",
+                    "dstip_reputation": "Good",
+                    "dstip_type": "private",
+                    "dstip_version": "ipv4",
+                    "dstmac": "00:00:00:00:00:00",
+                    "dstport": 53,
+                    "duration": 0,
+                    "end_bucket_time": 1790262600000,
+                    "engid": "4e3eab0649114a80a089a5d5a078994d",
+                    "engid_gateway": "181.103.4.178",
+                    "engid_name": "technoma-sensor",
+                    "event": {
+                        "timestamp": 1790262300062
+                    },
+                    "event_category": "network",
+                    "event_name": "fw_action",
+                    "event_score": 71,
+                    "event_source": "new_ml",
+                    "event_status": "New",
+                    "event_summary": {
+                        "fw_utm_action": []
+                    },
+                    "event_type": "conn",
+                    "fidelity": 99.98,
+                    "fortinet": {
+                        "appcat": "unscanned",
+                        "craction": "131072",
+                        "crlevel": "high",
+                        "crscore": "30",
+                        "date": "2026-09-24",
+                        "dev_name": "FG-Technoma",
+                        "devid": "FG120GTK24022543",
+                        "dstcountry": "Reserved",
+                        "dstintf": "ROGGIO_PRI",
+                        "dstintfrole": "undefined",
+                        "event_time": "2026-09-24 12:05:00",
+                        "eventtime": "1790262300062496317",
+                        "level": "notice",
+                        "logid": "0000000013",
+                        "mastersrcmac": "a0:29:42:e4:ee:7c",
+                        "osname": "Windows",
+                        "policytype": "policy",
+                        "rule_id": 0,
+                        "service": "DNS",
+                        "sessionid": "9375037",
+                        "srccountry": "Reserved",
+                        "srcintf": "WiFi_Corp",
+                        "srcintfrole": "lan",
+                        "srcname": "NB-JTORALES",
+                        "srcserver": "0",
+                        "srcswversion": "10/11",
+                        "subtype": "forward",
+                        "time": "12:05:00",
+                        "trandisp": "noop",
+                        "type": "traffic",
+                        "tz": "-0300",
+                        "unauthuser": "josetorales",
+                        "unauthusersource": "kerberos",
+                        "vd": "root",
+                        "vpntype": "ipsecvpn"
+                    },
+                    "fw_policy_id": "FG-Technoma_0",
+                    "inbytes_total": 0,
+                    "inpkts_delta": 0,
+                    "is_dga": "no",
+                    "lateral": true,
+                    "locid": "unassigned location",
+                    "log": {
+                        "syslog": {
+                            "priority": 189
+                        }
+                    },
+                    "msg_class": "firewall",
+                    "msg_origin": {
+                        "category": "firewall",
+                        "processor": {
+                            "name": "in_udp,parser-stellar,filter_stellar_parser-forti_fortigate",
+                            "type": "log_forwarder"
+                        },
+                        "source": "fw_fortigate"
+                    },
+                    "msgtype": 4,
+                    "msgtype_name": "startend",
+                    "netid": 0,
+                    "netid_name": "vlan0",
+                    "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+                    "org_name": "Technoma",
+                    "orig_id": "9f3006ABI3UnQyDOYiip",
+                    "orig_index": "aella-adr-2026.09.24-e511c3fc54cd4d668bb67612c2ef4b04",
+                    "outbytes_total": 0,
+                    "outpkts_delta": 0,
+                    "parser_raw_msg": "<189>date=2026-09-24 time=12:05:00 devname=\"FG-Technoma\" devid=\"FG120GTK24022543\" eventtime=1790262300062496317 tz=\"-0300\" logid=\"0000000013\" type=\"traffic\" subtype=\"forward\" level=\"notice\" vd=\"root\" srcip=192.168.169.64 srcname=\"NB-JTORALES     \" srcport=56543 srcintf=\"WiFi_Corp\" srcintfrole=\"lan\" dstip=192.168.3.1 dstport=53 dstintf=\"ROGGIO_PRI\" dstintfrole=\"undefined\" srccountry=\"Reserved\" dstcountry=\"Reserved\" sessionid=9375037 proto=17 action=\"deny\" policyid=0 policytype=\"policy\" service=\"DNS\" trandisp=\"noop\" appcat=\"unscanned\" duration=0 sentbyte=0 rcvdbyte=0 sentpkt=0 rcvdpkt=0 vpntype=\"ipsecvpn\" crscore=30 craction=131072 crlevel=\"high\" osname=\"Windows\" srcswversion=\"10/11\" unauthuser=\"josetorales\" unauthusersource=\"kerberos\" mastersrcmac=\"a0:29:42:e4:ee:7c\" srcmac=\"a0:29:42:e4:ee:7c\" srcserver=0",
+                    "proto": 17,
+                    "proto_name": "udp",
+                    "receive_time": 1790262398089,
+                    "run_every": 5,
+                    "severity": 60,
+                    "src_tuples": "a0:29:42:e4:ee:7c.0.192.168.169.64",
+                    "srcip": "192.168.169.64",
+                    "srcip_assetid": "8cfa8ff2-b5d9-11f1-ae9e-dae70fadb173",
+                    "srcip_geo": {
+                        "city": "Unknown",
+                        "countryCode": "PY",
+                        "countryName": "Paraguay",
+                        "latitude": -25.2869,
+                        "longitude": -57.6511,
+                        "region": "Asuncion"
+                    },
+                    "srcip_geo_point": "-25.2869,-57.6511",
+                    "srcip_geo_source": "maxmind",
+                    "srcip_host": "192.168.169.64",
+                    "srcip_reputation": "Good",
+                    "srcip_type": "private",
+                    "srcip_version": "ipv4",
+                    "srcmac": "a0:29:42:e4:ee:7c",
+                    "srcport": 56543,
+                    "start_bucket_time": 1790262300000,
+                    "state": "Closed",
+                    "stellar": {
+                        "alert_time": 1790262902731,
+                        "alert_timestamp_field": "timestamp",
+                        "detection_time": 501340,
+                        "status": "New"
+                    },
+                    "stellar_client_addr": "127.0.0.1",
+                    "stellar_da_input": 2588,
+                    "stellar_index_id": "aella-ser-2026.09.24-e511c3fc54cd4d668bb67612c2ef4b04",
+                    "stellar_ingestion_port": 5149,
+                    "stellar_uuid": "41ad2405-2f32-4c62-a09b-d89f67076f911790262903664-YWVsbGEtc2VyLTIwMjYuMDkuMjQtZTUxMWMzZmM1NGNkNGQ2NjhiYjY3NjEyYzJlZjRiMDQ=",
+                    "tenant_name": "technoma",
+                    "tenantid": "e511c3fc54cd4d668bb67612c2ef4b04",
+                    "threat_score": 0,
+                    "timestamp": 1790262300062,
+                    "timestamp_utc": "2026-09-24T15:05:00.000Z",
+                    "totalbytes": 0,
+                    "totalpackets": 0,
+                    "typical": 28,
+                    "vlan": 0,
+                    "write_by": "sef",
+                    "write_time": 1790262903664,
+                    "xdr_event": {
+                        "description": "In internal traffic, a source host (IP/name: 192.168.169.64 private) has had actions blocked by a firewall too many times (#: 3173), compared to the typical number of blocks (#: 28), measured in a 5.0-minute interval.",
+                        "display_name": "Internal Firewall Denial Anomaly",
+                        "framework_version": "v8",
+                        "name": "internal_fw_action",
+                        "scope": "Internal",
+                        "tactic": {
+                            "id": "XTA0002",
+                            "name": "XDR NBA"
+                        },
+                        "tags": [
+                            "Internal",
+                            "Network Traffic Analysis",
+                            "Firewall Anomalies"
+                        ],
+                        "technique": {
+                            "id": "XT2002",
+                            "name": "XDR Firewall Anomaly"
+                        },
+                        "xdr_killchain_stage": "Exploration",
+                        "xdr_killchain_version": "v1"
+                    }
+                }
+            },
+            {
+                "_index": "stellar-index-v1-ser-cf73a415c8794884a0c35b458b7c73ae-68e4cbd80c1098a3aec33727-2026.09.17-000033",
+                "_type": "_doc",
+                "_id": "97f73704-74b1-4324-80fc-e7df6c5e0c6f1790263207869-YWVsbGEtc2VyLTIwMjYuMDkuMjQtZTUxMWMzZmM1NGNkNGQ2NjhiYjY3NjEyYzJlZjRiMDQ=",
+                "_version": 1,
+                "_seq_no": 19572,
+                "_primary_term": 1,
+                "found": true,
+                "_source": {
+                    "action": "deny",
+                    "actual": 3007,
+                    "aella_tuples": "192.168.169.64.192.168.3.214.53.4",
+                    "anomaly_id": "mf3506ABI3UnQyDOGdrO",
+                    "appid": 4,
+                    "appid_family": "Standard",
+                    "appid_name": "DNS",
+                    "appid_stdport": "yes",
+                    "detected_fields": [
+                        "srcip_host"
+                    ],
+                    "detected_values": [
+                        "192.168.169.64"
+                    ],
+                    "detector_index": 0,
+                    "dev_class": "firewall",
+                    "dev_type": "fw_fortigate",
+                    "device": {
+                        "name": "FG-Technoma"
+                    },
+                    "domain_creation": 1790262600176,
+                    "dscp_name": "Best Effort",
+                    "dst_tuples": "00:00:00:00:00:00.0.192.168.3.214",
+                    "dstip": "192.168.3.214",
+                    "dstip_geo": {
+                        "city": "Unknown",
+                        "countryCode": "PY",
+                        "countryName": "Paraguay",
+                        "latitude": -25.2869,
+                        "longitude": -57.6511,
+                        "region": "Asuncion"
+                    },
+                    "dstip_geo_point": "-25.2869,-57.6511",
+                    "dstip_host": "192.168.3.214",
+                    "dstip_reputation": "Good",
+                    "dstip_type": "private",
+                    "dstip_version": "ipv4",
+                    "dstmac": "00:00:00:00:00:00",
+                    "dstport": 53,
+                    "duration": 0,
+                    "end_bucket_time": 1790262900000,
+                    "engid": "4e3eab0649114a80a089a5d5a078994d",
+                    "engid_gateway": "181.103.4.178",
+                    "engid_name": "technoma-sensor",
+                    "event": {
+                        "timestamp": 1790262600176
+                    },
+                    "event_category": "network",
+                    "event_name": "fw_action",
+                    "event_score": 71,
+                    "event_source": "new_ml",
+                    "event_status": "New",
+                    "event_summary": {
+                        "fw_utm_action": []
+                    },
+                    "event_type": "conn",
+                    "fidelity": 99.98,
+                    "fortinet": {
+                        "appcat": "unscanned",
+                        "craction": "131072",
+                        "crlevel": "high",
+                        "crscore": "30",
+                        "date": "2026-09-24",
+                        "dev_name": "FG-Technoma",
+                        "devid": "FG120GTK24022543",
+                        "dstcountry": "Reserved",
+                        "dstintf": "ROGGIO_PRI",
+                        "dstintfrole": "undefined",
+                        "event_time": "2026-09-24 12:09:59",
+                        "eventtime": "1790262600176469626",
+                        "level": "notice",
+                        "logid": "0000000013",
+                        "mastersrcmac": "a0:29:42:e4:ee:7c",
+                        "osname": "Windows",
+                        "policytype": "policy",
+                        "rule_id": 0,
+                        "service": "DNS",
+                        "sessionid": "9720510",
+                        "srccountry": "Reserved",
+                        "srcintf": "WiFi_Corp",
+                        "srcintfrole": "lan",
+                        "srcname": "NB-JTORALES",
+                        "srcserver": "0",
+                        "srcswversion": "10/11",
+                        "subtype": "forward",
+                        "time": "12:09:59",
+                        "trandisp": "noop",
+                        "type": "traffic",
+                        "tz": "-0300",
+                        "unauthuser": "josetorales",
+                        "unauthusersource": "kerberos",
+                        "vd": "root",
+                        "vpntype": "ipsecvpn"
+                    },
+                    "fw_policy_id": "FG-Technoma_0",
+                    "inbytes_total": 0,
+                    "inpkts_delta": 0,
+                    "is_dga": "no",
+                    "lateral": true,
+                    "locid": "unassigned location",
+                    "log": {
+                        "syslog": {
+                            "priority": 189
+                        }
+                    },
+                    "msg_class": "firewall",
+                    "msg_origin": {
+                        "category": "firewall",
+                        "processor": {
+                            "name": "in_udp,parser-stellar,filter_stellar_parser-forti_fortigate",
+                            "type": "log_forwarder"
+                        },
+                        "source": "fw_fortigate"
+                    },
+                    "msgtype": 4,
+                    "msgtype_name": "startend",
+                    "netid": 0,
+                    "netid_name": "vlan0",
+                    "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+                    "org_name": "Technoma",
+                    "orig_id": "mf3506ABI3UnQyDOGdrO",
+                    "orig_index": "aella-adr-2026.09.24-e511c3fc54cd4d668bb67612c2ef4b04",
+                    "outbytes_total": 0,
+                    "outpkts_delta": 0,
+                    "parser_raw_msg": "<189>date=2026-09-24 time=12:09:59 devname=\"FG-Technoma\" devid=\"FG120GTK24022543\" eventtime=1790262600176469626 tz=\"-0300\" logid=\"0000000013\" type=\"traffic\" subtype=\"forward\" level=\"notice\" vd=\"root\" srcip=192.168.169.64 srcname=\"NB-JTORALES     \" srcport=60584 srcintf=\"WiFi_Corp\" srcintfrole=\"lan\" dstip=192.168.3.214 dstport=53 dstintf=\"ROGGIO_PRI\" dstintfrole=\"undefined\" srccountry=\"Reserved\" dstcountry=\"Reserved\" sessionid=9720510 proto=17 action=\"deny\" policyid=0 policytype=\"policy\" service=\"DNS\" trandisp=\"noop\" appcat=\"unscanned\" duration=0 sentbyte=0 rcvdbyte=0 sentpkt=0 rcvdpkt=0 vpntype=\"ipsecvpn\" crscore=30 craction=131072 crlevel=\"high\" osname=\"Windows\" srcswversion=\"10/11\" unauthuser=\"josetorales\" unauthusersource=\"kerberos\" mastersrcmac=\"a0:29:42:e4:ee:7c\" srcmac=\"a0:29:42:e4:ee:7c\" srcserver=0",
+                    "proto": 17,
+                    "proto_name": "udp",
+                    "receive_time": 1790262705341,
+                    "run_every": 5,
+                    "severity": 60,
+                    "src_tuples": "a0:29:42:e4:ee:7c.0.192.168.169.64",
+                    "srcip": "192.168.169.64",
+                    "srcip_assetid": "8cfa8ff2-b5d9-11f1-ae9e-dae70fadb173",
+                    "srcip_geo": {
+                        "city": "Unknown",
+                        "countryCode": "PY",
+                        "countryName": "Paraguay",
+                        "latitude": -25.2869,
+                        "longitude": -57.6511,
+                        "region": "Asuncion"
+                    },
+                    "srcip_geo_point": "-25.2869,-57.6511",
+                    "srcip_geo_source": "maxmind",
+                    "srcip_host": "192.168.169.64",
+                    "srcip_reputation": "Good",
+                    "srcip_type": "private",
+                    "srcip_version": "ipv4",
+                    "srcmac": "a0:29:42:e4:ee:7c",
+                    "srcport": 60584,
+                    "start_bucket_time": 1790262600000,
+                    "state": "Closed",
+                    "stellar": {
+                        "alert_time": 1790263207567,
+                        "alert_timestamp_field": "timestamp",
+                        "detection_time": 496594,
+                        "status": "New"
+                    },
+                    "stellar_client_addr": "127.0.0.1",
+                    "stellar_da_input": 2592,
+                    "stellar_index_id": "aella-ser-2026.09.24-e511c3fc54cd4d668bb67612c2ef4b04",
+                    "stellar_ingestion_port": 5149,
+                    "stellar_uuid": "97f73704-74b1-4324-80fc-e7df6c5e0c6f1790263207869-YWVsbGEtc2VyLTIwMjYuMDkuMjQtZTUxMWMzZmM1NGNkNGQ2NjhiYjY3NjEyYzJlZjRiMDQ=",
+                    "tenant_name": "technoma",
+                    "tenantid": "e511c3fc54cd4d668bb67612c2ef4b04",
+                    "threat_score": 0,
+                    "timestamp": 1790262600176,
+                    "timestamp_utc": "2026-09-24T15:10:00.000Z",
+                    "totalbytes": 0,
+                    "totalpackets": 0,
+                    "typical": 28,
+                    "vlan": 0,
+                    "write_by": "sef",
+                    "write_time": 1790263207869,
+                    "xdr_event": {
+                        "description": "In internal traffic, a source host (IP/name: 192.168.169.64 private) has had actions blocked by a firewall too many times (#: 3007), compared to the typical number of blocks (#: 28), measured in a 5.0-minute interval.",
+                        "display_name": "Internal Firewall Denial Anomaly",
+                        "framework_version": "v8",
+                        "name": "internal_fw_action",
+                        "scope": "Internal",
+                        "tactic": {
+                            "id": "XTA0002",
+                            "name": "XDR NBA"
+                        },
+                        "tags": [
+                            "Internal",
+                            "Network Traffic Analysis",
+                            "Firewall Anomalies"
+                        ],
+                        "technique": {
+                            "id": "XT2002",
+                            "name": "XDR Firewall Anomaly"
+                        },
+                        "xdr_killchain_stage": "Exploration",
+                        "xdr_killchain_version": "v1"
+                    }
+                }
+            },
+            {
+                "_index": "stellar-index-v1-ser-cf73a415c8794884a0c35b458b7c73ae-68e4cbd80c1098a3aec33727-2026.09.17-000033",
+                "_type": "_doc",
+                "_id": "fe18e6c8-b2c6-4d13-b100-d845632acb541790263502771-YWVsbGEtc2VyLTIwMjYuMDkuMjQtZTUxMWMzZmM1NGNkNGQ2NjhiYjY3NjEyYzJlZjRiMDQ=",
+                "_version": 1,
+                "_seq_no": 19590,
+                "_primary_term": 1,
+                "found": true,
+                "_source": {
+                    "action": "deny",
+                    "actual": 3426,
+                    "aella_tuples": "192.168.169.64.192.168.100.1.53.4",
+                    "anomaly_id": "8v7906ABI3UnQyDOhY3r",
+                    "appid": 4,
+                    "appid_family": "Standard",
+                    "appid_name": "DNS",
+                    "appid_stdport": "yes",
+                    "detected_fields": [
+                        "srcip_host"
+                    ],
+                    "detected_values": [
+                        "192.168.169.64"
+                    ],
+                    "detector_index": 0,
+                    "dev_class": "firewall",
+                    "dev_type": "fw_fortigate",
+                    "device": {
+                        "name": "FG-Technoma"
+                    },
+                    "domain_creation": 1790262900004,
+                    "dscp_name": "Best Effort",
+                    "dst_tuples": "00:00:00:00:00:00.0.192.168.100.1",
+                    "dstip": "192.168.100.1",
+                    "dstip_geo": {
+                        "city": "Unknown",
+                        "countryCode": "PY",
+                        "countryName": "Paraguay",
+                        "latitude": -25.2869,
+                        "longitude": -57.6511,
+                        "region": "Asuncion"
+                    },
+                    "dstip_geo_point": "-25.2869,-57.6511",
+                    "dstip_host": "192.168.100.1",
+                    "dstip_reputation": "Good",
+                    "dstip_type": "private",
+                    "dstip_version": "ipv4",
+                    "dstmac": "00:00:00:00:00:00",
+                    "dstport": 53,
+                    "duration": 0,
+                    "end_bucket_time": 1790263200000,
+                    "engid": "4e3eab0649114a80a089a5d5a078994d",
+                    "engid_gateway": "181.103.4.178",
+                    "engid_name": "technoma-sensor",
+                    "event": {
+                        "timestamp": 1790262900004
+                    },
+                    "event_category": "network",
+                    "event_name": "fw_action",
+                    "event_score": 71,
+                    "event_source": "new_ml",
+                    "event_status": "New",
+                    "event_summary": {
+                        "fw_utm_action": []
+                    },
+                    "event_type": "conn",
+                    "fidelity": 99.98,
+                    "fortinet": {
+                        "appcat": "unscanned",
+                        "craction": "131072",
+                        "crlevel": "high",
+                        "crscore": "30",
+                        "date": "2026-09-24",
+                        "dev_name": "FG-Technoma",
+                        "devid": "FG120GTK24022543",
+                        "dstcountry": "Reserved",
+                        "dstintf": "CASA-ASTI",
+                        "dstintfrole": "undefined",
+                        "event_time": "2026-09-24 12:14:59",
+                        "eventtime": "1790262900003642974",
+                        "level": "notice",
+                        "logid": "0000000013",
+                        "mastersrcmac": "a0:29:42:e4:ee:7c",
+                        "osname": "Windows",
+                        "policytype": "policy",
+                        "rule_id": 0,
+                        "service": "DNS",
+                        "sessionid": "10112865",
+                        "srccountry": "Reserved",
+                        "srcintf": "WiFi_Corp",
+                        "srcintfrole": "lan",
+                        "srcname": "NB-JTORALES",
+                        "srcserver": "0",
+                        "srcswversion": "10/11",
+                        "subtype": "forward",
+                        "time": "12:14:59",
+                        "trandisp": "noop",
+                        "type": "traffic",
+                        "tz": "-0300",
+                        "unauthuser": "josetorales",
+                        "unauthusersource": "kerberos",
+                        "vd": "root",
+                        "vpntype": "ipsecvpn"
+                    },
+                    "fw_policy_id": "FG-Technoma_0",
+                    "inbytes_total": 0,
+                    "inpkts_delta": 0,
+                    "is_dga": "no",
+                    "lateral": true,
+                    "locid": "unassigned location",
+                    "log": {
+                        "syslog": {
+                            "priority": 189
+                        }
+                    },
+                    "msg_class": "firewall",
+                    "msg_origin": {
+                        "category": "firewall",
+                        "processor": {
+                            "name": "in_udp,parser-stellar,filter_stellar_parser-forti_fortigate",
+                            "type": "log_forwarder"
+                        },
+                        "source": "fw_fortigate"
+                    },
+                    "msgtype": 4,
+                    "msgtype_name": "startend",
+                    "netid": 0,
+                    "netid_name": "vlan0",
+                    "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+                    "org_name": "Technoma",
+                    "orig_id": "8v7906ABI3UnQyDOhY3r",
+                    "orig_index": "aella-adr-2026.09.24-e511c3fc54cd4d668bb67612c2ef4b04",
+                    "outbytes_total": 0,
+                    "outpkts_delta": 0,
+                    "parser_raw_msg": "<189>date=2026-09-24 time=12:14:59 devname=\"FG-Technoma\" devid=\"FG120GTK24022543\" eventtime=1790262900003642974 tz=\"-0300\" logid=\"0000000013\" type=\"traffic\" subtype=\"forward\" level=\"notice\" vd=\"root\" srcip=192.168.169.64 srcname=\"NB-JTORALES     \" srcport=59544 srcintf=\"WiFi_Corp\" srcintfrole=\"lan\" dstip=192.168.100.1 dstport=53 dstintf=\"CASA-ASTI\" dstintfrole=\"undefined\" srccountry=\"Reserved\" dstcountry=\"Reserved\" sessionid=10112865 proto=17 action=\"deny\" policyid=0 policytype=\"policy\" service=\"DNS\" trandisp=\"noop\" appcat=\"unscanned\" duration=0 sentbyte=0 rcvdbyte=0 sentpkt=0 rcvdpkt=0 vpntype=\"ipsecvpn\" crscore=30 craction=131072 crlevel=\"high\" osname=\"Windows\" srcswversion=\"10/11\" unauthuser=\"josetorales\" unauthusersource=\"kerberos\" mastersrcmac=\"a0:29:42:e4:ee:7c\" srcmac=\"a0:29:42:e4:ee:7c\" srcserver=0",
+                    "proto": 17,
+                    "proto_name": "udp",
+                    "receive_time": 1790262992572,
+                    "run_every": 5,
+                    "severity": 60,
+                    "src_tuples": "a0:29:42:e4:ee:7c.0.192.168.169.64",
+                    "srcip": "192.168.169.64",
+                    "srcip_assetid": "8cfa8ff2-b5d9-11f1-ae9e-dae70fadb173",
+                    "srcip_geo": {
+                        "city": "Unknown",
+                        "countryCode": "PY",
+                        "countryName": "Paraguay",
+                        "latitude": -25.2869,
+                        "longitude": -57.6511,
+                        "region": "Asuncion"
+                    },
+                    "srcip_geo_point": "-25.2869,-57.6511",
+                    "srcip_geo_source": "maxmind",
+                    "srcip_host": "192.168.169.64",
+                    "srcip_reputation": "Good",
+                    "srcip_type": "private",
+                    "srcip_version": "ipv4",
+                    "srcmac": "a0:29:42:e4:ee:7c",
+                    "srcport": 59544,
+                    "start_bucket_time": 1790262900000,
+                    "state": "Closed",
+                    "stellar": {
+                        "alert_time": 1790263502745,
+                        "alert_timestamp_field": "timestamp",
+                        "detection_time": 502064,
+                        "status": "New"
+                    },
+                    "stellar_client_addr": "127.0.0.1",
+                    "stellar_da_input": 2592,
+                    "stellar_index_id": "aella-ser-2026.09.24-e511c3fc54cd4d668bb67612c2ef4b04",
+                    "stellar_ingestion_port": 5149,
+                    "stellar_uuid": "fe18e6c8-b2c6-4d13-b100-d845632acb541790263502771-YWVsbGEtc2VyLTIwMjYuMDkuMjQtZTUxMWMzZmM1NGNkNGQ2NjhiYjY3NjEyYzJlZjRiMDQ=",
+                    "tenant_name": "technoma",
+                    "tenantid": "e511c3fc54cd4d668bb67612c2ef4b04",
+                    "threat_score": 0,
+                    "timestamp": 1790262900004,
+                    "timestamp_utc": "2026-09-24T15:15:00.000Z",
+                    "totalbytes": 0,
+                    "totalpackets": 0,
+                    "typical": 28,
+                    "vlan": 0,
+                    "write_by": "sef",
+                    "write_time": 1790263502771,
+                    "xdr_event": {
+                        "description": "In internal traffic, a source host (IP/name: 192.168.169.64 private) has had actions blocked by a firewall too many times (#: 3426), compared to the typical number of blocks (#: 28), measured in a 5.0-minute interval.",
+                        "display_name": "Internal Firewall Denial Anomaly",
+                        "framework_version": "v8",
+                        "name": "internal_fw_action",
+                        "scope": "Internal",
+                        "tactic": {
+                            "id": "XTA0002",
+                            "name": "XDR NBA"
+                        },
+                        "tags": [
+                            "Internal",
+                            "Network Traffic Analysis",
+                            "Firewall Anomalies"
+                        ],
+                        "technique": {
+                            "id": "XT2002",
+                            "name": "XDR Firewall Anomaly"
+                        },
+                        "xdr_killchain_stage": "Exploration",
+                        "xdr_killchain_version": "v1"
+                    }
+                }
+            }
+        ]
+    }
+}
+```

@@ -1,0 +1,2098 @@
+{
+    "took": 9284,
+    "timed_out": false,
+    "_shards": {
+        "total": 293,
+        "successful": 292,
+        "skipped": 0,
+        "failed": 1,
+        "failures": [
+            {
+                "shard": 0,
+                "index": "logs-crowdstrike_lookup.dest_aidmaster-1",
+                "node": "4mUPMws5S66BGqLiR40i6Q",
+                "reason": {
+                    "type": "query_shard_exception",
+                    "reason": "No mapping found for [@timestamp] in order to sort on",
+                    "index_uuid": "nu5bmYkOTg-AxBlWEkYhcg",
+                    "index": "logs-crowdstrike_lookup.dest_aidmaster-1"
+                }
+            }
+        ]
+    },
+    "hits": {
+        "total": {
+            "value": 10000,
+            "relation": "gte"
+        },
+        "max_score": null,
+        "hits": [
+            {
+                "_index": ".ds-logs-zeek-so-2026.07.08-000001",
+                "_id": "FehZQp8BSpiElYH71ROJ",
+                "_score": null,
+                "_source": {
+                    "container": {
+                        "id": "syslog.log"
+                    },
+                    "server": {
+                        "port": "514",
+                        "ip": "192.168.15.70"
+                    },
+                    "metadata": {
+                        "pipeline": "zeek.syslog",
+                        "input": {
+                            "beats": {
+                                "host": {
+                                    "ip": "192.168.15.71"
+                                }
+                            }
+                        },
+                        "raw_index": "logs-zeek-so",
+                        "stream_id": "filestream-filestream.filestream-zeek-logs",
+                        "beat": "filebeat",
+                        "type": "_doc",
+                        "version": "9.3.3+build202604082258",
+                        "input_id": "filestream-filestream-zeek-logs"
+                    },
+                    "log": {
+                        "file": {
+                            "inode": "141980465",
+                            "path": "/nsm/zeek/logs/current/syslog.log",
+                            "device_id": "64514"
+                        },
+                        "offset": 949862356,
+                        "id": {
+                            "uid": "CIi3mP1T6BfQljOtV2"
+                        }
+                    },
+                    "elastic_agent": {
+                        "id": "b0661c56-a383-41c1-8dc1-c41efc52de1a",
+                        "version": "9.3.3+build202604082258",
+                        "snapshot": false
+                    },
+                    "destination": {
+                        "port": 514,
+                        "ip": "192.168.15.70"
+                    },
+                    "syslog": {
+                        "severity_label": "NOTICE",
+                        "facility_label": "LOCAL7"
+                    },
+                    "source": {
+                        "port": 17338,
+                        "ip": "10.99.99.1"
+                    },
+                    "message": "date=2026-07-08 time=12:30:09 devname=\"FG-Technoma\" devid=\"FG120GTK24022543\" eventtime=1783524608659882275 tz=\"-0300\" logid=\"0000000013\" type=\"traffic\" subtype=\"forward\" level=\"notice\" vd=\"root\" srcip=192.168.169.48 srcname=\"NB-LDELVALLE    \" srcport=62484 srcintf=\"WiFi_Corp\" srcintfrole=\"lan\" dstip=142.251.129.3 dstport=443 dstintf=\"port2\" dstintfrole=\"wan\" srccountry=\"Reserved\" dstinetsvc=\"Google-Web\" dstcountry=\"United States\" dstregion=\"Undefined\" dstcity=\"Undefined\" dstreputation=5 sessionid=1081097902 proto=17 action=\"accept\" policyid=91 policytype=\"policy\" poluuid=\"460219e8-ca3f-51f0-e8ee-8c9a765155ab\" policyname=\"INTERNET_Technoma\" user=\"LAURADELVALLE\" group=\"TECHNOMA/USUARIOS\" authserver=\"AD1\" service=\"Google-Web\" trandisp=\"snat\" transip=190.104.178.146 transport=62484 appid=42533 app=\"Google.Services\" appcat=\"General.Interest\" apprisk=\"elevated\" applist=\"APP-Technoma\" duration=181 sentbyte=8652 rcvdbyte=5439 sentpkt=8 rcvdpkt=9 vwlid=1 vwlquality=\"Seq_num(1 port2 Internet), alive, sla(0x1), gid(2), num of pass(1), selected\" vwlname=\"Internet_Usuarios\" utmaction=\"allow\" countapp=1 osname=\"Windows\" srcswversion=\"10/11\" unauthuser=\"lauradelvalle\" unauthusersource=\"kerberos\" mastersrcmac=\"10:5f:ad:8b:b0:87\" srcmac=\"10:5f:ad:8b:b0:87\" srcserver=0",
+                    "tags": [
+                        "elastic-agent",
+                        "input-soc-onion",
+                        "beats_input_codec_plain_applied",
+                        "syslog"
+                    ],
+                    "network": {
+                        "protocol": "udp"
+                    },
+                    "pipeline": "syslog",
+                    "input": {
+                        "type": "filestream"
+                    },
+                    "observer": {
+                        "name": "securityonion"
+                    },
+                    "@timestamp": "2026-07-08T15:30:09.094Z",
+                    "ecs": {
+                        "version": "8.0.0"
+                    },
+                    "data_stream": {
+                        "namespace": "so",
+                        "type": "logs",
+                        "dataset": "zeek"
+                    },
+                    "@version": "1",
+                    "client": {
+                        "port": "17338",
+                        "ip": "10.99.99.1"
+                    },
+                    "event": {
+                        "agent_id_status": "missing",
+                        "ingested": "2026-07-08T15:30:11Z",
+                        "module": "zeek",
+                        "category": "network",
+                        "dataset": "zeek.syslog"
+                    }
+                },
+                "sort": [
+                    1783524609094
+                ]
+            },
+            {
+                "_index": ".ds-logs-zeek-so-2026.07.08-000001",
+                "_id": "JehZQp8BSpiElYH71RSR",
+                "_score": null,
+                "_source": {
+                    "container": {
+                        "id": "syslog.log"
+                    },
+                    "server": {
+                        "port": "514",
+                        "ip": "192.168.15.70"
+                    },
+                    "metadata": {
+                        "pipeline": "zeek.syslog",
+                        "input": {
+                            "beats": {
+                                "host": {
+                                    "ip": "192.168.15.71"
+                                }
+                            }
+                        },
+                        "raw_index": "logs-zeek-so",
+                        "stream_id": "filestream-filestream.filestream-zeek-logs",
+                        "beat": "filebeat",
+                        "type": "_doc",
+                        "version": "9.3.3+build202604082258",
+                        "input_id": "filestream-filestream-zeek-logs"
+                    },
+                    "log": {
+                        "file": {
+                            "inode": "141980465",
+                            "path": "/nsm/zeek/logs/current/syslog.log",
+                            "device_id": "64514"
+                        },
+                        "offset": 949808644,
+                        "id": {
+                            "uid": "CIi3mP1T6BfQljOtV2"
+                        }
+                    },
+                    "elastic_agent": {
+                        "id": "b0661c56-a383-41c1-8dc1-c41efc52de1a",
+                        "version": "9.3.3+build202604082258",
+                        "snapshot": false
+                    },
+                    "destination": {
+                        "port": 514,
+                        "ip": "192.168.15.70"
+                    },
+                    "syslog": {
+                        "severity_label": "NOTICE",
+                        "facility_label": "LOCAL7"
+                    },
+                    "source": {
+                        "port": 17338,
+                        "ip": "10.99.99.1"
+                    },
+                    "message": "date=2026-07-08 time=12:30:09 devname=\"FG-Technoma\" devid=\"FG120GTK24022543\" eventtime=1783524608266578957 tz=\"-0300\" logid=\"0000000013\" type=\"traffic\" subtype=\"forward\" level=\"notice\" vd=\"root\" srcip=192.168.15.166 srcport=65451 srcintf=\"VLAN-15\" srcintfrole=\"lan\" dstip=192.168.169.48 dstport=7680 dstintf=\"WiFi_Corp\" dstintfrole=\"lan\" srccountry=\"Reserved\" dstcountry=\"Reserved\" sessionid=1081305994 proto=6 action=\"deny\" policyid=0 policytype=\"policy\" dstuser=\"LAURADELVALLE\" service=\"tcp/7680\" trandisp=\"noop\" appcat=\"unscanned\" duration=0 sentbyte=0 rcvdbyte=0 sentpkt=0 rcvdpkt=0 crscore=30 craction=131072 crlevel=\"high\" mastersrcmac=\"50:6b:8d:fa:53:fb\" srcmac=\"50:6b:8d:fa:53:fb\" srcserver=0",
+                    "tags": [
+                        "elastic-agent",
+                        "input-soc-onion",
+                        "beats_input_codec_plain_applied",
+                        "syslog"
+                    ],
+                    "network": {
+                        "protocol": "udp"
+                    },
+                    "pipeline": "syslog",
+                    "input": {
+                        "type": "filestream"
+                    },
+                    "observer": {
+                        "name": "securityonion"
+                    },
+                    "@timestamp": "2026-07-08T15:30:09.093Z",
+                    "ecs": {
+                        "version": "8.0.0"
+                    },
+                    "data_stream": {
+                        "namespace": "so",
+                        "type": "logs",
+                        "dataset": "zeek"
+                    },
+                    "@version": "1",
+                    "client": {
+                        "port": "17338",
+                        "ip": "10.99.99.1"
+                    },
+                    "event": {
+                        "agent_id_status": "missing",
+                        "ingested": "2026-07-08T15:30:11Z",
+                        "module": "zeek",
+                        "category": "network",
+                        "dataset": "zeek.syslog"
+                    }
+                },
+                "sort": [
+                    1783524609093
+                ]
+            },
+            {
+                "_index": ".ds-logs-zeek-so-2026.07.08-000001",
+                "_id": "5ehZQp8BSpiElYH71RB4",
+                "_score": null,
+                "_source": {
+                    "container": {
+                        "id": "syslog.log"
+                    },
+                    "server": {
+                        "port": "514",
+                        "ip": "192.168.15.70"
+                    },
+                    "metadata": {
+                        "pipeline": "zeek.syslog",
+                        "input": {
+                            "beats": {
+                                "host": {
+                                    "ip": "192.168.15.71"
+                                }
+                            }
+                        },
+                        "raw_index": "logs-zeek-so",
+                        "stream_id": "filestream-filestream.filestream-zeek-logs",
+                        "beat": "filebeat",
+                        "type": "_doc",
+                        "version": "9.3.3+build202604082258",
+                        "input_id": "filestream-filestream-zeek-logs"
+                    },
+                    "log": {
+                        "file": {
+                            "inode": "141980465",
+                            "path": "/nsm/zeek/logs/current/syslog.log",
+                            "device_id": "64514"
+                        },
+                        "offset": 949387052,
+                        "id": {
+                            "uid": "CIi3mP1T6BfQljOtV2"
+                        }
+                    },
+                    "elastic_agent": {
+                        "id": "b0661c56-a383-41c1-8dc1-c41efc52de1a",
+                        "version": "9.3.3+build202604082258",
+                        "snapshot": false
+                    },
+                    "destination": {
+                        "port": 514,
+                        "ip": "192.168.15.70"
+                    },
+                    "syslog": {
+                        "severity_label": "NOTICE",
+                        "facility_label": "LOCAL7"
+                    },
+                    "source": {
+                        "port": 17338,
+                        "ip": "10.99.99.1"
+                    },
+                    "message": "date=2026-07-08 time=12:30:07 devname=\"FG-Technoma\" devid=\"FG120GTK24022543\" eventtime=1783524607587878025 tz=\"-0300\" logid=\"0000000013\" type=\"traffic\" subtype=\"forward\" level=\"notice\" vd=\"root\" srcip=192.168.169.48 srcname=\"NB-LDELVALLE    \" srcport=57014 srcintf=\"WiFi_Corp\" srcintfrole=\"lan\" dstip=10.11.1.1 dstport=53 dstintf=\"Citrix Servers\" dstintfrole=\"lan\" srccountry=\"Reserved\" dstcountry=\"Reserved\" sessionid=1081097899 proto=17 action=\"accept\" policyid=74 policytype=\"policy\" poluuid=\"46302716-ca3f-51f0-fc50-d60ccb4cf9ca\" policyname=\"TO_AD-DNS\" user=\"LAURADELVALLE\" authserver=\"AD1\" service=\"Windows AD\" trandisp=\"noop\" appcat=\"unscanned\" duration=180 sentbyte=61 rcvdbyte=77 sentpkt=1 rcvdpkt=1 osname=\"Windows\" srcswversion=\"10/11\" unauthuser=\"lauradelvalle\" unauthusersource=\"kerberos\" mastersrcmac=\"10:5f:ad:8b:b0:87\" srcmac=\"10:5f:ad:8b:b0:87\" srcserver=0 dsthwvendor=\"VMware\" masterdstmac=\"00:50:56:af:ff:5a\" dstmac=\"00:50:56:af:ff:5a\" dstserver=0",
+                    "tags": [
+                        "elastic-agent",
+                        "input-soc-onion",
+                        "beats_input_codec_plain_applied",
+                        "syslog"
+                    ],
+                    "network": {
+                        "protocol": "udp"
+                    },
+                    "pipeline": "syslog",
+                    "input": {
+                        "type": "filestream"
+                    },
+                    "observer": {
+                        "name": "securityonion"
+                    },
+                    "@timestamp": "2026-07-08T15:30:08.093Z",
+                    "ecs": {
+                        "version": "8.0.0"
+                    },
+                    "data_stream": {
+                        "namespace": "so",
+                        "type": "logs",
+                        "dataset": "zeek"
+                    },
+                    "@version": "1",
+                    "client": {
+                        "port": "17338",
+                        "ip": "10.99.99.1"
+                    },
+                    "event": {
+                        "agent_id_status": "missing",
+                        "ingested": "2026-07-08T15:30:11Z",
+                        "module": "zeek",
+                        "category": "network",
+                        "dataset": "zeek.syslog"
+                    }
+                },
+                "sort": [
+                    1783524608093
+                ]
+            },
+            {
+                "_index": ".ds-logs-zeek-so-2026.07.08-000001",
+                "_id": "2ehZQp8BSpiElYH71RB4",
+                "_score": null,
+                "_source": {
+                    "container": {
+                        "id": "syslog.log"
+                    },
+                    "server": {
+                        "port": "514",
+                        "ip": "192.168.15.70"
+                    },
+                    "metadata": {
+                        "pipeline": "zeek.syslog",
+                        "input": {
+                            "beats": {
+                                "host": {
+                                    "ip": "192.168.15.71"
+                                }
+                            }
+                        },
+                        "raw_index": "logs-zeek-so",
+                        "stream_id": "filestream-filestream.filestream-zeek-logs",
+                        "beat": "filebeat",
+                        "type": "_doc",
+                        "version": "9.3.3+build202604082258",
+                        "input_id": "filestream-filestream-zeek-logs"
+                    },
+                    "log": {
+                        "file": {
+                            "inode": "141980465",
+                            "path": "/nsm/zeek/logs/current/syslog.log",
+                            "device_id": "64514"
+                        },
+                        "offset": 949296091,
+                        "id": {
+                            "uid": "CIi3mP1T6BfQljOtV2"
+                        }
+                    },
+                    "elastic_agent": {
+                        "id": "b0661c56-a383-41c1-8dc1-c41efc52de1a",
+                        "version": "9.3.3+build202604082258",
+                        "snapshot": false
+                    },
+                    "destination": {
+                        "port": 514,
+                        "ip": "192.168.15.70"
+                    },
+                    "syslog": {
+                        "severity_label": "NOTICE",
+                        "facility_label": "LOCAL7"
+                    },
+                    "source": {
+                        "port": 17338,
+                        "ip": "10.99.99.1"
+                    },
+                    "message": "date=2026-07-08 time=12:30:07 devname=\"FG-Technoma\" devid=\"FG120GTK24022543\" eventtime=1783524607623894726 tz=\"-0300\" logid=\"0000000013\" type=\"traffic\" subtype=\"forward\" level=\"notice\" vd=\"root\" srcip=192.168.169.48 srcname=\"NB-LDELVALLE    \" srcport=62723 srcintf=\"WiFi_Corp\" srcintfrole=\"lan\" dstip=10.11.1.1 dstport=53 dstintf=\"Citrix Servers\" dstintfrole=\"lan\" srccountry=\"Reserved\" dstcountry=\"Reserved\" sessionid=1081097898 proto=17 action=\"accept\" policyid=74 policytype=\"policy\" poluuid=\"46302716-ca3f-51f0-fc50-d60ccb4cf9ca\" policyname=\"TO_AD-DNS\" user=\"LAURADELVALLE\" authserver=\"AD1\" service=\"Windows AD\" trandisp=\"noop\" appcat=\"unscanned\" duration=180 sentbyte=61 rcvdbyte=118 sentpkt=1 rcvdpkt=1 osname=\"Windows\" srcswversion=\"10/11\" unauthuser=\"lauradelvalle\" unauthusersource=\"kerberos\" mastersrcmac=\"10:5f:ad:8b:b0:87\" srcmac=\"10:5f:ad:8b:b0:87\" srcserver=0 dsthwvendor=\"VMware\" masterdstmac=\"00:50:56:af:ff:5a\" dstmac=\"00:50:56:af:ff:5a\" dstserver=0",
+                    "tags": [
+                        "elastic-agent",
+                        "input-soc-onion",
+                        "beats_input_codec_plain_applied",
+                        "syslog"
+                    ],
+                    "network": {
+                        "protocol": "udp"
+                    },
+                    "pipeline": "syslog",
+                    "input": {
+                        "type": "filestream"
+                    },
+                    "observer": {
+                        "name": "securityonion"
+                    },
+                    "@timestamp": "2026-07-08T15:30:07.651Z",
+                    "ecs": {
+                        "version": "8.0.0"
+                    },
+                    "data_stream": {
+                        "namespace": "so",
+                        "type": "logs",
+                        "dataset": "zeek"
+                    },
+                    "@version": "1",
+                    "client": {
+                        "port": "17338",
+                        "ip": "10.99.99.1"
+                    },
+                    "event": {
+                        "agent_id_status": "missing",
+                        "ingested": "2026-07-08T15:30:11Z",
+                        "module": "zeek",
+                        "category": "network",
+                        "dataset": "zeek.syslog"
+                    }
+                },
+                "sort": [
+                    1783524607651
+                ]
+            },
+            {
+                "_index": ".ds-logs-zeek-so-2026.07.08-000001",
+                "_id": "r-hZQp8BSpiElYH7zAmz",
+                "_score": null,
+                "_source": {
+                    "container": {
+                        "id": "syslog.log"
+                    },
+                    "server": {
+                        "port": "514",
+                        "ip": "192.168.15.70"
+                    },
+                    "metadata": {
+                        "pipeline": "zeek.syslog",
+                        "input": {
+                            "beats": {
+                                "host": {
+                                    "ip": "192.168.15.71"
+                                }
+                            }
+                        },
+                        "raw_index": "logs-zeek-so",
+                        "stream_id": "filestream-filestream.filestream-zeek-logs",
+                        "beat": "filebeat",
+                        "type": "_doc",
+                        "version": "9.3.3+build202604082258",
+                        "input_id": "filestream-filestream-zeek-logs"
+                    },
+                    "log": {
+                        "file": {
+                            "inode": "141980465",
+                            "path": "/nsm/zeek/logs/current/syslog.log",
+                            "device_id": "64514"
+                        },
+                        "offset": 947646496,
+                        "id": {
+                            "uid": "CIi3mP1T6BfQljOtV2"
+                        }
+                    },
+                    "elastic_agent": {
+                        "id": "b0661c56-a383-41c1-8dc1-c41efc52de1a",
+                        "version": "9.3.3+build202604082258",
+                        "snapshot": false
+                    },
+                    "destination": {
+                        "port": 514,
+                        "ip": "192.168.15.70"
+                    },
+                    "syslog": {
+                        "severity_label": "NOTICE",
+                        "facility_label": "LOCAL7"
+                    },
+                    "source": {
+                        "port": 17338,
+                        "ip": "10.99.99.1"
+                    },
+                    "message": "date=2026-07-08 time=12:30:05 devname=\"FG-Technoma\" devid=\"FG120GTK24022543\" eventtime=1783524604747886708 tz=\"-0300\" logid=\"0000000013\" type=\"traffic\" subtype=\"forward\" level=\"notice\" vd=\"root\" srcip=192.168.169.48 srcname=\"NB-LDELVALLE    \" srcport=64808 srcintf=\"WiFi_Corp\" srcintfrole=\"lan\" dstip=142.251.128.106 dstport=443 dstintf=\"port2\" dstintfrole=\"wan\" srccountry=\"Reserved\" dstinetsvc=\"Google-Web\" dstcountry=\"United States\" dstregion=\"Undefined\" dstcity=\"Undefined\" dstreputation=5 sessionid=1081066944 proto=17 action=\"accept\" policyid=91 policytype=\"policy\" poluuid=\"460219e8-ca3f-51f0-e8ee-8c9a765155ab\" policyname=\"INTERNET_Technoma\" user=\"LAURADELVALLE\" group=\"TECHNOMA/USUARIOS\" authserver=\"AD1\" service=\"Google-Web\" trandisp=\"snat\" transip=190.104.178.146 transport=64808 appid=42533 app=\"Google.Services\" appcat=\"General.Interest\" apprisk=\"elevated\" applist=\"APP-Technoma\" duration=204 sentbyte=19289 rcvdbyte=29708 sentpkt=26 rcvdpkt=44 vwlid=1 vwlquality=\"Seq_num(1 port2 Internet), alive, sla(0x1), gid(2), num of pass(1), selected\" vwlname=\"Internet_Usuarios\" sslaction=\"exempt-allowlist\" utmaction=\"allow\" countapp=1 countssl=1 osname=\"Windows\" srcswversion=\"10/11\" unauthuser=\"lauradelvalle\" unauthusersource=\"kerberos\" mastersrcmac=\"10:5f:ad:8b:b0:87\" srcmac=\"10:5f:ad:8b:b0:87\" srcserver=0",
+                    "tags": [
+                        "elastic-agent",
+                        "input-soc-onion",
+                        "beats_input_codec_plain_applied",
+                        "syslog"
+                    ],
+                    "network": {
+                        "protocol": "udp"
+                    },
+                    "pipeline": "syslog",
+                    "input": {
+                        "type": "filestream"
+                    },
+                    "observer": {
+                        "name": "securityonion"
+                    },
+                    "@timestamp": "2026-07-08T15:30:05.092Z",
+                    "ecs": {
+                        "version": "8.0.0"
+                    },
+                    "data_stream": {
+                        "namespace": "so",
+                        "type": "logs",
+                        "dataset": "zeek"
+                    },
+                    "@version": "1",
+                    "client": {
+                        "port": "17338",
+                        "ip": "10.99.99.1"
+                    },
+                    "event": {
+                        "agent_id_status": "missing",
+                        "ingested": "2026-07-08T15:30:09Z",
+                        "module": "zeek",
+                        "category": "network",
+                        "dataset": "zeek.syslog"
+                    }
+                },
+                "sort": [
+                    1783524605092
+                ]
+            },
+            {
+                "_index": ".ds-logs-zeek-so-2026.07.08-000001",
+                "_id": "1OhZQp8BSpiElYH7zAzE",
+                "_score": null,
+                "_source": {
+                    "container": {
+                        "id": "syslog.log"
+                    },
+                    "server": {
+                        "port": "514",
+                        "ip": "192.168.15.70"
+                    },
+                    "metadata": {
+                        "pipeline": "zeek.syslog",
+                        "input": {
+                            "beats": {
+                                "host": {
+                                    "ip": "192.168.15.71"
+                                }
+                            }
+                        },
+                        "raw_index": "logs-zeek-so",
+                        "stream_id": "filestream-filestream.filestream-zeek-logs",
+                        "beat": "filebeat",
+                        "type": "_doc",
+                        "version": "9.3.3+build202604082258",
+                        "input_id": "filestream-filestream-zeek-logs"
+                    },
+                    "log": {
+                        "file": {
+                            "inode": "141980465",
+                            "path": "/nsm/zeek/logs/current/syslog.log",
+                            "device_id": "64514"
+                        },
+                        "offset": 947142310,
+                        "id": {
+                            "uid": "CIi3mP1T6BfQljOtV2"
+                        }
+                    },
+                    "elastic_agent": {
+                        "id": "b0661c56-a383-41c1-8dc1-c41efc52de1a",
+                        "version": "9.3.3+build202604082258",
+                        "snapshot": false
+                    },
+                    "destination": {
+                        "port": 514,
+                        "ip": "192.168.15.70"
+                    },
+                    "syslog": {
+                        "severity_label": "NOTICE",
+                        "facility_label": "LOCAL7"
+                    },
+                    "source": {
+                        "port": 17338,
+                        "ip": "10.99.99.1"
+                    },
+                    "message": "date=2026-07-08 time=12:30:04 devname=\"FG-Technoma\" devid=\"FG120GTK24022543\" eventtime=1783524603371876804 tz=\"-0300\" logid=\"0000000013\" type=\"traffic\" subtype=\"forward\" level=\"notice\" vd=\"root\" srcip=192.168.169.48 srcname=\"NB-LDELVALLE    \" srcport=59328 srcintf=\"WiFi_Corp\" srcintfrole=\"lan\" dstip=10.11.1.1 dstport=53 dstintf=\"Citrix Servers\" dstintfrole=\"lan\" srccountry=\"Reserved\" dstcountry=\"Reserved\" sessionid=1081093051 proto=17 action=\"accept\" policyid=74 policytype=\"policy\" poluuid=\"46302716-ca3f-51f0-fc50-d60ccb4cf9ca\" policyname=\"TO_AD-DNS\" user=\"LAURADELVALLE\" authserver=\"AD1\" service=\"Windows AD\" trandisp=\"noop\" appcat=\"unscanned\" duration=180 sentbyte=108 rcvdbyte=206 sentpkt=1 rcvdpkt=1 osname=\"Windows\" srcswversion=\"10/11\" unauthuser=\"lauradelvalle\" unauthusersource=\"kerberos\" mastersrcmac=\"10:5f:ad:8b:b0:87\" srcmac=\"10:5f:ad:8b:b0:87\" srcserver=0 dsthwvendor=\"VMware\" dstosname=\"Windows\" dstswversion=\"10/11\" masterdstmac=\"00:50:56:af:ff:5a\" dstmac=\"00:50:56:af:ff:5a\" dstserver=0",
+                    "tags": [
+                        "elastic-agent",
+                        "input-soc-onion",
+                        "beats_input_codec_plain_applied",
+                        "syslog"
+                    ],
+                    "network": {
+                        "protocol": "udp"
+                    },
+                    "pipeline": "syslog",
+                    "input": {
+                        "type": "filestream"
+                    },
+                    "observer": {
+                        "name": "securityonion"
+                    },
+                    "@timestamp": "2026-07-08T15:30:04.347Z",
+                    "ecs": {
+                        "version": "8.0.0"
+                    },
+                    "data_stream": {
+                        "namespace": "so",
+                        "type": "logs",
+                        "dataset": "zeek"
+                    },
+                    "@version": "1",
+                    "client": {
+                        "port": "17338",
+                        "ip": "10.99.99.1"
+                    },
+                    "event": {
+                        "agent_id_status": "missing",
+                        "ingested": "2026-07-08T15:30:09Z",
+                        "module": "zeek",
+                        "category": "network",
+                        "dataset": "zeek.syslog"
+                    }
+                },
+                "sort": [
+                    1783524604347
+                ]
+            },
+            {
+                "_index": ".ds-logs-zeek-so-2026.07.08-000001",
+                "_id": "nuhZQp8BSpiElYH7zAq-",
+                "_score": null,
+                "_source": {
+                    "container": {
+                        "id": "syslog.log"
+                    },
+                    "server": {
+                        "port": "514",
+                        "ip": "192.168.15.70"
+                    },
+                    "metadata": {
+                        "pipeline": "zeek.syslog",
+                        "input": {
+                            "beats": {
+                                "host": {
+                                    "ip": "192.168.15.71"
+                                }
+                            }
+                        },
+                        "raw_index": "logs-zeek-so",
+                        "stream_id": "filestream-filestream.filestream-zeek-logs",
+                        "beat": "filebeat",
+                        "type": "_doc",
+                        "version": "9.3.3+build202604082258",
+                        "input_id": "filestream-filestream-zeek-logs"
+                    },
+                    "log": {
+                        "file": {
+                            "inode": "141980465",
+                            "path": "/nsm/zeek/logs/current/syslog.log",
+                            "device_id": "64514"
+                        },
+                        "offset": 947054219,
+                        "id": {
+                            "uid": "CIi3mP1T6BfQljOtV2"
+                        }
+                    },
+                    "elastic_agent": {
+                        "id": "b0661c56-a383-41c1-8dc1-c41efc52de1a",
+                        "version": "9.3.3+build202604082258",
+                        "snapshot": false
+                    },
+                    "destination": {
+                        "port": 514,
+                        "ip": "192.168.15.70"
+                    },
+                    "syslog": {
+                        "severity_label": "NOTICE",
+                        "facility_label": "LOCAL7"
+                    },
+                    "source": {
+                        "port": 17338,
+                        "ip": "10.99.99.1"
+                    },
+                    "message": "date=2026-07-08 time=12:30:03 devname=\"FG-Technoma\" devid=\"FG120GTK24022543\" eventtime=1783524603371878769 tz=\"-0300\" logid=\"0000000013\" type=\"traffic\" subtype=\"forward\" level=\"notice\" vd=\"root\" srcip=192.168.169.48 srcname=\"NB-LDELVALLE    \" srcport=50566 srcintf=\"WiFi_Corp\" srcintfrole=\"lan\" dstip=10.11.1.1 dstport=53 dstintf=\"Citrix Servers\" dstintfrole=\"lan\" srccountry=\"Reserved\" dstcountry=\"Reserved\" sessionid=1081093050 proto=17 action=\"accept\" policyid=74 policytype=\"policy\" poluuid=\"46302716-ca3f-51f0-fc50-d60ccb4cf9ca\" policyname=\"TO_AD-DNS\" user=\"LAURADELVALLE\" authserver=\"AD1\" service=\"Windows AD\" trandisp=\"noop\" appcat=\"unscanned\" duration=180 sentbyte=108 rcvdbyte=190 sentpkt=1 rcvdpkt=1 osname=\"Windows\" srcswversion=\"10/11\" unauthuser=\"lauradelvalle\" unauthusersource=\"kerberos\" mastersrcmac=\"10:5f:ad:8b:b0:87\" srcmac=\"10:5f:ad:8b:b0:87\" srcserver=0 dsthwvendor=\"VMware\" masterdstmac=\"00:50:56:af:ff:5a\" dstmac=\"00:50:56:af:ff:5a\" dstserver=0",
+                    "tags": [
+                        "elastic-agent",
+                        "input-soc-onion",
+                        "beats_input_codec_plain_applied",
+                        "syslog"
+                    ],
+                    "network": {
+                        "protocol": "udp"
+                    },
+                    "pipeline": "syslog",
+                    "input": {
+                        "type": "filestream"
+                    },
+                    "observer": {
+                        "name": "securityonion"
+                    },
+                    "@timestamp": "2026-07-08T15:30:04.093Z",
+                    "ecs": {
+                        "version": "8.0.0"
+                    },
+                    "data_stream": {
+                        "namespace": "so",
+                        "type": "logs",
+                        "dataset": "zeek"
+                    },
+                    "@version": "1",
+                    "client": {
+                        "port": "17338",
+                        "ip": "10.99.99.1"
+                    },
+                    "event": {
+                        "agent_id_status": "missing",
+                        "ingested": "2026-07-08T15:30:09Z",
+                        "module": "zeek",
+                        "category": "network",
+                        "dataset": "zeek.syslog"
+                    }
+                },
+                "sort": [
+                    1783524604093
+                ]
+            },
+            {
+                "_index": ".ds-logs-zeek-so-2026.07.08-000001",
+                "_id": "u-hZQp8BSpiElYH7xAfF",
+                "_score": null,
+                "_source": {
+                    "container": {
+                        "id": "syslog.log"
+                    },
+                    "server": {
+                        "port": "514",
+                        "ip": "192.168.15.70"
+                    },
+                    "metadata": {
+                        "pipeline": "zeek.syslog",
+                        "input": {
+                            "beats": {
+                                "host": {
+                                    "ip": "192.168.15.71"
+                                }
+                            }
+                        },
+                        "raw_index": "logs-zeek-so",
+                        "stream_id": "filestream-filestream.filestream-zeek-logs",
+                        "beat": "filebeat",
+                        "type": "_doc",
+                        "version": "9.3.3+build202604082258",
+                        "input_id": "filestream-filestream-zeek-logs"
+                    },
+                    "log": {
+                        "file": {
+                            "inode": "141980465",
+                            "path": "/nsm/zeek/logs/current/syslog.log",
+                            "device_id": "64514"
+                        },
+                        "offset": 945980960,
+                        "id": {
+                            "uid": "CIi3mP1T6BfQljOtV2"
+                        }
+                    },
+                    "elastic_agent": {
+                        "id": "b0661c56-a383-41c1-8dc1-c41efc52de1a",
+                        "version": "9.3.3+build202604082258",
+                        "snapshot": false
+                    },
+                    "destination": {
+                        "port": 514,
+                        "ip": "192.168.15.70"
+                    },
+                    "syslog": {
+                        "severity_label": "NOTICE",
+                        "facility_label": "LOCAL7"
+                    },
+                    "source": {
+                        "port": 17338,
+                        "ip": "10.99.99.1"
+                    },
+                    "message": "date=2026-07-08 time=12:30:01 devname=\"FG-Technoma\" devid=\"FG120GTK24022543\" eventtime=1783524600257088656 tz=\"-0300\" logid=\"0000000013\" type=\"traffic\" subtype=\"forward\" level=\"notice\" vd=\"root\" srcip=192.168.15.166 srcport=65451 srcintf=\"VLAN-15\" srcintfrole=\"lan\" dstip=192.168.169.48 dstport=7680 dstintf=\"WiFi_Corp\" dstintfrole=\"lan\" srccountry=\"Reserved\" dstcountry=\"Reserved\" sessionid=1081296992 proto=6 action=\"deny\" policyid=0 policytype=\"policy\" dstuser=\"LAURADELVALLE\" service=\"tcp/7680\" trandisp=\"noop\" appcat=\"unscanned\" duration=0 sentbyte=0 rcvdbyte=0 sentpkt=0 rcvdpkt=0 crscore=30 craction=131072 crlevel=\"high\" mastersrcmac=\"50:6b:8d:fa:53:fb\" srcmac=\"50:6b:8d:fa:53:fb\" srcserver=0",
+                    "tags": [
+                        "elastic-agent",
+                        "input-soc-onion",
+                        "beats_input_codec_plain_applied",
+                        "syslog"
+                    ],
+                    "network": {
+                        "protocol": "udp"
+                    },
+                    "pipeline": "syslog",
+                    "input": {
+                        "type": "filestream"
+                    },
+                    "observer": {
+                        "name": "securityonion"
+                    },
+                    "@timestamp": "2026-07-08T15:30:01.089Z",
+                    "ecs": {
+                        "version": "8.0.0"
+                    },
+                    "data_stream": {
+                        "namespace": "so",
+                        "type": "logs",
+                        "dataset": "zeek"
+                    },
+                    "@version": "1",
+                    "client": {
+                        "port": "17338",
+                        "ip": "10.99.99.1"
+                    },
+                    "event": {
+                        "agent_id_status": "missing",
+                        "ingested": "2026-07-08T15:30:07Z",
+                        "module": "zeek",
+                        "category": "network",
+                        "dataset": "zeek.syslog"
+                    }
+                },
+                "sort": [
+                    1783524601089
+                ]
+            },
+            {
+                "_index": ".ds-logs-zeek-so-2026.07.08-000001",
+                "_id": "XehZQp8BSpiElYH7tADU",
+                "_score": null,
+                "_source": {
+                    "container": {
+                        "id": "syslog.log"
+                    },
+                    "server": {
+                        "port": "514",
+                        "ip": "192.168.15.70"
+                    },
+                    "metadata": {
+                        "pipeline": "zeek.syslog",
+                        "input": {
+                            "beats": {
+                                "host": {
+                                    "ip": "192.168.15.71"
+                                }
+                            }
+                        },
+                        "raw_index": "logs-zeek-so",
+                        "stream_id": "filestream-filestream.filestream-zeek-logs",
+                        "beat": "filebeat",
+                        "type": "_doc",
+                        "version": "9.3.3+build202604082258",
+                        "input_id": "filestream-filestream-zeek-logs"
+                    },
+                    "log": {
+                        "file": {
+                            "inode": "141980465",
+                            "path": "/nsm/zeek/logs/current/syslog.log",
+                            "device_id": "64514"
+                        },
+                        "offset": 944876111,
+                        "id": {
+                            "uid": "CIi3mP1T6BfQljOtV2"
+                        }
+                    },
+                    "elastic_agent": {
+                        "id": "b0661c56-a383-41c1-8dc1-c41efc52de1a",
+                        "version": "9.3.3+build202604082258",
+                        "snapshot": false
+                    },
+                    "destination": {
+                        "port": 514,
+                        "ip": "192.168.15.70"
+                    },
+                    "syslog": {
+                        "severity_label": "NOTICE",
+                        "facility_label": "LOCAL7"
+                    },
+                    "source": {
+                        "port": 17338,
+                        "ip": "10.99.99.1"
+                    },
+                    "message": "date=2026-07-08 time=12:29:58 devname=\"FG-Technoma\" devid=\"FG120GTK24022543\" eventtime=1783524597843880296 tz=\"-0300\" logid=\"0000000013\" type=\"traffic\" subtype=\"forward\" level=\"notice\" vd=\"root\" srcip=192.168.169.48 srcname=\"NB-LDELVALLE    \" srcport=56766 srcintf=\"WiFi_Corp\" srcintfrole=\"lan\" dstip=142.251.129.35 dstport=443 dstintf=\"port2\" dstintfrole=\"wan\" srccountry=\"Reserved\" dstinetsvc=\"Google-Web\" dstcountry=\"United States\" dstregion=\"Undefined\" dstcity=\"Undefined\" dstreputation=5 sessionid=1081062432 proto=17 action=\"accept\" policyid=91 policytype=\"policy\" poluuid=\"460219e8-ca3f-51f0-e8ee-8c9a765155ab\" policyname=\"INTERNET_Technoma\" user=\"LAURADELVALLE\" group=\"TECHNOMA/USUARIOS\" authserver=\"AD1\" service=\"Google-Web\" trandisp=\"snat\" transip=190.104.178.146 transport=56766 appid=42533 app=\"Google.Services\" appcat=\"General.Interest\" apprisk=\"elevated\" applist=\"APP-Technoma\" duration=201 sentbyte=13853 rcvdbyte=19720 sentpkt=18 rcvdpkt=29 vwlid=1 vwlquality=\"Seq_num(1 port2 Internet), alive, sla(0x1), gid(2), num of pass(1), selected\" vwlname=\"Internet_Usuarios\" sslaction=\"exempt-ftgd-cat\" utmaction=\"allow\" countweb=2 countapp=1 countssl=1 osname=\"Windows\" srcswversion=\"10/11\" unauthuser=\"lauradelvalle\" unauthusersource=\"kerberos\" mastersrcmac=\"10:5f:ad:8b:b0:87\" srcmac=\"10:5f:ad:8b:b0:87\" srcserver=0",
+                    "tags": [
+                        "elastic-agent",
+                        "input-soc-onion",
+                        "beats_input_codec_plain_applied",
+                        "syslog"
+                    ],
+                    "network": {
+                        "protocol": "udp"
+                    },
+                    "pipeline": "syslog",
+                    "input": {
+                        "type": "filestream"
+                    },
+                    "observer": {
+                        "name": "securityonion"
+                    },
+                    "@timestamp": "2026-07-08T15:29:58.649Z",
+                    "ecs": {
+                        "version": "8.0.0"
+                    },
+                    "data_stream": {
+                        "namespace": "so",
+                        "type": "logs",
+                        "dataset": "zeek"
+                    },
+                    "@version": "1",
+                    "client": {
+                        "port": "17338",
+                        "ip": "10.99.99.1"
+                    },
+                    "event": {
+                        "agent_id_status": "missing",
+                        "ingested": "2026-07-08T15:30:03Z",
+                        "module": "zeek",
+                        "category": "network",
+                        "dataset": "zeek.syslog"
+                    }
+                },
+                "sort": [
+                    1783524598649
+                ]
+            },
+            {
+                "_index": ".ds-logs-zeek-so-2026.07.08-000001",
+                "_id": "audZQp8BSpiElYH7o_Yj",
+                "_score": null,
+                "_source": {
+                    "container": {
+                        "id": "syslog.log"
+                    },
+                    "server": {
+                        "port": "514",
+                        "ip": "192.168.15.70"
+                    },
+                    "metadata": {
+                        "pipeline": "zeek.syslog",
+                        "input": {
+                            "beats": {
+                                "host": {
+                                    "ip": "192.168.15.71"
+                                }
+                            }
+                        },
+                        "raw_index": "logs-zeek-so",
+                        "stream_id": "filestream-filestream.filestream-zeek-logs",
+                        "beat": "filebeat",
+                        "type": "_doc",
+                        "version": "9.3.3+build202604082258",
+                        "input_id": "filestream-filestream-zeek-logs"
+                    },
+                    "log": {
+                        "file": {
+                            "inode": "141980465",
+                            "path": "/nsm/zeek/logs/current/syslog.log",
+                            "device_id": "64514"
+                        },
+                        "offset": 943988959,
+                        "id": {
+                            "uid": "CIi3mP1T6BfQljOtV2"
+                        }
+                    },
+                    "elastic_agent": {
+                        "id": "b0661c56-a383-41c1-8dc1-c41efc52de1a",
+                        "version": "9.3.3+build202604082258",
+                        "snapshot": false
+                    },
+                    "destination": {
+                        "port": 514,
+                        "ip": "192.168.15.70"
+                    },
+                    "syslog": {
+                        "severity_label": "NOTICE",
+                        "facility_label": "LOCAL7"
+                    },
+                    "source": {
+                        "port": 17338,
+                        "ip": "10.99.99.1"
+                    },
+                    "message": "date=2026-07-08 time=12:29:56 devname=\"FG-Technoma\" devid=\"FG120GTK24022543\" eventtime=1783524596254972648 tz=\"-0300\" logid=\"0000000013\" type=\"traffic\" subtype=\"forward\" level=\"notice\" vd=\"root\" srcip=192.168.15.166 srcname=\"PREVENTAS-APP\" srcport=65451 srcintf=\"VLAN-15\" srcintfrole=\"lan\" dstip=192.168.169.48 dstport=7680 dstintf=\"WiFi_Corp\" dstintfrole=\"lan\" srccountry=\"Reserved\" dstcountry=\"Reserved\" sessionid=1081292581 proto=6 action=\"deny\" policyid=0 policytype=\"policy\" dstuser=\"LAURADELVALLE\" service=\"tcp/7680\" trandisp=\"noop\" appcat=\"unscanned\" duration=0 sentbyte=0 rcvdbyte=0 sentpkt=0 rcvdpkt=0 crscore=30 craction=131072 crlevel=\"high\" osname=\"Windows\" srcswversion=\"10/11\" mastersrcmac=\"50:6b:8d:fa:53:fb\" srcmac=\"50:6b:8d:fa:53:fb\" srcserver=0",
+                    "tags": [
+                        "elastic-agent",
+                        "input-soc-onion",
+                        "beats_input_codec_plain_applied",
+                        "syslog"
+                    ],
+                    "network": {
+                        "protocol": "udp"
+                    },
+                    "pipeline": "syslog",
+                    "input": {
+                        "type": "filestream"
+                    },
+                    "observer": {
+                        "name": "securityonion"
+                    },
+                    "@timestamp": "2026-07-08T15:29:56.356Z",
+                    "ecs": {
+                        "version": "8.0.0"
+                    },
+                    "data_stream": {
+                        "namespace": "so",
+                        "type": "logs",
+                        "dataset": "zeek"
+                    },
+                    "@version": "1",
+                    "client": {
+                        "port": "17338",
+                        "ip": "10.99.99.1"
+                    },
+                    "event": {
+                        "agent_id_status": "missing",
+                        "ingested": "2026-07-08T15:29:58Z",
+                        "module": "zeek",
+                        "category": "network",
+                        "dataset": "zeek.syslog"
+                    }
+                },
+                "sort": [
+                    1783524596356
+                ]
+            },
+            {
+                "_index": ".ds-logs-zeek-so-2026.07.08-000001",
+                "_id": "fOdZQp8BSpiElYH7o_Yn",
+                "_score": null,
+                "_source": {
+                    "container": {
+                        "id": "syslog.log"
+                    },
+                    "server": {
+                        "port": "514",
+                        "ip": "192.168.15.70"
+                    },
+                    "metadata": {
+                        "pipeline": "zeek.syslog",
+                        "input": {
+                            "beats": {
+                                "host": {
+                                    "ip": "192.168.15.71"
+                                }
+                            }
+                        },
+                        "raw_index": "logs-zeek-so",
+                        "stream_id": "filestream-filestream.filestream-zeek-logs",
+                        "beat": "filebeat",
+                        "type": "_doc",
+                        "version": "9.3.3+build202604082258",
+                        "input_id": "filestream-filestream-zeek-logs"
+                    },
+                    "log": {
+                        "file": {
+                            "inode": "141980465",
+                            "path": "/nsm/zeek/logs/current/syslog.log",
+                            "device_id": "64514"
+                        },
+                        "offset": 943278781,
+                        "id": {
+                            "uid": "CIi3mP1T6BfQljOtV2"
+                        }
+                    },
+                    "elastic_agent": {
+                        "id": "b0661c56-a383-41c1-8dc1-c41efc52de1a",
+                        "version": "9.3.3+build202604082258",
+                        "snapshot": false
+                    },
+                    "destination": {
+                        "port": 514,
+                        "ip": "192.168.15.70"
+                    },
+                    "syslog": {
+                        "severity_label": "NOTICE",
+                        "facility_label": "LOCAL7"
+                    },
+                    "source": {
+                        "port": 17338,
+                        "ip": "10.99.99.1"
+                    },
+                    "message": "date=2026-07-08 time=12:29:55 devname=\"FG-Technoma\" devid=\"FG120GTK24022543\" eventtime=1783524594254847657 tz=\"-0300\" logid=\"0000000013\" type=\"traffic\" subtype=\"forward\" level=\"notice\" vd=\"root\" srcip=192.168.15.166 srcport=65451 srcintf=\"VLAN-15\" srcintfrole=\"lan\" dstip=192.168.169.48 dstport=7680 dstintf=\"WiFi_Corp\" dstintfrole=\"lan\" srccountry=\"Reserved\" dstcountry=\"Reserved\" sessionid=1081290438 proto=6 action=\"deny\" policyid=0 policytype=\"policy\" dstuser=\"LAURADELVALLE\" service=\"tcp/7680\" trandisp=\"noop\" appcat=\"unscanned\" duration=0 sentbyte=0 rcvdbyte=0 sentpkt=0 rcvdpkt=0 crscore=30 craction=131072 crlevel=\"high\" mastersrcmac=\"50:6b:8d:fa:53:fb\" srcmac=\"50:6b:8d:fa:53:fb\" srcserver=0",
+                    "tags": [
+                        "elastic-agent",
+                        "input-soc-onion",
+                        "beats_input_codec_plain_applied",
+                        "syslog"
+                    ],
+                    "network": {
+                        "protocol": "udp"
+                    },
+                    "pipeline": "syslog",
+                    "input": {
+                        "type": "filestream"
+                    },
+                    "observer": {
+                        "name": "securityonion"
+                    },
+                    "@timestamp": "2026-07-08T15:29:55.098Z",
+                    "ecs": {
+                        "version": "8.0.0"
+                    },
+                    "data_stream": {
+                        "namespace": "so",
+                        "type": "logs",
+                        "dataset": "zeek"
+                    },
+                    "@version": "1",
+                    "client": {
+                        "port": "17338",
+                        "ip": "10.99.99.1"
+                    },
+                    "event": {
+                        "agent_id_status": "missing",
+                        "ingested": "2026-07-08T15:29:58Z",
+                        "module": "zeek",
+                        "category": "network",
+                        "dataset": "zeek.syslog"
+                    }
+                },
+                "sort": [
+                    1783524595098
+                ]
+            },
+            {
+                "_index": ".ds-logs-zeek-so-2026.07.08-000001",
+                "_id": "tedZQp8BSpiElYH7mvMz",
+                "_score": null,
+                "_source": {
+                    "container": {
+                        "id": "syslog.log"
+                    },
+                    "server": {
+                        "port": "514",
+                        "ip": "192.168.15.70"
+                    },
+                    "metadata": {
+                        "pipeline": "zeek.syslog",
+                        "input": {
+                            "beats": {
+                                "host": {
+                                    "ip": "192.168.15.71"
+                                }
+                            }
+                        },
+                        "raw_index": "logs-zeek-so",
+                        "stream_id": "filestream-filestream.filestream-zeek-logs",
+                        "beat": "filebeat",
+                        "type": "_doc",
+                        "version": "9.3.3+build202604082258",
+                        "input_id": "filestream-filestream-zeek-logs"
+                    },
+                    "log": {
+                        "file": {
+                            "inode": "141980465",
+                            "path": "/nsm/zeek/logs/current/syslog.log",
+                            "device_id": "64514"
+                        },
+                        "offset": 942155530,
+                        "id": {
+                            "uid": "CIi3mP1T6BfQljOtV2"
+                        }
+                    },
+                    "elastic_agent": {
+                        "id": "b0661c56-a383-41c1-8dc1-c41efc52de1a",
+                        "version": "9.3.3+build202604082258",
+                        "snapshot": false
+                    },
+                    "destination": {
+                        "port": 514,
+                        "ip": "192.168.15.70"
+                    },
+                    "syslog": {
+                        "severity_label": "NOTICE",
+                        "facility_label": "LOCAL7"
+                    },
+                    "source": {
+                        "port": 17338,
+                        "ip": "10.99.99.1"
+                    },
+                    "message": "date=2026-07-08 time=12:29:53 devname=\"FG-Technoma\" devid=\"FG120GTK24022543\" eventtime=1783524593249267948 tz=\"-0300\" logid=\"0000000013\" type=\"traffic\" subtype=\"forward\" level=\"notice\" vd=\"root\" srcip=192.168.15.166 srcname=\"PREVENTAS-APP\" srcport=65451 srcintf=\"VLAN-15\" srcintfrole=\"lan\" dstip=192.168.169.48 dstport=7680 dstintf=\"WiFi_Corp\" dstintfrole=\"lan\" srccountry=\"Reserved\" dstcountry=\"Reserved\" sessionid=1081289180 proto=6 action=\"deny\" policyid=0 policytype=\"policy\" dstuser=\"LAURADELVALLE\" service=\"tcp/7680\" trandisp=\"noop\" appcat=\"unscanned\" duration=0 sentbyte=0 rcvdbyte=0 sentpkt=0 rcvdpkt=0 crscore=30 craction=131072 crlevel=\"high\" osname=\"Windows\" srcswversion=\"10/11\" mastersrcmac=\"50:6b:8d:fa:53:fb\" srcmac=\"50:6b:8d:fa:53:fb\" srcserver=0",
+                    "tags": [
+                        "elastic-agent",
+                        "input-soc-onion",
+                        "beats_input_codec_plain_applied",
+                        "syslog"
+                    ],
+                    "network": {
+                        "protocol": "udp"
+                    },
+                    "pipeline": "syslog",
+                    "input": {
+                        "type": "filestream"
+                    },
+                    "observer": {
+                        "name": "securityonion"
+                    },
+                    "@timestamp": "2026-07-08T15:29:53.349Z",
+                    "ecs": {
+                        "version": "8.0.0"
+                    },
+                    "data_stream": {
+                        "namespace": "so",
+                        "type": "logs",
+                        "dataset": "zeek"
+                    },
+                    "@version": "1",
+                    "client": {
+                        "port": "17338",
+                        "ip": "10.99.99.1"
+                    },
+                    "event": {
+                        "agent_id_status": "missing",
+                        "ingested": "2026-07-08T15:29:56Z",
+                        "module": "zeek",
+                        "category": "network",
+                        "dataset": "zeek.syslog"
+                    }
+                },
+                "sort": [
+                    1783524593349
+                ]
+            },
+            {
+                "_index": ".ds-logs-zeek-so-2026.07.08-000001",
+                "_id": "BudZQp8BSpiElYH7ke2x",
+                "_score": null,
+                "_source": {
+                    "container": {
+                        "id": "syslog.log"
+                    },
+                    "server": {
+                        "port": "514",
+                        "ip": "192.168.15.70"
+                    },
+                    "metadata": {
+                        "pipeline": "zeek.syslog",
+                        "input": {
+                            "beats": {
+                                "host": {
+                                    "ip": "192.168.15.71"
+                                }
+                            }
+                        },
+                        "raw_index": "logs-zeek-so",
+                        "stream_id": "filestream-filestream.filestream-zeek-logs",
+                        "beat": "filebeat",
+                        "type": "_doc",
+                        "version": "9.3.3+build202604082258",
+                        "input_id": "filestream-filestream-zeek-logs"
+                    },
+                    "log": {
+                        "file": {
+                            "inode": "141980465",
+                            "path": "/nsm/zeek/logs/current/syslog.log",
+                            "device_id": "64514"
+                        },
+                        "offset": 941073067,
+                        "id": {
+                            "uid": "CIi3mP1T6BfQljOtV2"
+                        }
+                    },
+                    "elastic_agent": {
+                        "id": "b0661c56-a383-41c1-8dc1-c41efc52de1a",
+                        "version": "9.3.3+build202604082258",
+                        "snapshot": false
+                    },
+                    "destination": {
+                        "port": 514,
+                        "ip": "192.168.15.70"
+                    },
+                    "syslog": {
+                        "severity_label": "NOTICE",
+                        "facility_label": "LOCAL7"
+                    },
+                    "source": {
+                        "port": 17338,
+                        "ip": "10.99.99.1"
+                    },
+                    "message": "date=2026-07-08 time=12:29:51 devname=\"FG-Technoma\" devid=\"FG120GTK24022543\" eventtime=1783524591221678717 tz=\"-0300\" logid=\"0000000020\" type=\"traffic\" subtype=\"forward\" level=\"notice\" vd=\"root\" srcip=192.168.169.48 srcname=\"NB-LDELVALLE    \" srcport=63942 srcintf=\"WiFi_Corp\" srcintfrole=\"lan\" dstip=10.11.1.1 dstport=53 dstintf=\"Citrix Servers\" dstintfrole=\"lan\" srccountry=\"Reserved\" dstcountry=\"Reserved\" sessionid=1081095223 proto=17 action=\"accept\" policyid=74 policytype=\"policy\" poluuid=\"46302716-ca3f-51f0-fc50-d60ccb4cf9ca\" policyname=\"TO_AD-DNS\" user=\"LAURADELVALLE\" authserver=\"AD1\" service=\"Windows AD\" trandisp=\"noop\" appcat=\"unscanned\" duration=165 sentbyte=65 rcvdbyte=129 sentpkt=1 rcvdpkt=1 sentdelta=65 rcvddelta=129 durationdelta=165 sentpktdelta=1 rcvdpktdelta=1 osname=\"Windows\" srcswversion=\"10/11\" unauthuser=\"lauradelvalle\" unauthusersource=\"kerberos\" mastersrcmac=\"10:5f:ad:8b:b0:87\" srcmac=\"10:5f:ad:8b:b0:87\" srcserver=0 dsthwvendor=\"VMware\" dstosname=\"Windows\" dstswversion=\"10/11\" masterdstmac=\"00:50:56:af:ff:5a\" dstmac=\"00:50:56:af:ff:5a\" dstserver=0",
+                    "tags": [
+                        "elastic-agent",
+                        "input-soc-onion",
+                        "beats_input_codec_plain_applied",
+                        "syslog"
+                    ],
+                    "network": {
+                        "protocol": "udp"
+                    },
+                    "pipeline": "syslog",
+                    "input": {
+                        "type": "filestream"
+                    },
+                    "observer": {
+                        "name": "securityonion"
+                    },
+                    "@timestamp": "2026-07-08T15:29:51.358Z",
+                    "ecs": {
+                        "version": "8.0.0"
+                    },
+                    "data_stream": {
+                        "namespace": "so",
+                        "type": "logs",
+                        "dataset": "zeek"
+                    },
+                    "@version": "1",
+                    "client": {
+                        "port": "17338",
+                        "ip": "10.99.99.1"
+                    },
+                    "event": {
+                        "agent_id_status": "missing",
+                        "ingested": "2026-07-08T15:29:54Z",
+                        "module": "zeek",
+                        "category": "network",
+                        "dataset": "zeek.syslog"
+                    }
+                },
+                "sort": [
+                    1783524591358
+                ]
+            },
+            {
+                "_index": ".ds-logs-zeek-so-2026.07.08-000001",
+                "_id": "-uhZQp8BSpiElYH7xAW-",
+                "_score": null,
+                "_source": {
+                    "container": {
+                        "id": "conn.log"
+                    },
+                    "server": {
+                        "port": "53",
+                        "bytes": 92,
+                        "ip": "10.11.1.1",
+                        "ip_bytes": 120,
+                        "packets": 1
+                    },
+                    "metadata": {
+                        "pipeline": "zeek.conn",
+                        "input": {
+                            "beats": {
+                                "host": {
+                                    "ip": "192.168.15.71"
+                                }
+                            }
+                        },
+                        "raw_index": "logs-zeek-so",
+                        "stream_id": "filestream-filestream.filestream-zeek-logs",
+                        "beat": "filebeat",
+                        "type": "_doc",
+                        "version": "9.3.3+build202604082258",
+                        "input_id": "filestream-filestream-zeek-logs"
+                    },
+                    "log": {
+                        "file": {
+                            "inode": "141980464",
+                            "path": "/nsm/zeek/logs/current/conn.log",
+                            "device_id": "64514"
+                        },
+                        "offset": 56203610,
+                        "id": {
+                            "uid": "CxT3Pg4e1PZlMZ58A8"
+                        }
+                    },
+                    "elastic_agent": {
+                        "id": "b0661c56-a383-41c1-8dc1-c41efc52de1a",
+                        "version": "9.3.3+build202604082258",
+                        "snapshot": false
+                    },
+                    "destination": {
+                        "port": 53,
+                        "ip": "10.11.1.1"
+                    },
+                    "source": {
+                        "port": 63942,
+                        "ip": "192.168.169.48"
+                    },
+                    "message": "{\"ts\":1783524591.228528,\"uid\":\"CxT3Pg4e1PZlMZ58A8\",\"id.orig_h\":\"192.168.169.48\",\"id.orig_p\":63942,\"id.resp_h\":\"10.11.1.1\",\"id.resp_p\":53,\"proto\":\"udp\",\"service\":\"dns\",\"duration\":0.0005478858947753906,\"orig_bytes\":33,\"resp_bytes\":92,\"conn_state\":\"SF\",\"local_orig\":true,\"local_resp\":true,\"missed_bytes\":0,\"history\":\"Dd\",\"orig_pkts\":1,\"orig_ip_bytes\":61,\"resp_pkts\":1,\"resp_ip_bytes\":120,\"ip_proto\":17,\"vlan\":1101,\"community_id\":\"1:2RojchoZuxkcqNPym5iRT3vt+pk=\",\"orig_mac_oui\":\"Fortinet, Inc.\"}",
+                    "tags": [
+                        "elastic-agent",
+                        "input-soc-onion",
+                        "beats_input_codec_plain_applied",
+                        "conn"
+                    ],
+                    "network": {
+                        "protocol": "dns",
+                        "community_id": "1:2RojchoZuxkcqNPym5iRT3vt+pk=",
+                        "vlan": {
+                            "id": 1101
+                        },
+                        "bytes": 125,
+                        "transport": "udp"
+                    },
+                    "pipeline": "conn",
+                    "input": {
+                        "type": "filestream"
+                    },
+                    "observer": {
+                        "name": "securityonion"
+                    },
+                    "@timestamp": "2026-07-08T15:29:51.228Z",
+                    "ecs": {
+                        "version": "8.0.0"
+                    },
+                    "data_stream": {
+                        "namespace": "so",
+                        "type": "logs",
+                        "dataset": "zeek"
+                    },
+                    "@version": "1",
+                    "client": {
+                        "oui": "Fortinet, Inc.",
+                        "port": "63942",
+                        "bytes": 33,
+                        "ip": "192.168.169.48",
+                        "ip_bytes": 61,
+                        "packets": 1
+                    },
+                    "connection": {
+                        "state_description": "Normal SYN/FIN completion",
+                        "bytes": {
+                            "missed": 0
+                        },
+                        "state": "SF",
+                        "history": "Dd",
+                        "local": {
+                            "responder": true,
+                            "originator": true
+                        }
+                    },
+                    "event": {
+                        "duration": 0.0005478858947753906,
+                        "agent_id_status": "missing",
+                        "ingested": "2026-07-08T15:30:07Z",
+                        "module": "zeek",
+                        "category": "network",
+                        "dataset": "zeek.conn"
+                    }
+                },
+                "sort": [
+                    1783524591228
+                ]
+            },
+            {
+                "_index": ".ds-logs-zeek-so-2026.07.08-000001",
+                "_id": "E-dZQp8BSpiElYH7mvU1",
+                "_score": null,
+                "_source": {
+                    "container": {
+                        "id": "dns.log"
+                    },
+                    "server": {
+                        "port": "53",
+                        "ip": "10.11.1.1"
+                    },
+                    "metadata": {
+                        "pipeline": "zeek.dns",
+                        "input": {
+                            "beats": {
+                                "host": {
+                                    "ip": "192.168.15.71"
+                                }
+                            }
+                        },
+                        "raw_index": "logs-zeek-so",
+                        "stream_id": "filestream-filestream.filestream-zeek-logs",
+                        "beat": "filebeat",
+                        "type": "_doc",
+                        "version": "9.3.3+build202604082258",
+                        "input_id": "filestream-filestream-zeek-logs"
+                    },
+                    "log": {
+                        "file": {
+                            "inode": "141980469",
+                            "path": "/nsm/zeek/logs/current/dns.log",
+                            "device_id": "64514"
+                        },
+                        "offset": 53154898,
+                        "id": {
+                            "uid": "CxT3Pg4e1PZlMZ58A8"
+                        }
+                    },
+                    "elastic_agent": {
+                        "id": "b0661c56-a383-41c1-8dc1-c41efc52de1a",
+                        "version": "9.3.3+build202604082258",
+                        "snapshot": false
+                    },
+                    "dns": {
+                        "authoritative": false,
+                        "highest_registered_domain": "anydesk.com",
+                        "top_level_domain": "com",
+                        "query": {
+                            "type_name": "A",
+                            "rejected": false,
+                            "name": "crl.anydesk.com",
+                            "length": 15,
+                            "type": 1,
+                            "class": 1,
+                            "class_name": "C_INTERNET"
+                        },
+                        "truncated": false,
+                        "subdomain_length": 3,
+                        "reserved": 0,
+                        "parent_domain_length": 7,
+                        "response": {
+                            "code": 3,
+                            "code_name": "NXDOMAIN"
+                        },
+                        "subdomain": "crl",
+                        "id": 18335,
+                        "recursion": {
+                            "desired": true,
+                            "available": false
+                        },
+                        "parent_domain": "anydesk"
+                    },
+                    "destination": {
+                        "port": 53,
+                        "ip": "10.11.1.1"
+                    },
+                    "source": {
+                        "port": 63942,
+                        "ip": "192.168.169.48"
+                    },
+                    "message": "{\"ts\":1783524591.228528,\"uid\":\"CxT3Pg4e1PZlMZ58A8\",\"id.orig_h\":\"192.168.169.48\",\"id.orig_p\":63942,\"id.resp_h\":\"10.11.1.1\",\"id.resp_p\":53,\"proto\":\"udp\",\"trans_id\":18335,\"query\":\"crl.anydesk.com\",\"qclass\":1,\"qclass_name\":\"C_INTERNET\",\"qtype\":1,\"qtype_name\":\"A\",\"rcode\":3,\"rcode_name\":\"NXDOMAIN\",\"AA\":false,\"TC\":false,\"RD\":true,\"RA\":false,\"Z\":0,\"rejected\":false}",
+                    "tags": [
+                        "elastic-agent",
+                        "input-soc-onion",
+                        "beats_input_codec_plain_applied",
+                        "dns"
+                    ],
+                    "network": {
+                        "community_id": "1:2RojchoZuxkcqNPym5iRT3vt+pk=",
+                        "transport": "udp"
+                    },
+                    "pipeline": "dns",
+                    "input": {
+                        "type": "filestream"
+                    },
+                    "observer": {
+                        "name": "securityonion"
+                    },
+                    "@timestamp": "2026-07-08T15:29:51.228Z",
+                    "ecs": {
+                        "version": "8.0.0"
+                    },
+                    "data_stream": {
+                        "namespace": "so",
+                        "type": "logs",
+                        "dataset": "zeek"
+                    },
+                    "@version": "1",
+                    "client": {
+                        "port": "63942",
+                        "ip": "192.168.169.48"
+                    },
+                    "event": {
+                        "agent_id_status": "missing",
+                        "ingested": "2026-07-08T15:29:56Z",
+                        "module": "zeek",
+                        "category": "network",
+                        "dataset": "zeek.dns"
+                    }
+                },
+                "sort": [
+                    1783524591228
+                ]
+            },
+            {
+                "_index": ".ds-logs-zeek-so-2026.07.08-000001",
+                "_id": "D-dZQp8BSpiElYH7keqG",
+                "_score": null,
+                "_source": {
+                    "container": {
+                        "id": "syslog.log"
+                    },
+                    "server": {
+                        "port": "514",
+                        "ip": "192.168.15.70"
+                    },
+                    "metadata": {
+                        "pipeline": "zeek.syslog",
+                        "input": {
+                            "beats": {
+                                "host": {
+                                    "ip": "192.168.15.71"
+                                }
+                            }
+                        },
+                        "raw_index": "logs-zeek-so",
+                        "stream_id": "filestream-filestream.filestream-zeek-logs",
+                        "beat": "filebeat",
+                        "type": "_doc",
+                        "version": "9.3.3+build202604082258",
+                        "input_id": "filestream-filestream-zeek-logs"
+                    },
+                    "log": {
+                        "file": {
+                            "inode": "141980465",
+                            "path": "/nsm/zeek/logs/current/syslog.log",
+                            "device_id": "64514"
+                        },
+                        "offset": 939945302,
+                        "id": {
+                            "uid": "CIi3mP1T6BfQljOtV2"
+                        }
+                    },
+                    "elastic_agent": {
+                        "id": "b0661c56-a383-41c1-8dc1-c41efc52de1a",
+                        "version": "9.3.3+build202604082258",
+                        "snapshot": false
+                    },
+                    "destination": {
+                        "port": 514,
+                        "ip": "192.168.15.70"
+                    },
+                    "syslog": {
+                        "severity_label": "NOTICE",
+                        "facility_label": "LOCAL7"
+                    },
+                    "source": {
+                        "port": 17338,
+                        "ip": "10.99.99.1"
+                    },
+                    "message": "date=2026-07-08 time=12:29:48 devname=\"FG-Technoma\" devid=\"FG120GTK24022543\" eventtime=1783524587651879701 tz=\"-0300\" logid=\"0000000013\" type=\"traffic\" subtype=\"forward\" level=\"notice\" vd=\"root\" srcip=192.168.169.48 srcname=\"NB-LDELVALLE    \" srcport=51916 srcintf=\"WiFi_Corp\" srcintfrole=\"lan\" dstip=10.11.1.2 dstport=53 dstintf=\"Citrix Servers\" dstintfrole=\"lan\" srccountry=\"Reserved\" dstcountry=\"Reserved\" sessionid=1081075162 proto=17 action=\"accept\" policyid=74 policytype=\"policy\" poluuid=\"46302716-ca3f-51f0-fc50-d60ccb4cf9ca\" policyname=\"TO_AD-DNS\" user=\"LAURADELVALLE\" authserver=\"AD1\" dstuser=\"JUANSERVIN\" service=\"Windows AD\" trandisp=\"noop\" appcat=\"unscanned\" duration=180 sentbyte=62 rcvdbyte=219 sentpkt=1 rcvdpkt=1 osname=\"Windows\" srcswversion=\"10/11\" unauthuser=\"lauradelvalle\" unauthusersource=\"kerberos\" mastersrcmac=\"10:5f:ad:8b:b0:87\" srcmac=\"10:5f:ad:8b:b0:87\" srcserver=0 dsthwvendor=\"VMware\" masterdstmac=\"00:50:56:af:55:19\" dstmac=\"00:50:56:af:55:19\" dstserver=0",
+                    "tags": [
+                        "elastic-agent",
+                        "input-soc-onion",
+                        "beats_input_codec_plain_applied",
+                        "syslog"
+                    ],
+                    "network": {
+                        "protocol": "udp"
+                    },
+                    "pipeline": "syslog",
+                    "input": {
+                        "type": "filestream"
+                    },
+                    "observer": {
+                        "name": "securityonion"
+                    },
+                    "@timestamp": "2026-07-08T15:29:48.656Z",
+                    "ecs": {
+                        "version": "8.0.0"
+                    },
+                    "data_stream": {
+                        "namespace": "so",
+                        "type": "logs",
+                        "dataset": "zeek"
+                    },
+                    "@version": "1",
+                    "client": {
+                        "port": "17338",
+                        "ip": "10.99.99.1"
+                    },
+                    "event": {
+                        "agent_id_status": "missing",
+                        "ingested": "2026-07-08T15:29:54Z",
+                        "module": "zeek",
+                        "category": "network",
+                        "dataset": "zeek.syslog"
+                    }
+                },
+                "sort": [
+                    1783524588656
+                ]
+            },
+            {
+                "_index": ".ds-logs-zeek-so-2026.07.08-000001",
+                "_id": "J-dZQp8BSpiElYH7ienf",
+                "_score": null,
+                "_source": {
+                    "container": {
+                        "id": "syslog.log"
+                    },
+                    "server": {
+                        "port": "514",
+                        "ip": "192.168.15.70"
+                    },
+                    "metadata": {
+                        "pipeline": "zeek.syslog",
+                        "input": {
+                            "beats": {
+                                "host": {
+                                    "ip": "192.168.15.71"
+                                }
+                            }
+                        },
+                        "raw_index": "logs-zeek-so",
+                        "stream_id": "filestream-filestream.filestream-zeek-logs",
+                        "beat": "filebeat",
+                        "type": "_doc",
+                        "version": "9.3.3+build202604082258",
+                        "input_id": "filestream-filestream-zeek-logs"
+                    },
+                    "log": {
+                        "file": {
+                            "inode": "141980465",
+                            "path": "/nsm/zeek/logs/current/syslog.log",
+                            "device_id": "64514"
+                        },
+                        "offset": 939790948,
+                        "id": {
+                            "uid": "CIi3mP1T6BfQljOtV2"
+                        }
+                    },
+                    "elastic_agent": {
+                        "id": "b0661c56-a383-41c1-8dc1-c41efc52de1a",
+                        "version": "9.3.3+build202604082258",
+                        "snapshot": false
+                    },
+                    "destination": {
+                        "port": 514,
+                        "ip": "192.168.15.70"
+                    },
+                    "syslog": {
+                        "severity_label": "NOTICE",
+                        "facility_label": "LOCAL7"
+                    },
+                    "source": {
+                        "port": 17338,
+                        "ip": "10.99.99.1"
+                    },
+                    "message": "date=2026-07-08 time=12:29:47 devname=\"FG-Technoma\" devid=\"FG120GTK24022543\" eventtime=1783524587627879801 tz=\"-0300\" logid=\"0000000013\" type=\"traffic\" subtype=\"forward\" level=\"notice\" vd=\"root\" srcip=192.168.169.48 srcname=\"NB-LDELVALLE    \" srcport=51916 srcintf=\"WiFi_Corp\" srcintfrole=\"lan\" dstip=10.11.1.1 dstport=53 dstintf=\"Citrix Servers\" dstintfrole=\"lan\" srccountry=\"Reserved\" dstcountry=\"Reserved\" sessionid=1081075151 proto=17 action=\"accept\" policyid=74 policytype=\"policy\" poluuid=\"46302716-ca3f-51f0-fc50-d60ccb4cf9ca\" policyname=\"TO_AD-DNS\" user=\"LAURADELVALLE\" authserver=\"AD1\" service=\"Windows AD\" trandisp=\"noop\" appcat=\"unscanned\" duration=180 sentbyte=62 rcvdbyte=220 sentpkt=1 rcvdpkt=1 osname=\"Windows\" srcswversion=\"10/11\" unauthuser=\"lauradelvalle\" unauthusersource=\"kerberos\" mastersrcmac=\"10:5f:ad:8b:b0:87\" srcmac=\"10:5f:ad:8b:b0:87\" srcserver=0 dsthwvendor=\"VMware\" masterdstmac=\"00:50:56:af:ff:5a\" dstmac=\"00:50:56:af:ff:5a\" dstserver=0",
+                    "tags": [
+                        "elastic-agent",
+                        "input-soc-onion",
+                        "beats_input_codec_plain_applied",
+                        "syslog"
+                    ],
+                    "network": {
+                        "protocol": "udp"
+                    },
+                    "pipeline": "syslog",
+                    "input": {
+                        "type": "filestream"
+                    },
+                    "observer": {
+                        "name": "securityonion"
+                    },
+                    "@timestamp": "2026-07-08T15:29:48.094Z",
+                    "ecs": {
+                        "version": "8.0.0"
+                    },
+                    "data_stream": {
+                        "namespace": "so",
+                        "type": "logs",
+                        "dataset": "zeek"
+                    },
+                    "@version": "1",
+                    "client": {
+                        "port": "17338",
+                        "ip": "10.99.99.1"
+                    },
+                    "event": {
+                        "agent_id_status": "missing",
+                        "ingested": "2026-07-08T15:29:52Z",
+                        "module": "zeek",
+                        "category": "network",
+                        "dataset": "zeek.syslog"
+                    }
+                },
+                "sort": [
+                    1783524588094
+                ]
+            },
+            {
+                "_index": ".ds-logs-zeek-so-2026.07.08-000001",
+                "_id": "3OdZQp8BSpiElYH7iejc",
+                "_score": null,
+                "_source": {
+                    "container": {
+                        "id": "dns.log"
+                    },
+                    "server": {
+                        "port": "53",
+                        "ip": "10.11.1.2"
+                    },
+                    "metadata": {
+                        "pipeline": "zeek.dns",
+                        "input": {
+                            "beats": {
+                                "host": {
+                                    "ip": "192.168.15.71"
+                                }
+                            }
+                        },
+                        "raw_index": "logs-zeek-so",
+                        "stream_id": "filestream-filestream.filestream-zeek-logs",
+                        "beat": "filebeat",
+                        "type": "_doc",
+                        "version": "9.3.3+build202604082258",
+                        "input_id": "filestream-filestream-zeek-logs"
+                    },
+                    "log": {
+                        "file": {
+                            "inode": "141980469",
+                            "path": "/nsm/zeek/logs/current/dns.log",
+                            "device_id": "64514"
+                        },
+                        "offset": 53105348,
+                        "id": {
+                            "uid": "CDmBFH23FBrfs1vAZk"
+                        }
+                    },
+                    "elastic_agent": {
+                        "id": "b0661c56-a383-41c1-8dc1-c41efc52de1a",
+                        "version": "9.3.3+build202604082258",
+                        "snapshot": false
+                    },
+                    "dns": {
+                        "resolved_ip": [
+                            "192.168.169.48"
+                        ],
+                        "authoritative": true,
+                        "highest_registered_domain": "technoma.local",
+                        "top_level_domain": "local",
+                        "query": {
+                            "type_name": "A",
+                            "rejected": false,
+                            "name": "nb-ldelvalle.technoma.local",
+                            "length": 27,
+                            "type": 1,
+                            "class": 1,
+                            "class_name": "C_INTERNET"
+                        },
+                        "answers": {
+                            "name": [
+                                "192.168.169.48"
+                            ]
+                        },
+                        "truncated": false,
+                        "subdomain_length": 12,
+                        "ttls": [
+                            1200.0
+                        ],
+                        "reserved": 0,
+                        "parent_domain_length": 8,
+                        "response": {
+                            "code": 0,
+                            "code_name": "NOERROR"
+                        },
+                        "subdomain": "nb-ldelvalle",
+                        "id": 25005,
+                        "recursion": {
+                            "desired": true,
+                            "available": true
+                        },
+                        "parent_domain": "technoma"
+                    },
+                    "destination": {
+                        "port": 53,
+                        "ip": "10.11.1.2"
+                    },
+                    "source": {
+                        "port": 57133,
+                        "ip": "10.11.1.1"
+                    },
+                    "message": "{\"ts\":1783524587.911294,\"uid\":\"CDmBFH23FBrfs1vAZk\",\"id.orig_h\":\"10.11.1.1\",\"id.orig_p\":57133,\"id.resp_h\":\"10.11.1.2\",\"id.resp_p\":53,\"proto\":\"udp\",\"trans_id\":25005,\"rtt\":0.0000059604644775390625,\"query\":\"nb-ldelvalle.technoma.local\",\"qclass\":1,\"qclass_name\":\"C_INTERNET\",\"qtype\":1,\"qtype_name\":\"A\",\"rcode\":0,\"rcode_name\":\"NOERROR\",\"AA\":true,\"TC\":false,\"RD\":true,\"RA\":true,\"Z\":0,\"answers\":[\"192.168.169.48\"],\"TTLs\":[1200.0],\"rejected\":false}",
+                    "tags": [
+                        "elastic-agent",
+                        "input-soc-onion",
+                        "beats_input_codec_plain_applied",
+                        "dns"
+                    ],
+                    "network": {
+                        "community_id": "1:qhwDjVpU1bSHkvjIMaWMfGqB7fE=",
+                        "transport": "udp"
+                    },
+                    "pipeline": "dns",
+                    "input": {
+                        "type": "filestream"
+                    },
+                    "observer": {
+                        "name": "securityonion"
+                    },
+                    "@timestamp": "2026-07-08T15:29:47.911Z",
+                    "ecs": {
+                        "version": "8.0.0"
+                    },
+                    "data_stream": {
+                        "namespace": "so",
+                        "type": "logs",
+                        "dataset": "zeek"
+                    },
+                    "@version": "1",
+                    "client": {
+                        "port": "57133",
+                        "ip": "10.11.1.1"
+                    },
+                    "event": {
+                        "duration": 5.9604644775390625e-06,
+                        "agent_id_status": "missing",
+                        "ingested": "2026-07-08T15:29:52Z",
+                        "module": "zeek",
+                        "category": "network",
+                        "dataset": "zeek.dns"
+                    }
+                },
+                "sort": [
+                    1783524587911
+                ]
+            },
+            {
+                "_index": ".ds-logs-zeek-so-2026.07.08-000001",
+                "_id": "D-dZQp8BSpiElYH7g-fN",
+                "_score": null,
+                "_source": {
+                    "container": {
+                        "id": "syslog.log"
+                    },
+                    "server": {
+                        "port": "514",
+                        "ip": "192.168.15.70"
+                    },
+                    "metadata": {
+                        "pipeline": "zeek.syslog",
+                        "input": {
+                            "beats": {
+                                "host": {
+                                    "ip": "192.168.15.71"
+                                }
+                            }
+                        },
+                        "raw_index": "logs-zeek-so",
+                        "stream_id": "filestream-filestream.filestream-zeek-logs",
+                        "beat": "filebeat",
+                        "type": "_doc",
+                        "version": "9.3.3+build202604082258",
+                        "input_id": "filestream-filestream-zeek-logs"
+                    },
+                    "log": {
+                        "file": {
+                            "inode": "141980465",
+                            "path": "/nsm/zeek/logs/current/syslog.log",
+                            "device_id": "64514"
+                        },
+                        "offset": 939565378,
+                        "id": {
+                            "uid": "CIi3mP1T6BfQljOtV2"
+                        }
+                    },
+                    "elastic_agent": {
+                        "id": "b0661c56-a383-41c1-8dc1-c41efc52de1a",
+                        "version": "9.3.3+build202604082258",
+                        "snapshot": false
+                    },
+                    "destination": {
+                        "port": 514,
+                        "ip": "192.168.15.70"
+                    },
+                    "syslog": {
+                        "severity_label": "NOTICE",
+                        "facility_label": "LOCAL7"
+                    },
+                    "source": {
+                        "port": 17338,
+                        "ip": "10.99.99.1"
+                    },
+                    "message": "date=2026-07-08 time=12:29:47 devname=\"FG-Technoma\" devid=\"FG120GTK24022543\" eventtime=1783524586899882589 tz=\"-0300\" logid=\"0000000013\" type=\"traffic\" subtype=\"forward\" level=\"notice\" vd=\"root\" srcip=192.168.169.48 srcname=\"NB-LDELVALLE    \" srcport=52066 srcintf=\"WiFi_Corp\" srcintfrole=\"lan\" dstip=10.11.1.2 dstport=53 dstintf=\"Citrix Servers\" dstintfrole=\"lan\" srccountry=\"Reserved\" dstcountry=\"Reserved\" sessionid=1081074113 proto=17 action=\"accept\" policyid=74 policytype=\"policy\" poluuid=\"46302716-ca3f-51f0-fc50-d60ccb4cf9ca\" policyname=\"TO_AD-DNS\" user=\"LAURADELVALLE\" authserver=\"AD1\" dstuser=\"JUANSERVIN\" service=\"Windows AD\" trandisp=\"noop\" appcat=\"unscanned\" duration=180 sentbyte=89 rcvdbyte=185 sentpkt=1 rcvdpkt=1 osname=\"Windows\" srcswversion=\"10/11\" unauthuser=\"lauradelvalle\" unauthusersource=\"kerberos\" mastersrcmac=\"10:5f:ad:8b:b0:87\" srcmac=\"10:5f:ad:8b:b0:87\" srcserver=0 dsthwvendor=\"VMware\" dstosname=\"Windows\" dstswversion=\"10/11\" masterdstmac=\"00:50:56:af:55:19\" dstmac=\"00:50:56:af:55:19\" dstserver=0",
+                    "tags": [
+                        "elastic-agent",
+                        "input-soc-onion",
+                        "beats_input_codec_plain_applied",
+                        "syslog"
+                    ],
+                    "network": {
+                        "protocol": "udp"
+                    },
+                    "pipeline": "syslog",
+                    "input": {
+                        "type": "filestream"
+                    },
+                    "observer": {
+                        "name": "securityonion"
+                    },
+                    "@timestamp": "2026-07-08T15:29:47.358Z",
+                    "ecs": {
+                        "version": "8.0.0"
+                    },
+                    "data_stream": {
+                        "namespace": "so",
+                        "type": "logs",
+                        "dataset": "zeek"
+                    },
+                    "@version": "1",
+                    "client": {
+                        "port": "17338",
+                        "ip": "10.99.99.1"
+                    },
+                    "event": {
+                        "agent_id_status": "missing",
+                        "ingested": "2026-07-08T15:29:50Z",
+                        "module": "zeek",
+                        "category": "network",
+                        "dataset": "zeek.syslog"
+                    }
+                },
+                "sort": [
+                    1783524587358
+                ]
+            },
+            {
+                "_index": ".ds-logs-zeek-so-2026.07.08-000001",
+                "_id": "IedZQp8BSpiElYH7g-bL",
+                "_score": null,
+                "_source": {
+                    "container": {
+                        "id": "syslog.log"
+                    },
+                    "server": {
+                        "port": "514",
+                        "ip": "192.168.15.70"
+                    },
+                    "metadata": {
+                        "pipeline": "zeek.syslog",
+                        "input": {
+                            "beats": {
+                                "host": {
+                                    "ip": "192.168.15.71"
+                                }
+                            }
+                        },
+                        "raw_index": "logs-zeek-so",
+                        "stream_id": "filestream-filestream.filestream-zeek-logs",
+                        "beat": "filebeat",
+                        "type": "_doc",
+                        "version": "9.3.3+build202604082258",
+                        "input_id": "filestream-filestream-zeek-logs"
+                    },
+                    "log": {
+                        "file": {
+                            "inode": "141980465",
+                            "path": "/nsm/zeek/logs/current/syslog.log",
+                            "device_id": "64514"
+                        },
+                        "offset": 939432053,
+                        "id": {
+                            "uid": "CIi3mP1T6BfQljOtV2"
+                        }
+                    },
+                    "elastic_agent": {
+                        "id": "b0661c56-a383-41c1-8dc1-c41efc52de1a",
+                        "version": "9.3.3+build202604082258",
+                        "snapshot": false
+                    },
+                    "destination": {
+                        "port": 514,
+                        "ip": "192.168.15.70"
+                    },
+                    "syslog": {
+                        "severity_label": "NOTICE",
+                        "facility_label": "LOCAL7"
+                    },
+                    "source": {
+                        "port": 17338,
+                        "ip": "10.99.99.1"
+                    },
+                    "message": "date=2026-07-08 time=12:29:47 devname=\"FG-Technoma\" devid=\"FG120GTK24022543\" eventtime=1783524586875879882 tz=\"-0300\" logid=\"0000000013\" type=\"traffic\" subtype=\"forward\" level=\"notice\" vd=\"root\" srcip=192.168.169.48 srcname=\"NB-LDELVALLE    \" srcport=52066 srcintf=\"WiFi_Corp\" srcintfrole=\"lan\" dstip=10.11.1.1 dstport=53 dstintf=\"Citrix Servers\" dstintfrole=\"lan\" srccountry=\"Reserved\" dstcountry=\"Reserved\" sessionid=1081074109 proto=17 action=\"accept\" policyid=74 policytype=\"policy\" poluuid=\"46302716-ca3f-51f0-fc50-d60ccb4cf9ca\" policyname=\"TO_AD-DNS\" user=\"LAURADELVALLE\" authserver=\"AD1\" service=\"Windows AD\" trandisp=\"noop\" appcat=\"unscanned\" duration=180 sentbyte=89 rcvdbyte=185 sentpkt=1 rcvdpkt=1 osname=\"Windows\" srcswversion=\"10/11\" unauthuser=\"lauradelvalle\" unauthusersource=\"kerberos\" mastersrcmac=\"10:5f:ad:8b:b0:87\" srcmac=\"10:5f:ad:8b:b0:87\" srcserver=0 dsthwvendor=\"VMware\" masterdstmac=\"00:50:56:af:ff:5a\" dstmac=\"00:50:56:af:ff:5a\" dstserver=0",
+                    "tags": [
+                        "elastic-agent",
+                        "input-soc-onion",
+                        "beats_input_codec_plain_applied",
+                        "syslog"
+                    ],
+                    "network": {
+                        "protocol": "udp"
+                    },
+                    "pipeline": "syslog",
+                    "input": {
+                        "type": "filestream"
+                    },
+                    "observer": {
+                        "name": "securityonion"
+                    },
+                    "@timestamp": "2026-07-08T15:29:47.095Z",
+                    "ecs": {
+                        "version": "8.0.0"
+                    },
+                    "data_stream": {
+                        "namespace": "so",
+                        "type": "logs",
+                        "dataset": "zeek"
+                    },
+                    "@version": "1",
+                    "client": {
+                        "port": "17338",
+                        "ip": "10.99.99.1"
+                    },
+                    "event": {
+                        "agent_id_status": "missing",
+                        "ingested": "2026-07-08T15:29:50Z",
+                        "module": "zeek",
+                        "category": "network",
+                        "dataset": "zeek.syslog"
+                    }
+                },
+                "sort": [
+                    1783524587095
+                ]
+            }
+        ]
+    }
+}

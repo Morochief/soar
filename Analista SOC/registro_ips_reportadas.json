@@ -1,0 +1,84 @@
+{
+  "updated_at": "2026-10-09T15:09:04.030427",
+  "analyst": "Kevin Moraes",
+  "reported_ips": [
+    {
+      "ip": "172.71.232.51",
+      "date": "2026-10-09",
+      "org": "Cloudflare Inc.",
+      "country": "France",
+      "service": "HTTPS",
+      "port": 443,
+      "incident_type": "escaneo",
+      "recipient": "abuse@cloudflare.com",
+      "bcc": "Ivan",
+      "subject": "Scan - 172.71.232.51 [Cloudflare Inc.]",
+      "status": "notificado"
+    },
+    {
+      "ip": "172.71.119.91",
+      "date": "2026-10-09",
+      "org": "Cloudflare Inc.",
+      "country": "France",
+      "service": "HTTPS",
+      "port": 443,
+      "incident_type": "escaneo",
+      "recipient": "abuse@cloudflare.com",
+      "bcc": "Ivan",
+      "subject": "Scan - 172.71.119.91 [Cloudflare Inc.]",
+      "status": "notificado"
+    },
+    {
+      "ip": "172.71.232.50",
+      "date": "2026-10-09",
+      "org": "Cloudflare Inc.",
+      "country": "France",
+      "service": "HTTPS",
+      "port": 443,
+      "incident_type": "escaneo",
+      "recipient": "abuse@cloudflare.com",
+      "bcc": "Ivan",
+      "subject": "Scan - 172.71.232.50 [Cloudflare Inc.]",
+      "status": "notificado"
+    },
+    {
+      "ip": "172.71.127.147",
+      "date": "2026-10-09",
+      "org": "Cloudflare Inc.",
+      "country": "France",
+      "service": "HTTPS",
+      "port": 443,
+      "incident_type": "fuerza_bruta",
+      "recipient": "abuse@cloudflare.com",
+      "bcc": "Ivan",
+      "subject": "Scan - 172.71.127.147 [Cloudflare Inc.]",
+      "status": "notificado"
+    },
+    {
+      "ip": "104.23.254.12",
+      "date": "2026-10-09",
+      "org": "Cloudflare Inc.",
+      "country": "United States",
+      "service": "HTTPS",
+      "port": 443,
+      "incident_type": "escaneo",
+      "recipient": "abuse@cloudflare.com",
+      "bcc": "Ivan",
+      "subject": "Scan - 104.23.254.12 [Cloudflare Inc.]",
+      "status": "notificado"
+    },
+    {
+      "ip": "5.61.209.106",
+      "date": "2026-10-09",
+      "org": "Amarutu Technology Ltd",
+      "country": "Seychelles",
+      "service": "HTTP",
+      "port": 443,
+      "incident_type": "fuerza_bruta",
+      "recipient": "abuse@koddos.com",
+      "bcc": "Ivan",
+      "subject": "Brute force attack HTTP - 5.61.209.106 [Amarutu Technology Ltd]",
+      "status": "notificado"
+    }
+  ]
+}

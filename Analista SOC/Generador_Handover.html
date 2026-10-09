@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Handover - SOC Technoma</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: rgba(22, 27, 34, 0.8);
+            --border-color: rgba(48, 54, 61, 0.8);
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --accent-color: #58a6ff;
+            --accent-glow: rgba(88, 166, 255, 0.15);
+            --success-color: #3fb950;
+            --danger-color: #f85149;
+            --font-display: 'Space Grotesk', sans-serif;
+            --font-sans: 'Inter', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            transition: all 0.2s ease-in-out;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 10% 20%, rgba(88, 166, 255, 0.05) 0%, transparent 40%),
+                              radial-gradient(circle at 90% 80%, rgba(88, 166, 255, 0.02) 0%, transparent 40%);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        header {
+            margin-bottom: 35px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-family: var(--font-display);
+            font-size: 28px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .soc-badge {
+            background: rgba(88, 166, 255, 0.1);
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: var(--font-display);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 18px;
+            color: #ffffff;
+            margin-bottom: 20px;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        input[type="text"], input[type="date"], input[type="time"], select, textarea {
+            background-color: rgba(21, 26, 33, 0.8);
+            border: 1px solid var(--border-color);
+            color: #ffffff;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 14px;
+            outline: none;
+            width: 100%;
+        }
+
+        input[type="text"]:focus, input[type="date"]:focus, input[type="time"]:focus, select:focus, textarea:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .choices-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .choice-btn {
+            flex: 1;
+            background: rgba(21, 26, 33, 0.8);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .choice-btn.active {
+            background: rgba(88, 166, 255, 0.1);
+            border-color: var(--accent-color);
+            color: #ffffff;
+        }
+
+        /* Cases Section */
+        .cases-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .case-card {
+            background: rgba(21, 26, 33, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            position: relative;
+        }
+
+        .case-header-inputs {
+            display: grid;
+            grid-template-columns: 1fr 3fr 1.5fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .remove-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .remove-btn:hover {
+            color: var(--danger-color);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px dashed var(--border-color);
+            color: var(--text-secondary);
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 30px;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-color);
+            color: #ffffff;
+            background: rgba(88, 166, 255, 0.02);
+        }
+
+        /* Infrastructure list */
+        .infra-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .infra-card {
+            background: rgba(21, 26, 33, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .infra-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .infra-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--danger-color);
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--success-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .infra-details {
+            display: none;
+        }
+
+        .infra-card.failed .infra-details {
+            display: block;
+        }
+
+        /* Action Buttons */
+        .actions-panel {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 40px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 30px;
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            border: 1px solid var(--accent-color);
+            color: #0d1117;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .btn-primary:hover {
+            background: #79b8ff;
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+
+        /* Modal / Output Panel */
+        .output-section {
+            margin-top: 30px;
+            background: rgba(21, 26, 33, 0.9);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 25px;
+            display: none;
+        }
+
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .output-title {
+            font-family: var(--font-display);
+            font-size: 15px;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .copy-btn {
+            background: rgba(88, 166, 255, 0.1);
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .copy-btn:hover {
+            background: var(--accent-color);
+            color: #0d1117;
+        }
+
+        pre {
+            background: #090c10;
+            border: 1px solid rgba(48, 54, 61, 0.5);
+            border-radius: 6px;
+            padding: 16px;
+            color: #c9d1d9;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div>
+            <h1>Generador de Handover</h1>
+            <div class="subtitle">Herramienta de Relevo para Analistas SOC - Technoma</div>
+        </div>
+        <div class="soc-badge">Piloto v2.0</div>
+    </header>
+
+    <form id="handoverForm" onsubmit="event.preventDefault();">
+        
+        <!-- Shift Info -->
+        <div class="section-title">Información de la Guardia</div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="shiftDate">Fecha</label>
+                <input type="date" id="shiftDate" required>
+            </div>
+            <div class="form-group">
+                <label>Turno</label>
+                <div class="choices-group">
+                    <button type="button" class="choice-btn active" onclick="setShift('Noche')">Noche</button>
+                    <button type="button" class="choice-btn" onclick="setShift('Mañana')">Mañana</button>
+                    <button type="button" class="choice-btn" onclick="setShift('Tarde')">Tarde</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="analystName">Analista Saliente</label>
+                <select id="analystName">
+                    <option value="Kevin Moraes">Kevin Moraes</option>
+                    <option value="Angel Insaurralde">Angel Insaurralde</option>
+                    <option value="Igor">Igor</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="incomingAnalyst">Analista Entrante</label>
+                <select id="incomingAnalyst">
+                    <option value="Angel Insaurralde">Angel Insaurralde</option>
+                    <option value="Kevin Moraes" selected>Kevin Moraes</option>
+                    <option value="Igor">Igor</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Cases / Alerts -->
+        <div class="section-title">Casos e Incidentes Procesados</div>
+        <div class="cases-container" id="casesContainer">
+            <!-- Dynamically populated -->
+        </div>
+        <button type="button" class="btn-secondary" onclick="addCaseRow()">+ Agregar Caso</button>
+
+        <!-- Infrastructure status -->
+        <div class="section-title">Estado de Infraestructura y Sistemas</div>
+        <div class="infra-grid">
+            <div class="infra-card" id="card-internet">
+                <div class="infra-header">
+                    <span class="infra-name">Internet Oficina / Conectividad</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="status-internet" checked onchange="toggleInfra('internet')">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="infra-details" id="details-internet">
+                    <input type="text" placeholder="Describa la falla en conectividad..." id="desc-internet">
+                </div>
+            </div>
+
+            <div class="infra-card" id="card-odoo">
+                <div class="infra-header">
+                    <span class="infra-name">Odoo / Plataforma SOC</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="status-odoo" checked onchange="toggleInfra('odoo')">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="infra-details" id="details-odoo">
+                    <input type="text" placeholder="Describa el inconveniente en Odoo..." id="desc-odoo">
+                </div>
+            </div>
+
+            <div class="infra-card" id="card-cortex">
+                <div class="infra-header">
+                    <span class="infra-name">Cortex XDR / EDR</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="status-cortex" checked onchange="toggleInfra('cortex')">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="infra-details" id="details-cortex">
+                    <input type="text" placeholder="Describa problemas con Cortex..." id="desc-cortex">
+                </div>
+            </div>
+
+            <div class="infra-card" id="card-power">
+                <div class="infra-header">
+                    <span class="infra-name">Suministro Eléctrico / UPS</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="status-power" checked onchange="toggleInfra('power')">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="infra-details" id="details-power">
+                    <input type="text" placeholder="Describa cortes o problemas de UPS..." id="desc-power">
+                </div>
+            </div>
+
+            <div class="infra-card" id="card-screens">
+                <div class="infra-header">
+                    <span class="infra-name">Monitores / VideoWall del SOC</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="status-screens" checked onchange="toggleInfra('screens')">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="infra-details" id="details-screens">
+                    <input type="text" placeholder="Describa el inconveniente de pantallas..." id="desc-screens">
+                </div>
+            </div>
+
+            <div class="infra-card" id="card-telemetry">
+                <div class="infra-header">
+                    <span class="infra-name">Sensores y Telemetría</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="status-telemetry" checked onchange="toggleInfra('telemetry')">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="infra-details" id="details-telemetry">
+                    <input type="text" placeholder="Describa sensores caídos o sin datos..." id="desc-telemetry">
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending activities -->
+        <div class="section-title">Pendientes para el Relevo</div>
+        <div class="form-group full-width" style="margin-bottom: 30px;">
+            <textarea id="pendingTasks" rows="3" placeholder="Detalle las actividades que deben continuarse o monitorearse en el siguiente turno..."></textarea>
+        </div>
+
+        <div style="display: flex; gap: 15px; width: 100%; margin-top: 10px;">
+            <button type="button" class="btn-primary" style="flex: 2;" onclick="generateReport()">Generar Reportes de Cierre</button>
+            <button type="button" class="btn-secondary" style="flex: 1; border-style: solid; border-color: var(--danger-color); color: var(--danger-color); margin-bottom: 0;" onclick="clearForm()">Limpiar Formulario</button>
+        </div>
+    </form>
+
+    <!-- Output sections -->
+    <div class="output-section" id="whatsappOutputSection">
+        <div class="output-header">
+            <span class="output-title">Mensaje para WhatsApp (Sin Emojis)</span>
+            <button class="copy-btn" onclick="copyText('whatsappText')">Copiar</button>
+        </div>
+        <pre id="whatsappText"></pre>
+    </div>
+
+</div>
+
+<script>
+    let currentShift = 'Noche';
+    const systemsList = ['internet', 'odoo', 'cortex', 'power', 'screens', 'telemetry'];
+
+    // Initial page load
+    window.addEventListener('DOMContentLoaded', () => {
+        loadFromLocalStorage();
+        setupAutoSave();
+    });
+
+    function setShift(shift) {
+        currentShift = shift;
+        const buttons = document.querySelectorAll('.choices-group .choice-btn');
+        buttons.forEach(btn => {
+            if (btn.innerText === shift) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+        saveToLocalStorage();
+    }
+
+    function toggleInfra(system) {
+        const checkbox = document.getElementById('status-' + system);
+        const card = document.getElementById('card-' + system);
+        if (!checkbox.checked) {
+            card.classList.add('failed');
+        } else {
+            card.classList.remove('failed');
+            document.getElementById('desc-' + system).value = '';
+        }
+        saveToLocalStorage();
+    }
+
+    let caseCount = 0;
+    function addCaseRow(id = '', name = '', verdict = 'False Positive') {
+        caseCount++;
+        const container = document.getElementById('casesContainer');
+        const card = document.createElement('div');
+        card.className = 'case-card';
+        card.id = 'case-' + caseCount;
+        card.innerHTML = `
+            <button type="button" class="remove-btn" onclick="removeCaseRow(${caseCount})">Eliminar</button>
+            <div class="case-header-inputs">
+                <div>
+                    <label>ID Caso</label>
+                    <input type="text" class="case-id" placeholder="Ej. 12243" value="${id}" oninput="saveToLocalStorage()">
+                </div>
+                <div>
+                    <label>Nombre del Caso</label>
+                    <input type="text" class="case-name" placeholder="Ej. Public to Private Exploit Anomaly" value="${name}" oninput="saveToLocalStorage()">
+                </div>
+                <div>
+                    <label>Veredicto</label>
+                    <select class="case-verdict" onchange="saveToLocalStorage()">
+                        <option value="False Positive" ${verdict === 'False Positive' ? 'selected' : ''}>False Positive</option>
+                        <option value="True Positive" ${verdict === 'True Positive' ? 'selected' : ''}>True Positive</option>
+                        <option value="True Positive Mitigated" ${verdict === 'True Positive Mitigated' ? 'selected' : ''}>True Positive Mitigated</option>
+                        <option value="Benign" ${verdict === 'Benign' ? 'selected' : ''}>Benign</option>
+                    </select>
+                </div>
+            </div>
+        `;
+        container.appendChild(card);
+        saveToLocalStorage();
+    }
+
+    function removeCaseRow(num) {
+        const row = document.getElementById('case-' + num);
+        if (row) {
+            row.remove();
+            saveToLocalStorage();
+        }
+    }
+
+    function generateReport() {
+        const dateStr = document.getElementById('shiftDate').value;
+        const analyst = document.getElementById('analystName').value;
+        const incoming = document.getElementById('incomingAnalyst').value;
+
+        // Format Date to DD/MM/YYYY
+        let formattedDate = '';
+        if (dateStr) {
+            const parts = dateStr.split('-');
+            if (parts.length === 3) {
+                formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+            } else {
+                formattedDate = dateStr;
+            }
+        }
+
+        // Compile cases
+        const caseCards = document.querySelectorAll('.case-card');
+        let casesText = '';
+        caseCards.forEach(card => {
+            const id = card.querySelector('.case-id').value.trim();
+            const name = card.querySelector('.case-name').value.trim();
+            const verdict = card.querySelector('.case-verdict').value;
+            if (id && name) {
+                casesText += `• Caso ${id} - ${name} -> ${verdict}\n`;
+            }
+        });
+        if (!casesText) {
+            casesText = '• Sin incidentes activos / cola al día\n';
+        }
+
+        // Compile Infrastructure
+        let infraText = '';
+        let failedSystems = 0;
+        const systemLabels = {
+            internet: 'Conectividad de oficina',
+            odoo: 'Plataforma Odoo',
+            cortex: 'Servicio Cortex XDR',
+            power: 'Suministro electrico y UPS',
+            screens: 'Monitores de visualizacion del SOC',
+            telemetry: 'Telemetria y sensores'
+        };
+
+        systemsList.forEach(sys => {
+            const isOk = document.getElementById('status-' + sys).checked;
+            if (!isOk) {
+                failedSystems++;
+                const desc = document.getElementById('desc-' + sys).value.trim();
+                infraText += `• Inconveniente en ${systemLabels[sys]}: ${desc || 'Sin descripcion de falla.'}\n`;
+            }
+        });
+
+        if (failedSystems === 0) {
+            infraText = '• Todos los sistemas internos e infraestructura operando con normalidad\n';
+        }
+
+        // Pending tasks
+        const pending = document.getElementById('pendingTasks').value.trim();
+        const pendingText = pending ? pending.split('\n').map(l => `• ${l}`).join('\n') : '• Ninguno pendiente prioritario';
+
+        // Format WhatsApp
+        const waReport = `*REPORTE DE GUARDIA SOC - ${currentShift.toUpperCase()}*
+*Fecha:* ${formattedDate} | *Analista de Guardia:* ${analyst}
+
+
+*Casos Procesados e Incidentes:*
+${casesText}
+*Novedades de Infraestructura y Herramientas:*
+${infraText}
+*Pendientes para el Relevo:*
+${pendingText}`;
+
+        document.getElementById('whatsappText').innerText = waReport;
+        document.getElementById('whatsappOutputSection').style.display = 'block';
+        document.getElementById('whatsappOutputSection').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function copyText(elementId) {
+        const text = document.getElementById(elementId).innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            alert('Texto copiado al portapapeles con éxito.');
+        }).catch(err => {
+            alert('No se pudo copiar el texto.');
+        });
+    }
+
+    // LocalStorage Operations
+    function saveToLocalStorage() {
+        const data = {
+            shiftDate: document.getElementById('shiftDate').value,
+            shift: currentShift,
+            analystName: document.getElementById('analystName').value,
+            incomingAnalyst: document.getElementById('incomingAnalyst').value,
+            pendingTasks: document.getElementById('pendingTasks').value,
+            infra: {},
+            cases: []
+        };
+
+        // Infrastructure states
+        systemsList.forEach(sys => {
+            data.infra[sys] = {
+                status: document.getElementById('status-' + sys).checked,
+                desc: document.getElementById('desc-' + sys).value
+            };
+        });
+
+        // Cases lists
+        const caseCards = document.querySelectorAll('.case-card');
+        caseCards.forEach(card => {
+            data.cases.push({
+                id: card.querySelector('.case-id').value,
+                name: card.querySelector('.case-name').value,
+                verdict: card.querySelector('.case-verdict').value
+            });
+        });
+
+        localStorage.setItem('soc_handover_data', JSON.stringify(data));
+    }
+
+    function loadFromLocalStorage() {
+        const raw = localStorage.getItem('soc_handover_data');
+        if (!raw) {
+            // Default setup if no stored data
+            document.getElementById('shiftDate').valueAsDate = new Date();
+            addCaseRow();
+            return;
+        }
+
+        try {
+            const data = JSON.parse(raw);
+            document.getElementById('shiftDate').value = data.shiftDate || new Date().toISOString().split('T')[0];
+            setShift(data.shift || 'Noche');
+            document.getElementById('analystName').value = data.analystName || 'Kevin Moraes';
+            document.getElementById('incomingAnalyst').value = data.incomingAnalyst || 'Kevin Moraes';
+            document.getElementById('pendingTasks').value = data.pendingTasks || '';
+
+            // Load Infrastructure
+            if (data.infra) {
+                systemsList.forEach(sys => {
+                    if (data.infra[sys]) {
+                        const checkbox = document.getElementById('status-' + sys);
+                        checkbox.checked = data.infra[sys].status;
+                        document.getElementById('desc-' + sys).value = data.infra[sys].desc || '';
+                        toggleInfra(sys);
+                    }
+                });
+            }
+
+            // Load Cases
+            const container = document.getElementById('casesContainer');
+            container.innerHTML = '';
+            if (data.cases && data.cases.length > 0) {
+                data.cases.forEach(c => {
+                    addCaseRow(c.id, c.name, c.verdict);
+                });
+            } else {
+                addCaseRow();
+            }
+        } catch (e) {
+            console.error('Error cargando persistencia local:', e);
+            document.getElementById('shiftDate').valueAsDate = new Date();
+            addCaseRow();
+        }
+    }
+
+    function setupAutoSave() {
+        const inputs = ['shiftDate', 'analystName', 'incomingAnalyst', 'pendingTasks'];
+        inputs.forEach(id => {
+            document.getElementById(id).addEventListener('input', saveToLocalStorage);
+            document.getElementById(id).addEventListener('change', saveToLocalStorage);
+        });
+
+        // Add auto-save to infrastructure inputs too
+        systemsList.forEach(sys => {
+            document.getElementById('desc-' + sys).addEventListener('input', saveToLocalStorage);
+        });
+    }
+
+    function clearForm() {
+        if (confirm('¿Está seguro de que desea limpiar todos los datos del formulario para una nueva guardia?')) {
+            localStorage.removeItem('soc_handover_data');
+            document.getElementById('pendingTasks').value = '';
+            
+            // Reset systems
+            systemsList.forEach(sys => {
+                const checkbox = document.getElementById('status-' + sys);
+                checkbox.checked = true;
+                document.getElementById('desc-' + sys).value = '';
+                toggleInfra(sys);
+            });
+
+            // Reset Date & Cases
+            document.getElementById('shiftDate').valueAsDate = new Date();
+            document.getElementById('casesContainer').innerHTML = '';
+            addCaseRow();
+            
+            document.getElementById('whatsappOutputSection').style.display = 'none';
+            saveToLocalStorage();
+        }
+    }
+</script>
+
+
+</body>
+</html>

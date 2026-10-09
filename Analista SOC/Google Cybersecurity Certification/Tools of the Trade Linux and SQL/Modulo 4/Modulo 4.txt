@@ -1,0 +1,894 @@
+Welcome to module 4
+Transcript
+00:00
+In the world of security, diversity is important.
+00:04
+Diverse perspectives are often needed to find effective solutions.
+00:08
+This is also true of the tools we use.
+00:10
+Your job will often require you to use a lot of diverse tools.
+00:14
+In the last section, we studied the Linux command line and learned how this tool can
+00:18
+help you search and filter through data, navigate through the Linux file system, and authenticate users.
+00:25
+Now, we'll learn about another tool.
+00:28
+In this section, we'll explore SQL and how it allows you to analyze data in a way needed for your role as a security analyst.
+00:36
+We're going to start off by learning about relational databases and how they're structured.
+00:41
+From there, we're going to introduce SQL queries and how to use them to access data from databases.
+00:47
+We then move on to SQL filters, which help us refine our queries to get the exact information we need.
+00:54
+Lastly, we'll explore SQL joins, which allow you to combine tables together.
+01:00
+When I'm presented with a problem or a project at work, I often have to sift through a large amount of data.
+01:05
+When I use SQL, I'm able to review data quickly and provide results with confidence since the queries are consistent and easily executed.
+01:14
+SQL is a very powerful and flexible tool.
+01:15
+Throughout this section, you'll learn how to use the parts of it you need as a security analyst and gain hands-on experience.
+01:22
+Good luck, and I'll join you for the rest of the course!
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Introduction to databases
+Transcript
+00:00
+Our modern world is filled with data and that data almost always guides us in making important decisions.
+00:07
+When working with large amounts of data, we need to know how to store it, so it's organized and quick to access and process.
+00:14
+The solution to this is through databases, and that's what we're exploring in this video!
+00:21
+To start us off, we can define a database as an organized collection of information or data.
+00:25
+Databases are often compared to spreadsheets.
+00:28
+Some of you may have used Google Sheets or another common spreadsheet program in the past.
+00:34
+While these programs are convenient ways to store data, spreadsheets are often designed for a single user or a small team to store less data.
+00:42
+In contrast, databases can be accessed by multiple people simultaneously and can store massive amounts of data.
+00:49
+Databases can also perform complex tasks while accessing data.
+00:54
+As a security analyst, you'll often need to access databases containing useful information.
+00:59
+For example, these could be databases containing information on login attempts, software and updates, or machines and their owners.
+01:09
+Now that we know how important databases are for us, let's talk about how they're organized and how we can interact with them.
+01:16
+Using databases allow us to store large amounts of data while keeping it quick and easy to access.
+01:22
+There are lots of different ways we can structure a database, but in this course, we'll be working with relational databases.
+01:28
+A relational database is a structured database containing tables that are related to each other.
+01:35
+Let's learn more about what makes a relational database.
+01:37
+We'll start by examining an individual table in a larger database of organizational information.
+01:44
+Each table contains fields of information.
+01:46
+For example, in this table on employees, these would include fields like employee_id, device_id, and username.
+01:55
+These are the columns of the tables.
+01:57
+In addition, tables contain rows also called records.
+02:01
+Rows are filled with specific data related to the columns in the table.
+02:05
+For example, our first row is a record for an employee whose id is 1,000 and who works in the marketing department.
+02:13
+Relational databases often have multiple tables.
+02:15
+Consider an example where we have two tables from a larger database, one with employees of the company and another with machines given to those employees.
+02:25
+We can connect two tables if they share a common column.
+02:28
+In this example, we establish a relationship between them with a common employee_id column.
+02:34
+The columns that relate two tables to each other are called keys.
+02:37
+There are two types of keys.
+02:39
+The first is called a primary key.
+02:41
+The primary key refers to a column where every row has a unique entry.
+02:46
+The primary key must not have any duplicate values, or any null or empty values.
+02:52
+The primary key allows us to uniquely identify every row in our table.
+02:57
+For the table of employees, employee_id is a primary key.
+03:01
+Every employee_id is unique and there are no employee_ids that are duplicate or empty.
+03:08
+The second type of key is a foreign key.
+03:10
+The foreign key is a column in a table that is a primary key in another table.
+03:15
+Foreign keys, unlike primary keys, can have empty values and duplicates.
+03:20
+The foreign key allows us to connect two tables together.
+03:23
+In our example, we can look at the employee_id column in the machines table.
+03:29
+We previously identified this as a primary key in the employees table, so we can use this to connect every machine to their corresponding employee.
+03:39
+It's also important to know that a table can only have one primary key, but multiple foreign keys.
+03:44
+With this information, we're ready to move on to the basics of SQL, the language that lets us work with databases.
+03:51
+Throughout this section, we'll gain hands-on experience working with the concepts we just covered!
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Query databases with SQL
+Transcript
+00:01
+As a security analyst, you'll need to be familiar both with databases and the tools used to access them.
+00:07
+Now that we know the basics of databases, let's focus on an important tool used
+00:10
+to work with them, SQL, and learn more about how analysts like yourself might utilize it.
+00:17
+SQL, or as it's also pronounced, S-Q-L, stands for Structured Query Language.
+00:22
+SQL is a programming language used to create, interact with, and request information from a database.
+00:29
+Before learning more about SQL, we need to define what query means.
+00:32
+A query is a request for data from a database table or a combination of tables.
+00:37
+Nearly all relational databases rely on some version of SQL to query data.
+00:43
+The different versions of SQL only have slight differences in their structure, like where to place quotation marks.
+00:49
+Whatever variety of SQL you use, you'll find it to be a very important tool in your work as a security analyst.
+00:56
+First, let's discuss how SQL can help you retrieve logs.
+00:59
+A log is a record of events that occur within an organization's systems.
+01:03
+As a security analyst, you might be tasked with reviewing logs for various reasons.
+01:09
+For example, some logs might contain details on machines used in a company, and as an analyst, you would need to find those machines that weren't configured properly.
+01:18
+Other logs might describe the visitors to your website or web app and the tasks they perform.
+01:25
+In that case, you might be looking for unusual patterns that may point to malicious activity.
+01:30
+Security logs are often very large and hard to process.
+01:34
+There are millions of data points, and it's very time consuming to find what you need.
+01:39
+But this is where SQL comes in!
+01:40
+It can search through millions of data points to extract relevant rows of data using one query that takes seconds to run.
+01:47
+That's pretty useful, right?
+01:49
+SQL is also a very common language used for basic data analytics, another set of skills that will set you apart as a security analyst.
+01:55
+As a security analyst, you can use SQL's filtering to find data to support security-related decisions and analyze when things may go wrong.
+02:04
+For instance, you can identify what machines haven't received the latest patch.
+02:09
+This is important because patches are updates that help secure against attacks.
+02:14
+As another example, you can use SQL to determine the best time to update a machine based on when it's least used.
+02:22
+Now that we know why SQL is important to us, we're going to start making basic queries to a sample database!
+02:27
+This is definitely exciting, and I'll meet you in the next video.
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Adedayo: SQL in cybersecurity
+Transcript
+00:04
+My name is Adedayo, and I'm a Security Engineer at Google.
+00:08
+A lot of people think you need to have a degree in computer science, right to be able to get into cybersecurity.
+00:12
+I don't think that's true.
+00:14
+Take me for an example, I started learning IT from Lagos, Nigeria where I was born
+00:19
+and raised, and then I'm all the way here now in Silicon Valley, working for Google.
+00:25
+I think that's just amazing and a dream come true.
+00:28
+You taking this certificate is a first step to you making a commitment to switching your career to cybersecurity.
+00:35
+Kudos to you on that.
+00:37
+SQL is one of the skillset you need to have in your toolbox as a cybersecurity professional because you can very
+00:45
+quickly make decisions, not just off the bat, but make decisions with data backing you, and be able to communicate with your
+00:54
+team, with stakeholders about why you made a decision because it's one thing to be able to say, we need to do
+01:01
+this, it's another thing to say we need to do this and here's the data that I wrote my SQL statements about.
+01:08
+I learned SQL by, first, as a coursework in school, that was really great, but I think I forgot everything about that after school.
+01:17
+The next step that I took was taking online courses, such as the one you're taking
+01:21
+right now to learn SQL and the fundamentals about it and how to really use it.
+01:27
+Then the first time I used SQL practically was at Google.
+01:32
+You really need to practice.
+01:34
+I think with anything else, practice makes perfect.
+01:37
+Being able to, even if it's just a few hours a week, put aside time to practice writing SQL statement.
+01:45
+Having that skill is something that will be very applicable to your first job, and you can use that to make data-driven decisions.
+01:52
+I feel very fulfilled working in cybersecurity.
+01:55
+I feel very energized, come into work every day.
+01:58
+Not only because I get to work on really complex problems and try to figure out solutions
+02:02
+for them, but I also have great teammates that we all come together and tackle the problem.
+02:09
+Being able to go to bed at night, knowing that the work that I do is
+02:13
+for the better of Google users and Google employees is a very rewarding feeling for me.
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Basic queries
+Transcript
+00:00
+In this video, we're going to be running our very first SQL query!
+00:06
+This query will be based on a common work task that you might encounter as a security analyst.
+00:12
+We're going to determine which computer has been assigned to a certain employee.
+00:17
+Let's say we have access to the employees table.
+00:21
+The employees table has five columns.
+00:24
+Two of them, employee_id and device_id, contain the information that we need.
+00:30
+We'll write a query to this table that returns only those two columns from the table.
+00:37
+The two SQL keywords we need for basic SQL queries are SELECT and FROM.
+00:41
+SELECT indicates which columns to return.
+00:45
+FROM indicates which table to query.
+00:48
+The use of these keywords in SQL is very similar to how we would use these words in everyday language.
+00:55
+For example, we can ask a friend to select apples and bananas from the big box when going out to buy fruit.
+01:03
+This is already very similar to SQL.
+01:08
+So let's go ahead and use SELECT and FROM in SQL to return the information we need on employees and the computers they use.
+01:15
+We start off by typing in the SQL statement.
+01:19
+After FROM, we've identified that the information will be pulled from the employees table.
+01:26
+And after SELECT, employee_id and device_id indicate the two columns we want to return from this table.
+01:34
+Notice how a comma separates the two columns that we want to return.
+01:40
+It's also worth mentioning a couple of key aspects related to the syntax of SQL here.
+01:45
+Syntax refers to the rules that determine what is correctly structured in a computing language.
+01:52
+In SQL, keywords are not case-sensitive, so you could also write select and from in
+01:58
+lowercase, but we're placing them in capital letters because it makes the query easier to understand.
+02:05
+Another aspect of this syntax is that semicolons are placed at the end of the statement.
+02:11
+And now, we'll run the query by pressing Enter.
+02:14
+The output gives us the information we need to match employees to their computers.
+02:20
+We just ran our very first SQL query!
+02:24
+Suppose you wanted to know what department the employee using the computer is from, or their username, or the office they work in.
+02:32
+To do that, we can use SQL to make another statement that prints out all of the columns from the table.
+02:38
+We can do this by placing an asterisk after SELECT.
+02:41
+This is commonly referred to as select all.
+02:44
+Now, let's run this query to the employees table in SQL.
+02:49
+And now we have the full table in the output.
+02:54
+You just made it through a basic query in SQL, congratulations!
+02:57
+In the next video, we'll learn how to add filters to our queries, so I'll meet you there!
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Basic filters on SQL queries
+Transcript
+00:00
+One of the most powerful features of SQL is its ability to filter.
+00:05
+In this video, we're going to learn how this helps us make better queries and select more specific pieces of data from a database.
+00:13
+Filtering is selecting data that match a certain condition.
+00:16
+Think of filtering as a way of only choosing the data we want.
+00:20
+Let's say we wanted to select apples from a fruit cart.
+00:23
+Filtering allows us to specify what kind of apples we want to choose.
+00:27
+When we go buy apples, we might explicitly say, "Choose only apples that are fresh."
+00:32
+This removes apples that aren't fresh from the selection.
+00:36
+This is a filter!
+00:37
+As a security analyst, you might filter a log-in attempts table to find all attempts from a specific country.
+00:44
+This could be done by applying a filter on the country column.
+00:47
+For example, you could filter to just return records containing Canada.
+00:54
+Before we get started, we need to focus on an important part of the syntax of SQL.
+00:58
+Let's learn about operators.
+01:00
+An operator is a symbol or keyword that represents an operation.
+01:05
+An example of an operator would be the equal to operator.
+01:09
+For example, if we wanted to find all records that have USA in the country column, we use country = 'USA'
+01:18
+To filter a query in SQL, we simply add an extra line to the SELECT and FROM statement we used before.
+01:26
+This extra line will use a WHERE clause.
+01:30
+In SQL, WHERE indicates the condition for a filter.
+01:33
+After the keyword WHERE, the specific condition is listed using operators.
+01:39
+So if we wanted to find all of the login attempts made in the United States, we would create this filter.
+01:46
+In this particular condition, we're indicating to return all records that have a value in the country column that is equal to USA.
+01:56
+Let's try putting it all together in SQL.
+01:59
+We're going to start with selecting all the columns from the log_in_attempts table.
+02:03
+And then add the WHERE filter.
+02:09
+Don't forget the semicolon!
+02:11
+This tells us we finished the SQL statement.
+02:15
+Now, let's run this query!
+02:16
+Because of our filter, only the rows where the country of the log-in attempt was USA are returned.
+02:27
+In the previous example, the condition for our filter was based simply on returning records that are equal to a particular value.
+02:33
+We can also make our conditions more complex by searching for a pattern instead of an exact word.
+02:40
+For example, in the employees table, we have a column for office.
+02:45
+We could search for records in this column that match a certain pattern.
+02:49
+Perhaps we might want all offices in the East building.
+02:52
+To search for a pattern, we used the percentage sign to act as a wildcard for unspecified characters.
+02:59
+If we ran a filter for 'East%', this would return all records that start with East -- for example, the offices East-120, East-290, and East-435.
+03:14
+When searching for patterns with the percentage sign, we cannot use the equals operator.
+03:20
+Instead, we use another operator, LIKE.
+03:23
+LIKE is an operator used with WHERE to search for a pattern in a column.
+03:30
+Since LIKE is an operator, similar to the equal sign, we use it instead of the equal sign.
+03:37
+So, when our goal is to return all values in the office column that start with the word East, LIKE would appear in a WHERE clause.
+03:46
+Let's go back to the example in which we wanted to filter for log-in attempts made in the United States.
+03:53
+Imagine that we realize that our database contains inconsistencies with how the United States is represented.
+04:00
+Some entries use US while others use USA.
+04:05
+Let's get into SQL and apply this new type of filter with LIKE.
+04:09
+We're going to start with the same first two lines of code because we want to select all columns from the log-in attempts table.
+04:17
+And we're going to add a filter with LIKE so that records will be returned if they contain a value in the country column beginning with the characters US.
+04:27
+This includes both US and USA.
+04:31
+Let's run this query to check if the output changes.
+04:34
+This returns all the entries where the user location was in the United States.
+04:42
+And now we can use the LIKE clause to filter columns based on a pattern!
+04:49
+Wow, we've already learned how to get very precise with our database and get exactly the data we need with one single query.
+04:57
+I'm excited for what's next!
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Filter dates and numbers
+Transcript
+00:00
+In this video, we're going to continue using SQL queries and filters, but now we're going to apply them to new data types.
+00:09
+First, let's explore the three common data types that you will find in databases: string, numeric, and date and time.
+00:18
+String data is data consisting of an ordered sequence of characters.
+00:23
+These characters could be numbers, letters, or symbols.
+00:28
+For example, you'll encounter string data in user names, such as a user name: analyst10.
+00:34
+Numeric data is data consisting of numbers, such as a count of log-in attempts.
+00:40
+Unlike strings, mathematical operations can be used on numeric data, like multiplication or addition.
+00:47
+Date and time data refers to data representing a date and/or time.
+00:54
+Previously, we applied filters using string data, but now let's work with numeric and date and time data.
+01:00
+As a security analyst, you'll often need to query numbers and dates.
+01:04
+For example, we could filter patch dates to find machines that need an update, or
+01:10
+we could filter log-in attempts to return only those made in a certain period of time.
+01:16
+We learned about operators in the last video, and we're going to use them again for numbers and dates.
+01:23
+Common operators for working with numeric or date and time data types include: equals, greater than,
+01:28
+less than, not equal to, greater than or equal to, and less than or equal to.
+01:34
+Let's say you want to find the log-in attempts made after 6 pm.
+01:38
+Because this is past normal business hours, you want to look for suspicious patterns.
+01:44
+You can identify these attempts by using the greater than operator in your filter.
+01:50
+We'll start writing our query in SQL.
+01:52
+We begin by indicating that we want to select all columns FROM the log_in_attempts table.
+02:00
+Then we'll add our filter with WHERE.
+02:07
+Our condition indicates that the value in the time column must be greater than, or
+02:13
+for dates and times, later than '18:00', which is how 6 pm is written in SQL.
+02:19
+Let's run this and examine the output.
+02:21
+Perfect!
+02:21
+Now we have a list of log-in attempts made after 6 pm.
+02:28
+We can also filter for numbers and dates by using the BETWEEN operator.
+02:32
+BETWEEN is an operator that filters for numbers or dates within a range.
+02:37
+An example of this would be when looking for all patches installed within a certain range.
+02:43
+Let's do this!
+02:43
+Let's find all the patches installed between March 1st, 2021 and September 1st, 2021.
+02:51
+In our query, we start with selecting all records FROM the machines table.
+02:59
+And we add the BETWEEN operator in the WHERE statement.
+03:06
+Let's break down the statement.
+03:08
+First, after WHERE, we indicate which column to filter, in our case, OS_patch_date.
+03:16
+Next, comes our operator BETWEEN.
+03:20
+We then add the beginning of our range, type AND, then finish by adding the end of our range and a semicolon.
+03:28
+Now, let's run this and explore the output.
+03:32
+And now we have a list of all machines patched between those two dates!
+03:38
+Before we wrap up, an important thing to note is that when we filter for strings, dates, and times, we use quotation marks to specify what we're looking for.
+03:47
+However, for numbers, we don't use quotation marks.
+03:52
+With this new knowledge, you're now ready to work on all sorts of interesting filters for numbers and dates.
+03:58
+In the next video, we'll be able to expand our filtering even further by using multiple conditions in one query.
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Filters with AND, OR, and NOT
+Transcript
+00:00
+In the previous lesson, we learned about even more ways to filter queries in SQL to work with some typical security analyst tasks.
+00:08
+However, when working with real security questions, we often have to filter for multiple conditions.
+00:15
+Vulnerabilities, for instance, might depend on more than one factor.
+00:19
+For example, a security vulnerability might be related to machines using a specific email client on a specific operating system.
+00:28
+So, to find the possible vulnerabilities, we need to find machines using both the email client and the operating system.
+00:38
+To make a query with multiple conditions that must be met, we use the AND operator between two separate conditions.
+00:46
+AND is an operator that specifies that both conditions must be met simultaneously.
+00:53
+Bringing this back to our fruit and vegetable analogy, this is the same as asking someone to select apples from the big box where the apples are large and fresh.
+01:03
+This means our results won't include any small apples even if they're fresh, or any rotten apples even if they're large.
+01:12
+They'll only include large fresh apples.
+01:15
+The apples must meet both conditions.
+01:20
+Going back to our database, the machines table lists all operating systems and email clients.
+01:25
+We want a list of machines running Operating System 1 and a list of machines using Email Client 1.
+01:33
+We'll use the left and right circles in the Venn diagram to represent these groups.
+01:39
+We need SQL to select the machines that have both OS 1 and Email Client 1.
+01:46
+The filled-in area at the intersection of these circles represents this condition.
+01:51
+Let's take this and implement it in SQL.
+01:56
+First, we're going to start by building the first lines of the query, telling SQL to SELECT* all columns FROM the machines table.
+02:04
+Then, we'll add the WHERE clause.
+02:11
+Let's examine this more closely.
+02:14
+First, we indicate the first condition that it must meet, that the operating system column
+02:19
+has a value of '0S 1' Then, we use AND to join this to another condition.
+02:27
+And finally, we enter the other condition, in this case that the email client column should have
+02:33
+a value of 'Email Client 1' And this is how you use the AND operator in SQL!
+02:40
+Let's run this to get the query results.
+02:43
+Perfect!
+02:43
+All the results match both our conditions!
+02:49
+Let's keep going and explore more ways to combine different conditions by working with the OR operator.
+02:55
+The OR operator is an operator that specifies that either condition can be met.
+03:01
+In a Venn diagram, let's say each circle represents a condition.
+03:06
+When they are joined with OR, SQL would select all rows that satisfy one of the conditions.
+03:12
+And it's also ok if it meets both conditions.
+03:16
+Let's run another query and use the OR operator.
+03:19
+Let's say that we wanted the filter to identify machines that have either OS 1 or OS 3 because both types need a patch.
+03:28
+We'll type in these conditions.
+03:36
+Let's examine this more closely.
+03:39
+After WHERE, our first condition indicates we want to filter, so that the query selects machines with
+03:45
+'OS 1' We use the OR operator because we also want to find records that match another condition.
+03:53
+This additional condition is placed after OR and indicates to also select machines running 'OS 3' Executing the query, our
+04:02
+results now include records that have a value of either OS 1 or OS 3 in the operating system column.
+04:10
+Good job, we're running some complex queries.
+04:15
+The last operator we're going to go into is the NOT operator.
+04:19
+NOT negates a condition.
+04:22
+In a diagram, we can show this by selecting every entry that does not match our condition.
+04:29
+The condition is represented by the circle.
+04:31
+The filled-in portion outside the circle represents what gets returned.
+04:36
+This is all data that does not match the condition.
+04:39
+For example, when picking out fruit, you can be looking for any fruit that is not an apple.
+04:45
+That is a lot more efficient than telling your friend you want a banana or an orange or a lime, and so on.
+04:54
+Suppose you wanted to update all of the devices in your company except for the ones using OS 3.
+05:00
+Bringing this into SQL, we can write this query.
+05:07
+We place NOT after WHERE and before the condition of the filter.
+05:14
+Executing these queries gives us the list of all the machines that aren't running OS 3, and now we know which machines to update.
+05:24
+That was a lot of new content that we just looked into, but you're learning more and more SQL that you can use on your journey to become an analyst!
+05:32
+In the next video, we'll be learning how to combine and join two tables together to expand the kinds of queries we can run.
+05:40
+I'll meet you there!
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Join tables in SQL
+Transcript
+00:00
+You've already learned a lot about SQL queries and filters.
+00:03
+Nice work!
+00:05
+The last concept we're introducing in this section is joining tables when querying a database.
+00:11
+This is helpful when you need information from two different tables in a database.
+00:17
+Let's say we have two tables: one that tells us about security vulnerabilities of different operating systems, and one about different machines in our company, including their operating systems.
+00:28
+Having the ability to combine them gives us a list of vulnerable machines.
+00:33
+That's pretty cool, right?
+00:37
+First, let's start talking about the syntax of joins.
+00:39
+Since we're working with two tables now, we need a way to tell SQL what table we're picking columns from.
+00:45
+In our example database, we have an employee_id column in both the employees table and the machines table.
+00:53
+In SQL statements that contain two columns, SQL needs to know which column we're referring to.
+01:00
+The way to resolve this is by writing the name of the table first, then a period, and then the name of a column.
+01:08
+So, we would have employees followed by a period, followed by the column name.
+01:14
+This is the employee_id column for the employees table.
+01:18
+Similarly, this is the employee_id column for the machines table.
+01:23
+Now that we understand this syntax, let's apply it to a join!
+01:28
+Imagine that we want to get a deeper understanding of the employees accessing the machines in our company.
+01:34
+By joining the employees and the machines tables, we can do this!
+01:39
+We first need to identify the shared column that we'll use to connect the two tables.
+01:45
+In this case, we'll use a primary key and one table to connect to another table where it's a foreign key.
+01:52
+The primary key of the employees table is employee_id, which is a foreign key in the machines table.
+02:00
+employee_id is a primary key in the employees table because it has a unique value for every row in the employees table, and no empty values.
+02:11
+We don't have a guarantee that the employee_id column in the machines table follows the same criteria since it's a foreign key and not a primary key.
+02:23
+Next, we'll use a type of join called an INNER JOIN.
+02:26
+An INNER JOIN returns rows matching on a specified column that exists in more than one table.
+02:33
+Tables usually contain many more rows, but to further explain what we mean by INNER JOIN,
+02:39
+let's focus on just four rows from the employees table and four rows from the machines table.
+02:46
+We'll also look at just a few columns of each table for this example.
+02:51
+Let's say we choose employee_id in both tables to perform an INNER JOIN.
+02:57
+Let's look at the two rows where there is a match.
+03:01
+Both tables have 1188 and 1189 in their respective employee_id columns, so they are considered a match.
+03:09
+The results of the join is the two rows that have 1188 and 1189 and all columns from both tables.
+03:18
+Before we move on to the queries, we have to talk about the NULL values in the tables.
+03:23
+In SQL, NULL represents a missing value due to any reason.
+03:28
+In this case, this might be machines that are not assigned to any employee.
+03:34
+Now, let's bring this into SQL and do an INNER JOIN on the full tables.
+03:40
+Let's imagine we want to join these tables in order to get a list of
+03:44
+users and their office location that also shows what operating system they use on their machines.
+03:51
+employee_id is a common column between these tables, and we can use this to join them.
+03:57
+But we won't need to show this column in the results.
+04:01
+First, let's start with a basic query that indicates we want to select the username, office, and operating_system columns.
+04:09
+We want employees to be our first or left table, so we'll use that in our FROM statement.
+04:16
+Now, we write the part of the query that tells SQL to join the machines table with the employees table.
+04:23
+Let's break down this query.
+04:24
+INNER JOIN tells SQL to perform the INNER JOIN.
+04:28
+Then, we name the second table we want to combine with the first.
+04:31
+This is called the right table.
+04:34
+In this case, we want to join machines with the employees table that was already identified after FROM.
+04:41
+Lastly, we tell SQL what column to base the join on.
+04:45
+In our case, we're using the employee_id column.
+04:49
+Since we're using two tables, we have to identify the table and follow that with the column name.
+04:55
+So, we have employees.employee_id.
+04:58
+And machines.employee_id.
+05:02
+Let's review the output.
+05:03
+Perfect!
+05:03
+We have now joined two tables.
+05:07
+The results of our query displays the records that match on the employee_id column.
+05:12
+Notice that these records contain columns from both tables, but only the ones we've indicated through our SELECT statement.
+05:20
+There are other types of joins that don't require a match to join two tables, and we're going to discuss those in the next video.
+05:27
+I'll meet you there!
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Types of joins
+Transcript
+00:00
+Welcome back.
+00:00
+I hope you enjoyed working on inner joins.
+00:04
+In the previous video and exercises, we saw how inner joins can be useful by only returning records that share a value in specify columns.
+00:13
+However, in some situations, we might need all of the entries from one or both of our tables.
+00:20
+This is where we need to use outer joins.
+00:24
+There are three types of outer joins: LEFT JOIN, RIGHT JOIN, and FULL OUTER JOIN.
+00:29
+Similar to inner joins, outer joins combine two tables together; however, they don't necessarily need a match between columns to return a row.
+00:39
+Which rows are returned depends on the type of join.
+00:43
+LEFT JOIN returns all of the records of the first table, but only returns rows of the second table that match on a specified column.
+00:49
+Like we did in the previous video, let's examine this type of join by looking at just four rows of two tables with a small number of columns.
+00:58
+Employees is the left table, or the first table, and machines is the right table, or the second table.
+01:05
+Let's join on employee_id.
+01:08
+There's a matching value in this column for two of the four records.
+01:11
+When we execute the join, SQL returns these rows with the matching value, all other rows from the left table, and all columns from both tables.
+01:21
+Records from the employees table that didn't match but were returned through the LEFT JOIN contain NULL values in columns that came from the machines table.
+01:29
+Next, let's talk about right joins.
+01:33
+RIGHT JOIN returns all of the records of the second table but only returns rows from the first table that match on a specified column.
+01:40
+With a RIGHT JOIN on the previous example, the full result returns matching rows from both, all the rows from the second table, and all the columns in both tables.
+01:50
+For the values that don't exist in either table, we are left with a NULL value.
+01:55
+Last, we'll discuss full outer joins.
+01:58
+FULL OUTER JOIN returns all records from both tables.
+02:00
+Using our same example, a FULL OUTER JOIN returns all columns from all tables.
+02:06
+If a row doesn't have a value for a particular column, it returns NULL.
+02:10
+For example, the machines table do not have any rows with employee_id 1190, so the values for that row and the columns that came from the machines table is NULL.
+02:19
+To implement left joins, right joins, and full outer joins in SQL, you use the same syntax
+02:24
+structure as the INNER JOIN but use these keywords: LEFT JOIN, RIGHT JOIN, and FULL OUTER JOIN.
+02:33
+As a security analyst, you're not required to know all of these from memory.
+02:37
+Once you understand the type of join you need, you can quickly search and find all the information you need to execute these queries.
+02:44
+With this information on joins, we've now covered some very important information you'll need as a security analyst using SQL.
+02:52
+Thank you for joining me in this video.
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Wrap-up
+Transcript
+00:00
+Congratulations!
+00:00
+We've made it together through the end of our focus on SQL.
+00:05
+You've put in a lot of work and learned an important tool that will help you on your journey as a security analyst.
+00:12
+Let's take a moment to go through all of the topics you learned in this section.
+00:17
+We started by learning about the structure of relational databases and how we can access them by using the query language SQL.
+00:23
+We then got hands-on practice with writing our own SQL queries.
+00:27
+We used SQL to bring up information you might need on the job when working as an analyst.
+00:33
+We then focused on SQL filters.
+00:35
+We started with simple conditions with strings, and by the end, we learned how to use multiple filters in one query.
+00:42
+We concluded the unit with SQL joins and learned how to join multiple tables, giving us even more information at once.
+00:50
+By completing this course, you just took a very big step in your future career as a security analyst.
+00:55
+You have been introduced to a powerful tool that can help you in your work.
+00:59
+Whenever you need to, I encourage you to revisit the materials in this course.
+01:04
+Learning a querying language like SQL takes time.
+01:08
+Thank you again for joining me in this journey.
+01:11
+I hope you'll enjoy using SQL as much as I do.
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Course wrap-up
+Transcript
+00:00
+You made it to the end of this course!
+00:02
+Congratulations—you did it!
+00:05
+I hope you are proud of all you learned.
+00:07
+The focus of this course was computing basics.
+00:10
+Understanding the basics of computing is a valuable skill as you transition into your career as a security analyst.
+00:18
+Let's recap what you learned in this course.
+00:20
+We first focused on operating systems and how they relate to applications and hardware.
+00:25
+Understanding how the system you're protecting works is essential for doing your job effectively.
+00:31
+That brings us to the Linux operating system.
+00:34
+When working in the security profession, familiarity with Linux is important.
+00:38
+We first discussed this architecture and various distributions.
+00:42
+Then, we used a Linux command line to carry out tasks you might encounter as a security analyst.
+00:49
+Finally, we looked at another useful tool and used SQL to query databases.
+00:56
+After this course, I hope you have a better understanding of how these foundations of computing support a security analyst in their daily work.
+01:02
+I also hope you continue your path with this program.
+01:05
+There are a lot of other useful and exciting topics ahead.
+01:09
+Once again, congratulations.
+01:11
+You've finished another course.
+01:13
+Building skills is something you should be proud of.
+01:16
+Keep it up as you progress through this program.
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

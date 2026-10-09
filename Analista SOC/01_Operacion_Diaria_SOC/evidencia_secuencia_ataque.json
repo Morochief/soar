@@ -1,0 +1,17 @@
+[
+    {
+        "Paso_del_Diagrama": "Paso 1: Consulta DNS Evasiva a OpenDNS",
+        "Hora_Local": "17:56:50",
+        "Raw_Log": "date=2026-07-07 time=17:56:50 devname=\"FG-Technoma\" devid=\"FG120GTK24022543\" eventtime=1783457809818307422 tz=\"-0300\" logid=\"0000000020\" type=\"traffic\" subtype=\"forward\" level=\"notice\" vd=\"root\" srcip=172.17.10.124 srcport=5129 srcintf=\"LAB-SERVER\" srcintfrole=\"lan\" dstip=208.67.222.222 dstport=53 dstintf=\"port1\" dstintfrole=\"wan\" srccountry=\"Reserved\" dstcountry=\"United States\" sessionid=1003871507 proto=17 action=\"accept\" policyid=136 policytype=\"policy\" poluuid=\"4607889c-ca3f-51f0-882a-9813e2bd364a\" policyname=\"Serv-a-Internet\" service=\"DNS\" trandisp=\"snat\" transip=190.128.219.210 transport=5129 appcat=\"unscanned\" duration=167 sentbyte=288 rcvdbyte=652 sentpkt=1 rcvdpkt=1 shapingpolicyid=3 shapingpolicyname=\"TS_Servidores\" shapersentname=\"FULL\" shaperdropsentbyte=0 shaperrcvdname=\"FULL\" shaperdroprcvdbyte=0 vwlid=0 sentdelta=288 rcvddelta=652 durationdelta=167 sentpktdelta=1 rcvdpktdelta=1 devtype=\"Router\" mastersrcmac=\"50:03:00:02:00:00\" srcmac=\"50:03:00:02:00:00\" srcserver=0"
+    },
+    {
+        "Paso_del_Diagrama": "Paso 4: Conexion Ciega al Sinkhole HTTP",
+        "Hora_Local": "17:56:51",
+        "Raw_Log": "date=2026-07-07 time=17:56:51 devname=\"FG-Technoma\" devid=\"FG120GTK24022543\" eventtime=1783457810987877847 tz=\"-0300\" logid=\"0000000013\" type=\"traffic\" subtype=\"forward\" level=\"notice\" vd=\"root\" srcip=172.17.10.124 srcport=5252 srcintf=\"LAB-SERVER\" srcintfrole=\"lan\" dstip=146.112.61.104 dstport=80 dstintf=\"port1\" dstintfrole=\"wan\" srccountry=\"Reserved\" dstcountry=\"United States\" sessionid=1004089456 proto=6 action=\"close\" policyid=136 policytype=\"policy\" poluuid=\"4607889c-ca3f-51f0-882a-9813e2bd364a\" policyname=\"Serv-a-Internet\" service=\"HTTP\" trandisp=\"snat\" transip=190.128.219.210 transport=5252 appcat=\"unscanned\" duration=1 sentbyte=500 rcvdbyte=862 sentpkt=5 rcvdpkt=4 shapingpolicyid=3 shapingpolicyname=\"TS_Servidores\" shapersentname=\"FULL\" shaperdropsentbyte=0 shaperrcvdname=\"FULL\" shaperdroprcvdbyte=0 vwlid=0 devtype=\"Router\" mastersrcmac=\"50:03:00:02:00:00\" srcmac=\"50:03:00:02:00:00\" srcserver=0"
+    },
+    {
+        "Paso_del_Diagrama": "Paso 4: Conexion Ciega al Sinkhole HTTP",
+        "Hora_Local": "17:56:51",
+        "Raw_Log": "date=2026-07-07 time=17:56:51 devname=\"FG-Technoma\" devid=\"FG120GTK24022543\" eventtime=1783457811115893667 tz=\"-0300\" logid=\"0000000013\" type=\"traffic\" subtype=\"forward\" level=\"notice\" vd=\"root\" srcip=172.17.10.124 srcport=5264 srcintf=\"LAB-SERVER\" srcintfrole=\"lan\" dstip=146.112.61.104 dstport=80 dstintf=\"port1\" dstintfrole=\"wan\" srccountry=\"Reserved\" dstcountry=\"United States\" sessionid=1004089892 proto=6 action=\"close\" policyid=136 policytype=\"policy\" poluuid=\"4607889c-ca3f-51f0-882a-9813e2bd364a\" policyname=\"Serv-a-Internet\" service=\"HTTP\" trandisp=\"snat\" transip=190.128.219.210 transport=5264 appcat=\"unscanned\" duration=1 sentbyte=494 rcvdbyte=862 sentpkt=5 rcvdpkt=4 shapingpolicyid=3 shapingpolicyname=\"TS_Servidores\" shapersentname=\"FULL\" shaperdropsentbyte=0 shaperrcvdname=\"FULL\" shaperdroprcvdbyte=0 vwlid=0 mastersrcmac=\"50:03:00:02:00:00\" srcmac=\"50:03:00:02:00:00\" srcserver=0"
+    }
+]

@@ -1,0 +1,730 @@
+Security controls
+Transcript
+00:01
+These days, information is in so many places at once.
+00:04
+As a result, organizations are under a lot of pressure to implement effective security controls that protects everyone's information from being stolen or exposed.
+00:14
+Security controls are safeguards designed to reduce specific security risks.
+00:19
+They include a wide range of tools that protect assets before, during, and after an event.
+00:26
+Security controls can be organized into three types: technical, operational, and managerial.
+00:32
+Technical control types include the many technologies used to protect assets.
+00:35
+This includes encryption, authentication systems, and others.
+00:40
+Operational controls relate to maintaining the day-to-day security environment.
+00:44
+Generally, people perform these controls like awareness training and incident response.
+00:50
+Managerial controls are centered around how the other two reduce risk.
+00:53
+Examples of management controls include policies, standards, and procedures.
+00:59
+Typically, organization's security policy outlines the controls needed to achieve their goals.
+01:04
+Information privacy plays a key role in these decisions.
+01:08
+Information privacy is the protection of unauthorized access and distribution of data.
+01:14
+Information privacy is about the right to choose.
+01:17
+People and organizations alike deserve the right to decide when, how, and to what extent private information about them is shared.
+01:26
+Security controls are the technologies used to regulate information privacy.
+01:32
+For example, imagine using a travel app to book a flight.
+01:34
+You might browse through a list of flights and find one at a good price.
+01:38
+To reserve a seat, you enter some personal information, like your name, email, and credit card number for payment.
+01:45
+The transaction goes through successfully, and you booked your flight.
+01:49
+Now, you reasonably expect the airline company to access this information you enter when signing up to complete the reservation.
+01:57
+However, should everyone at the company have access to your information?
+02:01
+A person working in the marketing department shouldn't need access to your credit card information.
+02:06
+It makes sense to share that information with a customer support agent.
+02:10
+Except, they should only need to access it while helping with your reservation.
+02:14
+To maintain privacy, security controls are intended to limit access based on the user and situation.
+02:20
+This is known as the principle of least privilege.
+02:24
+Security controls should be designed with the principle of least privilege in mind.
+02:28
+When they are, they rely on differentiating between data owners and data custodians.
+02:34
+A data owner is a person who decides who can access, edit, use, or destroy their information.
+02:39
+The idea is very straightforward except in cases where there are multiple owners.
+02:44
+For example, the intellectual property of an organization can have multiple data owners.
+02:51
+A data custodian is anyone or anything that's responsible for the safe handling, transport, and storage of information.
+02:58
+Did you notice that I mentioned, "anything?"
+03:00
+That's because, aside from people, organizations and their systems are also custodians of people's information.
+03:09
+There are other considerations besides these when implementing security controls.
+03:11
+Remember that data is an asset.
+03:14
+Like any other asset, information privacy requires proper classification and handling.
+03:19
+As we progress in this section, we'll continue exploring other security controls that make this possible.
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Heather: The importance of protecting PII
+Transcript
+00:03
+Hello, my name is Heather and I'm the Vice President of Security Engineering at Google.
+00:09
+PII is everywhere.
+00:11
+It's a fundamental part of how we are all working online all the time.
+00:16
+If you are using online resources, you are probably putting your PII out there somewhere.
+00:22
+There's some of your PII that lots of people know, such as your name.
+00:27
+And then there's sensitive data that you don't want very many people to know, such as your bank account number or your private medical health information.
+00:37
+And so we make these distinctions often because this kind of information needs to be handled differently.
+00:43
+Everything that we do now, from school to voting, to registering our car happens online.
+00:53
+And because of that, it's so important that we have safety built-in by default into all of our systems.
+00:59
+Here's some tips.
+01:01
+You should always encrypt the data as much as you can when it's being stored at rest.
+01:06
+And secondly, when it's transitting over the Internet, we always want to encrypt it using TLS or SSL.
+01:14
+Third, within your company, you should think very clearly about who has access to that data.
+01:21
+It should be almost no one if it's very sensitive.
+01:24
+And in the rare cases where somebody does need to access that data, there should be a record of that access, who accessed it, and a justification as to why.
+01:36
+And you should have a program to look at the audit records for that data.
+01:42
+The most important thing to remember is if you have a situation where PII has been
+01:48
+compromised, remember that's someone's personal information and your response wants to be grounded in that reality.
+01:56
+They need to be able to trust the infrastructure, the systems, the websites, the devices.
+02:02
+They need to be able to trust the experience they're having.
+02:05
+For me, that's the mission: To help keep billions of people safe online every day.
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Fundamentals of cryptography
+Transcript
+00:01
+The internet is an open, public system with a lot of data flowing through it.
+00:05
+Even though we all send and store information online, there's some information that we choose to keep private.
+00:12
+In security, this type of data is known as personally identifiable information.
+00:18
+Personally identifiable information, or PII, is any information that can be used to infer an individual's identity.
+00:26
+This can include things like someone's name, medical and financial information, photos, emails, or fingerprints.
+00:35
+Maintaining the privacy of PII online is difficult.
+00:38
+It takes the right security controls to do so.
+00:41
+One of the main security controls used to protect information online is cryptography.
+00:46
+Cryptography is the process of transforming information into a form that unintended readers can't understand.
+00:53
+Data of any kind is kept secret using a two-step process: encryption to hide the information, and decryption to unhide it.
+01:04
+Imagine sending an email to a friend.
+01:05
+The process starts by taking data in its original and readable form, known as plaintext.
+01:11
+Encryption takes that information and scrambles it into an unreadable form, known as ciphertext.
+01:18
+We then use decryption to unscramble the ciphertext back into plaintext form, making it readable again.
+01:26
+Hiding and unhiding private information is a practice that's been around for a long time.
+01:30
+Way before computers!
+01:32
+One of the earliest cryptographic methods is known as Caesar's cipher.
+01:37
+This method is named after a Roman general, Julius Caesar, who ruled the Roman empire near the end of the first century BC.
+01:45
+He used it to keep messages between him and his military generals private.
+01:50
+Caesar's cipher is a pretty simple algorithm that works by shifting letters in the Roman alphabet forward by a fixed number of spaces.
+01:57
+An algorithm is a set of rules that solve a problem.
+02:01
+Specifically in cryptography, a cipher is an algorithm that encrypts information.
+02:08
+For example, a message encoded with Caesar's cipher using a shift of 3 would encode an
+02:13
+A as a D, a B as an E, a C as an F, and so on.
+02:19
+In this example, you could send a friend a message that said, "hello" using a shift of 3, and it would read "khoor."
+02:28
+Now, you might be wondering how would you know the shift a message encrypted with Caesar's cipher is using.
+02:34
+The answer to that is, you need the key!
+02:39
+A cryptographic key is a mechanism that decrypts ciphertext.
+02:43
+In our example, the key would tell you that my message is encrypted by 3 shifts.
+02:47
+With that information, you can unlock the hidden message!
+02:52
+Every form of encryption relies on both a cipher and key to secure the exchange of information.
+02:58
+Caesar's cipher is not widely used today because of a couple of major flaws.
+03:02
+One concerns the cipher itself.
+03:04
+The other relates to the key.
+03:08
+This particular cipher relies entirely on the characters of the Roman alphabet to hide information.
+03:13
+For example, consider a message written using the English alphabet, which is only 26 characters.
+03:19
+Even without the key, it's pretty simple to crack a message secured with Caesar's cipher by shifting letters 26 different ways.
+03:28
+In information security, this tactic is known as brute force attack, a trial-and-error process of discovering private information.
+03:37
+The other major flaw of Caesar's cipher is that it relies on a single key.
+03:40
+If that key was lost or stolen, there's nothing stopping someone from accessing private information.
+03:46
+Properly keeping track of cryptographic keys is an important part of security.
+03:51
+To start, it's important to ensure that these keys are not stored in public places, and to share them separately from the information they will decrypt.
+04:01
+Caesar's cipher is just one of many algorithms used to protect people's privacy.
+04:05
+Due to its limitations, we rely on more complex algorithms to secure information online.
+04:11
+Our next focus is exploring how modern algorithms work to keep information private.
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Public key infrastructure
+Transcript
+00:00
+Computers use a lot of encryption algorithms to send and store information online.
+00:05
+They're all helpful when it comes to hiding private information, but only as long as their keys are protected.
+00:11
+Can you imagine having to keep track of the encryption keys protecting all of your personal information online?
+00:16
+Neither can I, and we don't have to, thanks to something known as public key infrastructure.
+00:25
+Public key infrastructure, or PKI, is an encryption framework that secures the exchange of information online.
+00:31
+It's a broad system that makes accessing information fast, easy, and secure.
+00:36
+So, how does it all work?
+00:39
+PKI is a two-step process.
+00:40
+It all starts with the exchange of encrypted information.
+00:44
+This involves either asymmetric encryption, symmetric encryption, or both.
+00:50
+Asymmetric encryption involves the use of a public and private key pair for encryption and decryption of data.
+00:56
+Let's imagine this as a box that can be opened with two keys.
+01:00
+One key, the public key, can only be used to access the slot and add items to the box.
+01:06
+Since the public key can't be used to remove items, it can be copied and shared with people all around the world to add items.
+01:14
+On the other hand, the second key, the private key, opens the box fully, so that the items inside can be removed.
+01:21
+Only the owner of the box has access to the private key that unlocks it.
+01:26
+Using a public key allows the people and servers you're communicating with to see and send you encrypted information that only you can decrypt with your private key.
+01:34
+This two-key system makes asymmetric encryption a secure way to exchange information online; however, it also slows down the process.
+01:44
+Symmetric encryption, on the other hand, is a faster and simpler approach to key management.
+01:49
+Symmetric encryption involves the use of a single secret key to exchange information.
+01:55
+Let's imagine the locked box again.
+01:57
+Instead of two keys, symmetric encryption uses the same key.
+02:01
+The owner can use it to open the box, add items, and close it again.
+02:05
+When they want to share access, they can give the secret key to anyone else to do the same.
+02:11
+Exchanging a single secret key may make web communications faster, but it also makes it less secure.
+02:18
+PKI uses both asymmetric and symmetric encryption, sometimes in conjunction with one another.
+02:24
+It all depends on whether speed or security is the priority.
+02:28
+For example, mobile chat applications use asymmetric encryption to establish a connection between people at the start of a conversation when security is the priority.
+02:38
+Afterwards, when the speed of communications back-and-forth is the priority, symmetric encryption takes over.
+02:46
+While both have their own strengths and weaknesses, they share a common vulnerability, establishing trust between the sender and receiver.
+02:54
+Both processes rely on sharing keys that can be misused, lost, or stolen.
+02:59
+This isn't a problem when we exchange information in person because we can use our senses to tell the difference between those we trust and those we don't trust.
+03:08
+Computers, on the other hand, aren't naturally equipped to make this distinction.
+03:12
+That's where the second step of PKI applies.
+03:15
+PKI addresses the vulnerability of key sharing by establishing trust using a system of digital certificates between computers and networks.
+03:25
+A digital certificate is a file that verifies the identity of a public key holder.
+03:30
+Most online information is exchanged using digital certificates.
+03:34
+Users, companies, and networks hold one and exchange them when communicating information online as a way of signaling trust.
+03:43
+Let's look at an example of how digital certificates are created.
+03:48
+Let's say an online business is about to launch their website, and they want to obtain a digital certificate.
+03:52
+When they register their domain, the hosting company sends certain information over to a trusted certificate authority, or CA.
+04:00
+The information provided is usually basic things like the company name and the country where its headquarters are located.
+04:07
+A public key for the site is also provided.
+04:10
+The certificate authority then uses this data to verify the company's identity.
+04:15
+When it's confirmed, the CA encrypts the data with its own private key.
+04:19
+Finally, they create a digital certificate that contains the encrypted company data.
+04:23
+It also contains CA's digital signature to prove that it's authentic.
+04:29
+Digital certificates are a lot like a digital ID badge that's used online to restrict or grant access to information.
+04:35
+This is how PKI solves the trust issue.
+04:39
+Combined with asymmetric and symmetric encryption, this two-step approach to exchanging secure information between trusted sources is what makes PKI such a useful security control.
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Non-repudiation and hashing
+Transcript
+00:00
+Security professionals are always thinking about vulnerabilities.
+00:03
+It's how we stay ahead of threats.
+00:08
+We've spent some time together exploring a couple forms of encryption.
+00:10
+The two types we've discussed produce keys that are shared when communicating information.
+00:15
+Encryption keys are vulnerable to being lost or stolen, which can lead to sensitive information at risk.
+00:21
+Let's explore another security control that helps companies address this weakness.
+00:27
+A hash function is an algorithm that produces a code that can't be decrypted.
+00:31
+Unlike asymmetric and symmetric algorithms, hash functions are one-way processes that do not generate decryption keys.
+00:39
+Instead, these algorithms produce a unique identifier known as a hash value, or digest.
+00:46
+Here's an example to demonstrate this.
+00:49
+Imagine a company has an internal application that is used by employees and is stored in a shared drive.
+00:54
+After passing through a hashing function, the program receives its hash value.
+01:00
+For example purposes, we created this relatively short hash value with the MD5 hashing function.
+01:06
+Generally, standard hash functions that produce longer hashes are preferred for being more secure.
+01:14
+Next, let's imagine an attacker replaces the program with a modified version that performs malicious actions.
+01:21
+The malicious program may work like the original.
+01:23
+However, if so much as one line of code is different from the original, it will produce a different hash value.
+01:31
+By comparing the hash values, we can validate that the programs are different.
+01:35
+Attackers use tricks like this often because they're easily overlooked.
+01:40
+Fortunately, hash values help us identify when something like this is happening.
+01:46
+In security, hashes are primarily used as a way to determine the integrity of files and applications.
+01:52
+Data integrity relates to the accuracy and consistency of information.
+01:56
+This is known as non-repudiation, the concept that authenticity of information can't be denied.
+02:03
+Hash functions are important security controls that make proven data integrity possible.
+02:07
+Analysts use them frequently.
+02:09
+One way to do this is by finding the hash value of files or applications and comparing them against known malicious files.
+02:17
+For example, we can use the Linux command line to generate the hash value for any file on your computer.
+02:22
+We just launch a shell and type the name of the hashing algorithm we want to use.
+02:28
+In this case, we're using a common one known as sha256.
+02:32
+Next, we need to enter the file name of any file we want to hash.
+02:36
+Let's hash the contents of newfile.txt.
+02:39
+Now, we'll press Enter.
+02:43
+The terminal generates this unique hash value for the file.
+02:47
+These tools can be compared with the hash values of known online viruses.
+02:51
+One such database is VirusTotal.
+02:54
+This is a popular tool among security practitioners that's useful for analyzing suspicious files, domains, IPs, and URLs.
+03:03
+As we've explored, even the slightest change in input results in a totally different hash value.
+03:08
+Hash functions are intentionally designed this way to assist with matters of non-repudiation.
+03:13
+They equip computers with a quick and easy way to compare input and output values and validate data integrity.
+03:20
+Pretty cool, right?
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Access controls and authentication systems
+Transcript
+00:00
+Protecting data is a fundamental feature of security controls.
+00:04
+When it comes to keeping information safe and secure, hashing and encryption are powerful, yet limited tools.
+00:11
+Managing who or what has access to information is also key to safeguarding information.
+00:19
+The next series of controls that we'll be exploring are access controls, the security controls that manage access, authorization, and accountability of information.
+00:27
+When done well, access controls maintain data confidentiality, integrity, and availability.
+00:34
+They also get users the information they need quickly.
+00:39
+These systems are commonly broken down into three separate, yet related functions known as the authentication, authorization, and accounting framework.
+00:47
+Each control has its own protocol and systems that make them work.
+00:51
+In this video, let's get comfortable with the basics of the first one on the list, authentication.
+00:58
+Authentication systems are access controls that serve a very basic purpose.
+01:02
+They ask anything attempting to access information this simple question: who are you?
+01:08
+Organizations go about collecting answers to these questions differently, depending on the objectives of their security policy.
+01:15
+Some are more thorough than others, but in general, responses to this question can be based on three factors of authentication.
+01:23
+The first is knowledge.
+01:23
+Authentication by knowledge refers to something the user knows, like a password or the answer to a security question they provided previously.
+01:33
+Another factor is ownership, referring to something the user possesses.
+01:37
+A commonly used type of authentication by ownership is a one-time passcode, or OTP.
+01:42
+You've probably experienced these at one time or another.
+01:46
+They're a random number sequence that an application or website will send you via text or email and ask you to provide.
+01:54
+Last is characteristic.
+01:54
+Authentication by this factor is something the user is.
+01:58
+Biometrics, like fingerprint scans on your smartphone, are example of this type of authentication.
+02:04
+While not used everywhere, this form of authentication is becoming more common because it's much tougher for criminals
+02:10
+to impersonate someone if they have to mimic a fingerprint or facial scan as opposed to a password.
+02:18
+The information provided during authentication needs to match the information on file for these access controls to work.
+02:23
+When the credentials don't match, authentication fails and access is denied.
+02:27
+When they match, access is granted.
+02:32
+Incorrectly denying access can be frustrating to anyone.
+02:35
+To make access systems more convenient, many organizations these days rely on single sign-on.
+02:40
+Single sign-on, or SSO, is a technology that combines several different logins into one.
+02:47
+Can you imagine having to reintroduce yourself every time you meet up with a friend?
+02:51
+That's exactly the sort of problem SSO solves.
+02:56
+Instead of requiring users to authenticate over and over again, SSO establishes their identity once, allowing them to gain access to company resources faster.
+03:05
+While SSO systems are helpful when it comes to speeding up the authentication process, they present a significant vulnerability when used alone.
+03:15
+Denying access to authorized users can be frustrating, but you know what's even worse?
+03:19
+Incorrectly granting access to the wrong user.
+03:23
+SSO technology is great, but not if it relies on just a single factor of authentication.
+03:27
+Adding more authentication factors strengthen these systems.
+03:34
+Multi-factor authentication, or MFA, is a security measure, which requires a user to verify their identity in two or more ways to access a system or network.
+03:43
+MFA combines two or more independent credentials, like knowledge and ownership, to prove that someone is who they claim to be.
+03:52
+SSO and MFA are often used in conjunction with one another to layer the defense capabilities of authentication systems.
+03:59
+When both are used, organizations can ensure convenient access that is also secure.
+04:04
+Now that we covered authentication, we're ready to explore the second part of the framework.
+04:09
+Next, we'll learn about authorization!
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+The mechanisms of authorization
+Transcript
+00:00
+Access is as much about authorization as it is about authentication.
+00:05
+One of the most important functions of access controls is how they assign responsibility for certain systems and processes.
+00:13
+Next up in our exploration of access control systems are the mechanisms of authorization.
+00:20
+These protocols actually work closely together with authentication technologies.
+00:22
+While one validates who the user is, the other determines what they're allowed to do.
+00:29
+Let's take a look at the next part of the authentication, authorization, and accounting framework that protects private information.
+00:37
+Earlier, we learned about the principle of least privilege.
+00:40
+Authorization is linked to the idea that access to information only lasts as long as needed.
+00:46
+Authorization systems are also heavily influenced by this idea in addition to another important security principle, the separation of duties.
+00:56
+Separation of duties is the principle that users should not be given levels of authorization that will allow them to misuse a system.
+01:04
+Separating duties reduces the risk of system failures and inappropriate behavior from users.
+01:11
+For example, a person responsible for providing customer service shouldn't also be authorized to rate their own performance.
+01:17
+In this position, they could easily neglect their duties while continuing to give themselves high marks with no oversight.
+01:24
+Similarly, if one person was authorized to develop and test a security system, they are much more likely to be unaware of its weaknesses.
+01:34
+Both the principle of least privilege and the concept of separating duties apply to more than just people.
+01:39
+They apply to all systems including networks, databases, processes, and any other aspect of an organization.
+01:46
+Ultimately, authorization depends on a system or user's role.
+01:51
+When it comes to securing data over a network, there are a couple of frequently used access controls that you should be familiar with: HTTP basic auth and OAuth.
+02:02
+Have you ever wondered what the HTTP in web addresses stood for.
+02:05
+It stands for hypertext transfer protocol, which is how communications are established over network.
+02:12
+HTTP uses what is known as basic auth, the technology used to establish a user's request to access a server.
+02:19
+Basic auth works by sending an identifier every time a user communicates with a web page.
+02:26
+Some websites still use basic auth to tell whether or not someone is authorized to access information on that site.
+02:31
+However, their protocol is considered to be vulnerable to attacks because it transmits usernames and password openly over the network.
+02:40
+Most websites today use HTTPS instead, which stands for hypertext transfer protocol secure.
+02:48
+This protocol doesn't expose sensitive information, like access credentials, when communicating over the network.
+02:56
+Another secure authentication technology used today is OAuth.
+02:59
+OAuth is an open-standard authorization protocol that shares designated access between applications.
+03:05
+For example, you can tell Google that it's okay for another website to access your profile to create an account.
+03:12
+Instead of requesting and sending sensitive usernames and passwords over the network, OAuth uses API tokens to verify access between you and a service provider.
+03:23
+An API token is a small block of encrypted code that contains information about a user.
+03:28
+These tokens contain things like your identity, site permissions, and more.
+03:32
+OAuth sends and receives access requests using API tokens by passing them from a server to a user's device.
+03:41
+Let's explore what's going on behind the scenes.
+03:43
+When you authorize a site to create an account using your Google profile, all of Google's usual login protocols are still active.
+03:50
+If you have multi-factor authentication enabled on your account, and you should, you'll still have the security benefits that it provides.
+03:58
+API tokens minimize risks in a major way.
+04:01
+These API tokens serve as an additional layer of encryption that helps to keep your Google password safe in the event of a breach on another platform.
+04:10
+Basic auth and OAuth are just a couple of examples of authorization tools that are designed with the principles of least privilege and separation of duty in mind.
+04:19
+There are many other controls that help limit the risk of unauthorized access to information.
+04:24
+In addition to controlling access, it's also important to monitor it.
+04:29
+In our next video, we'll focus on the third and final part of the authentication, authorization, and accounting framework.
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Why we audit user activity
+Transcript
+00:00
+Have you ever wondered if your employer is keeping a record of when you log into company systems?
+00:06
+Well, they are, if they're implementing the third and final function of the authentication, authorization, and accounting framework.
+00:14
+Accounting is the practice of monitoring the access logs of a system.
+00:17
+These logs contain information like who accessed the system, and when they accessed it, and what resources they used.
+00:25
+Security analysts use access logs a lot.
+00:26
+The data they contain is a helpful way to identify trends, like failed login attempts.
+00:32
+They're also used to uncover hackers who have gained access to a system, and for detecting an incident, like a data breach.
+00:40
+In this field, access logs are essential.
+00:42
+Oftentimes, analyzing them is the first procedure you'll follow when investigating a security event.
+00:49
+So, how do access logs compile all this useful information?
+00:53
+Let's examine this more closely.
+00:56
+Anytime a user accesses a system, they initiate what's called a session.
+01:00
+A session is a sequence of network HTTP basic auth requests and responses associated with the same user, like when you visit a website.
+01:10
+Access logs are essentially records of sessions that capture the moment a user enters a system until the moment they leave it.
+01:18
+Two actions are triggered when the session begins.
+01:21
+The first is the creation of a session ID.
+01:23
+A session ID is a unique token that identifies a user and their device while accessing the system.
+01:29
+Session IDs are attached to the user until they either close their browser or the session times out.
+01:36
+The second action that takes place at the start of a session is an exchange of session cookies between a server and a user's device.
+01:43
+A session cookie is a token that websites use to validate a session and determine how long that session should last.
+01:50
+When cookies are exchanged between your computer and a server, your session ID is read to determine what information the website should show you.
+02:01
+Cookies make web sessions safer and more efficient.
+02:03
+The exchange of tokens means that no sensitive information, like usernames and passwords, are shared.
+02:09
+Session cookies prevent attackers from obtaining sensitive data.
+02:13
+However, there's other damage that they can do.
+02:16
+With a stolen cookie, an attacker can impersonate a user using their session token.
+02:21
+This kind of attack is known as session hijacking.
+02:25
+Session hijacking is an event when attackers obtain a legitimate user's session ID.
+02:30
+During these kinds of attacks, cyber criminals impersonate the user, causing all sorts of harm.
+02:36
+Money or private data can be stolen.
+02:39
+If, for example, hijackers obtain a single sign-on credential from stolen cookies, they can even gain access to additional systems that otherwise seem secure.
+02:50
+This is one reason why accounting and monitoring session logs is so important.
+02:54
+Unusual activity on access logs can be an indication that information has been improperly accessed or stolen.
+03:02
+At the end of the day, accounting is how we gain valuable insight that makes information safer.
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Tim: Finding purpose in protecting assets
+Transcript
+00:00
+[MUSIC] My name is Tim and I work on the Detection and Response team at Google.
+00:08
+You can think of us as the smoke detectors and the fire departments at Google.
+00:12
+So what our job is, is to detect harmful activity that may affect Google and its users.
+00:20
+The stakes here are very, very high.
+00:21
+So imagine what you have on Google, whether it's docs, it's pictures, your financial information, some of your secrets.
+00:31
+Some things that you don't want anybody to know.
+00:33
+Those are the things that we're protecting.
+00:35
+Cybersecurity professionals are there to protect the most valuable assets of the company.
+00:40
+You'll be there to protect that, and that direct line from what you're doing to what the company
+00:45
+feels is most important, most valuable, and protecting that, I think provides a lot of purpose for folks.
+00:51
+And provides a lot of motivation and provides the basis and the foundation for a very, very satisfying career.
+00:57
+Cybersecurity is a profoundly rewarding career.
+01:02
+It is a function that is critical at many, many companies and it is a career
+01:07
+that is in high demand, and there is an absolute shortage of talented labor out there.
+01:14
+So from that aspect, if you're looking for a path to a viable, long term, rewarding career, this is as straight a path to that as you can imagine.
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Wrap-up
+Transcript
+00:00
+Our focus in this section was on a major theme of security: protecting assets.
+00:05
+A large part of this relates to privacy.
+00:08
+We should all enjoy the right to decide who can access our information.
+00:12
+As we learned, there are several controls in place that help secure assets.
+00:18
+We began the section by exploring effective data handling processes that are founded on the principle of least privilege.
+00:23
+We then explored the role of encryption and hashing and safeguarding information.
+00:28
+We explored how symmetric and asymmetric encryption works and how hashes further safeguard data from harm.
+00:36
+We then turned our attention to standard access controls.
+00:38
+Properly authenticating and authorizing users is what maintaining the CIA triad of information is all about!
+00:46
+We used the AAA framework of security to take a detailed tour of identity and access management
+00:50
+systems and the access controls that validate whether or not someone is who they claim to be.
+00:58
+Well done making it through the first half of the course!
+01:00
+You're making great progress so far, and I hope you keep it up.
+01:04
+Remember, your background and experiences are valuable in this field.
+01:08
+This combined with the concepts we're covering will make you a valuable contributor to any security team.
+01:15
+Up until this point, we've been exploring the defensive side of security, but security isn't all about planning ahead and waiting for something to happen.
+01:22
+In the next part of our journey, we're going to continue developing a security mindset by taking a more proactive look at security from the perspective of attackers.
+01:31
+I'll meet you there!
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -1,0 +1,1 @@
+﻿{" events\:5,\src\:\192.168.169.102\,\src_host\:\nb-mazcona.technoma.local\,\dst\:\10.0.200.51\,\ports\:[\udp/137\,\tcp/5150\],\action\:\deny\,\device\:\FortiGate-200F\,\rules\:[\DENY_INTERLAN_NETBIOS\,\DENY_INTERLAN_UNKNOWN\]}

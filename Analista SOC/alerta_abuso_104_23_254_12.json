@@ -1,0 +1,176 @@
+{
+  "srcip": "104.23.254.12",
+  "stellar_da_input": 3167,
+  "parser_raw_msg": "<189>date=2026-10-09 time=08:58:04 devname=\"FG-Technoma\" devid=\"FG120GTK24022543\" eventtime=1791547083087885250 tz=\"-0300\" logid=\"0000000013\" type=\"traffic\" subtype=\"forward\" level=\"notice\" vd=\"root\" srcip=104.23.254.12 srcport=12041 srcintf=\"port2\" srcintfrole=\"wan\" dstip=190.104.178.146 dstport=443 dstintf=\"DMZ Servers\" dstintfrole=\"lan\" srccountry=\"Brazil\" dstcountry=\"Paraguay\" sessionid=1485024629 proto=6 action=\"close\" policyid=219 policytype=\"policy\" poluuid=\"c98b32b0-e4cd-51f0-f9ca-f18e6561c980\" policyname=\"Publicacion DigitalCert\" service=\"HTTPS\" trandisp=\"dnat\" tranip=10.11.3.196 tranport=443 appcat=\"unscanned\" duration=136 sentbyte=2945 rcvdbyte=5617 sentpkt=19 rcvdpkt=16 shapingpolicyid=8 shapingpolicyname=\"Digital Cert IN\" shapersentname=\"TECH-DIGITALCERT\" shaperdropsentbyte=0 shaperrcvdname=\"TECH-DIGITALCERT\" shaperdroprcvdbyte=0 sentdelta=156 rcvddelta=232 durationdelta=15 sentpktdelta=3 rcvdpktdelta=4 masterdstmac=\"50:6b:8d:f6:1e:1d\" dstmac=\"50:6b:8d:f6:1e:1d\" dstserver=0",
+  "dstport": 443,
+  "totalbytes": 8562,
+  "dstip_geo": {
+    "city": "Asunción",
+    "countryCode": "PY",
+    "latitude": -25.2869,
+    "countryName": "Paraguay",
+    "region": "Asuncion",
+    "longitude": -57.6511
+  },
+  "appid_family": "Standard",
+  "appid_stdport": "yes",
+  "srcip_geo": {
+    "city": "São Paulo",
+    "countryCode": "BR",
+    "latitude": -23.5475,
+    "countryName": "Brazil",
+    "region": "São Paulo",
+    "longitude": -46.6361
+  },
+  "msg_class": "firewall",
+  "action": "close",
+  "stellar_uuid": "0d307ce9-c845-41f8-b538-f8cf193bdf521791547172363",
+  "dstip_type": "public",
+  "srcip_reputation_source": "ETPro",
+  "dstip": "190.104.178.146",
+  "state": "Closed",
+  "msgtype": 4,
+  "tenant_name": "technoma",
+  "dstip_reputation": "Good",
+  "outbytes_total": 2945,
+  "appid_name": "HTTPS",
+  "receive_time": 1791547161875,
+  "dstip_host": "190.104.178.146",
+  "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+  "proto": 6,
+  "srcip_geo_point": "-23.5475,-46.6361",
+  "write_time": 1791547172363,
+  "engid": "4e3eab0649114a80a089a5d5a078994d",
+  "dev_type": "fw_fortigate",
+  "dev_class": "firewall",
+  "device": {
+    "name": "FG-Technoma"
+  },
+  "fw_policy_id": "FG-Technoma_219",
+  "dstip_geo_point": "-25.2869,-57.6511",
+  "domain_creation": 1791547083088,
+  "dstmac": "50:6b:8d:f6:1e:1d",
+  "log": {
+    "syslog": {
+      "priority": 189
+    }
+  },
+  "netid": 0,
+  "inpkts_delta": 16,
+  "msg_origin": {
+    "source": "fw_fortigate",
+    "category": "firewall",
+    "processor": {
+      "name": "in_udp,parser-stellar,filter_stellar_parser-forti_fortigate",
+      "type": "log_forwarder"
+    }
+  },
+  "threat_score": 42,
+  "duration": 136,
+  "srcip_asn_org": "Cloudflare, Inc.",
+  "dstip_asn": 27895,
+  "msg_data": [
+    {
+      "name": "shapingpolicyid",
+      "strvalue": "8"
+    },
+    {
+      "name": "shapingpolicyname",
+      "strvalue": "Digital Cert IN"
+    },
+    {
+      "name": "shapersentname",
+      "strvalue": "TECH-DIGITALCERT"
+    },
+    {
+      "name": "shaperdropsentbyte",
+      "strvalue": "0"
+    },
+    {
+      "name": "shaperrcvdname",
+      "strvalue": "TECH-DIGITALCERT"
+    },
+    {
+      "name": "shaperdroprcvdbyte",
+      "strvalue": "0"
+    },
+    {
+      "name": "masterdstmac",
+      "strvalue": "50:6b:8d:f6:1e:1d"
+    },
+    {
+      "name": "dstserver",
+      "strvalue": "0"
+    }
+  ],
+  "engid_gateway": "181.103.4.178",
+  "msgtype_name": "startend",
+  "aella_tuples": "104.23.254.12.190.104.178.146.443.4",
+  "stellar_client_addr": "127.0.0.1",
+  "stellar_ingestion_port": 5149,
+  "vlan": 0,
+  "dscp_name": "Best Effort",
+  "tenantid": "e511c3fc54cd4d668bb67612c2ef4b04",
+  "srcip_asn": 13335,
+  "srcip_host": "104.23.254.12",
+  "srcmac": "00:00:00:00:00:00",
+  "srcip_version": "ipv4",
+  "event": {
+    "timestamp": 1791547083088
+  },
+  "org_name": "Technoma",
+  "outpkts_delta": 19,
+  "timestamp": 1791547083088,
+  "inbytes_total": 5617,
+  "netid_name": "vlan0",
+  "totalpackets": 35,
+  "srcip_type": "public",
+  "srcip_reputation": "Brute_Forcer",
+  "engid_name": "technoma-sensor",
+  "proto_name": "tcp",
+  "stellar_index_id": "aella-adr-2026.10.09-e511c3fc54cd4d668bb67612c2ef4b04",
+  "dstip_version": "ipv4",
+  "fortinet": {
+    "date": "2026-10-09",
+    "devid": "FG120GTK24022543",
+    "srcintfrole": "wan",
+    "poluuid": "c98b32b0-e4cd-51f0-f9ca-f18e6561c980",
+    "sentdelta": "156",
+    "durationdelta": "15",
+    "tz": "-0300",
+    "eventtime": "1791547083087885250",
+    "sessionid": "1485024629",
+    "type": "traffic",
+    "srccountry": "Brazil",
+    "subtype": "forward",
+    "dstintf": "DMZ Servers",
+    "trandisp": "dnat",
+    "rcvdpktdelta": "4",
+    "dev_name": "FG-Technoma",
+    "srcintf": "port2",
+    "level": "notice",
+    "policytype": "policy",
+    "sentpktdelta": "3",
+    "vd": "root",
+    "rule_id": 219,
+    "dstintfrole": "lan",
+    "appcat": "unscanned",
+    "tranip": "10.11.3.196",
+    "service": "HTTPS",
+    "logid": "0000000013",
+    "policyname": "Publicacion DigitalCert",
+    "time": "08:58:04",
+    "tranport": "443",
+    "rcvddelta": "232",
+    "dstcountry": "Paraguay",
+    "event_time": "2026-10-09 08:58:04"
+  },
+  "appid": 4,
+  "srcport": 12041,
+  "srcip_geo_source": "maxmind",
+  "locid": "unassigned location",
+  "dstip_asn_org": "Nucleo S.A.",
+  "_index": "stellar-index-v1-adr-cf73a415c8794884a0c35b458b7c73ae-68e4cbd80c1098a3aec33727-2026.10.07-000060",
+  "_id": "VVWIIKEBI3UnQyDOawio",
+  "_type": "_doc"
+}

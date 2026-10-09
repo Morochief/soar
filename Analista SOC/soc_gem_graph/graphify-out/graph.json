@@ -1,0 +1,105 @@
+{
+  "directed": false,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {
+      "label": "Memoria Institucional",
+      "file_type": "document",
+      "source_file": "SOC_GEM_v2.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "soc_gem_graph_soc_gem_v2_memoria_institucional",
+      "community": 0,
+      "norm_label": "memoria institucional"
+    },
+    {
+      "label": "Reglas de Oro Operacionales",
+      "file_type": "document",
+      "source_file": "SOC_GEM_v2.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "soc_gem_graph_soc_gem_v2_reglas_oro",
+      "community": 0,
+      "norm_label": "reglas de oro operacionales"
+    },
+    {
+      "label": "NIST SP 800-61 Rev3",
+      "file_type": "concept",
+      "source_file": "SOC_GEM_v2.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "soc_gem_graph_soc_gem_v2_nist_800_61",
+      "community": 0,
+      "norm_label": "nist sp 800-61 rev3"
+    },
+    {
+      "label": "SAMR Protocol",
+      "file_type": "concept",
+      "source_file": "SOC_GEM_v2.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "soc_gem_graph_soc_gem_v2_samr_protocol",
+      "community": 1,
+      "norm_label": "samr protocol"
+    },
+    {
+      "label": "MS-SAMR Protocol Specification",
+      "file_type": "document",
+      "source_file": "SOC_GEM_v2.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "soc_gem_graph_soc_gem_v2_ms_samr",
+      "community": 1,
+      "norm_label": "ms-samr protocol specification"
+    }
+  ],
+  "links": [
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "SOC_GEM_v2.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "soc_gem_graph_soc_gem_v2_reglas_oro",
+      "target": "soc_gem_graph_soc_gem_v2_memoria_institucional"
+    },
+    {
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "SOC_GEM_v2.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "soc_gem_graph_soc_gem_v2_reglas_oro",
+      "target": "soc_gem_graph_soc_gem_v2_nist_800_61"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "SOC_GEM_v2.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "soc_gem_graph_soc_gem_v2_ms_samr",
+      "target": "soc_gem_graph_soc_gem_v2_samr_protocol"
+    }
+  ],
+  "hyperedges": []
+}

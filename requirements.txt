@@ -1,0 +1,29 @@
+# =============================================================================
+# TECHNOMA SOC — OPENXDR COCKPIT & FORENSIC SUITE
+# Dependencias de Python requeridas para ejecutar Cockpit en cualquier equipo
+# Instalación: pip install -r requirements.txt
+# =============================================================================
+
+# Interfaz Gráfica (GUI Desktop)
+PySide6>=6.6.0
+
+# Red, APIs y Telemetría HTTP
+requests>=2.31.0
+urllib3>=2.0.0
+beautifulsoup4>=4.12.0
+
+# Gestión de Variables de Entorno y Configuración
+python-dotenv>=1.0.0
+
+# Manipulación de Datos, Exportación TSV/Excel
+pandas>=2.1.0
+openpyxl>=3.1.0
+
+# Motores de Inteligencia Artificial (NVIDIA NIM / Gemini / OpenAI)
+openai>=1.0.0
+google-generativeai>=0.8.0
+
+# Procesamiento de Documentos y Reportes PDF
+pypdf>=4.0.0
+pdfplumber>=0.11.0
+markdownify>=1.2.0

@@ -1,0 +1,212 @@
+{
+"issue": {
+"custom_status": "New",
+"lastOpen": "0001-01-01T00:00:00Z",
+"autime": 1785933994082620400,
+"details": "The rare binary TeknoMW3_Client_Launcher.exe connected to a rare external host. The address it tried to contact was teknogods.com. This unsigned process was seen on 0 hosts and across 0 unique days in the last 30 days. The actor sent 0.0002498626708984375MB and recved 0.0033969879150390625MB during the network session. The address teknogods.com was connected by 0 different endpoints across 0 unique days in the last 30 days. This is an uncommon communication pattern",
+"rawType": "Unclassified",
+"dueDate": "0001-01-01T00:00:00Z",
+"attachment": null,
+"retained": false,
+"reason": "",
+"haOriginalID": "",
+"occurred": "0001-01-01T00:00:00Z",
+"isPlayground": false,
+"resolution_status": "New",
+"sizeInBytes": 0,
+"canvases": null,
+"rawCategory": "",
+"sla": 0,
+"dbotDirtyFields": null,
+"created": "2026-08-05T12:46:34.082620544Z",
+"linkedIncidents": null,
+"modified": "2026-07-30T22:06:41.613Z",
+"isDebug": false,
+"closeNotes": "",
+"parent": "",
+"name": "Rare unsigned binary connected to a globally rare external host",
+"sourceBrand": "ANALYTICS_BIOC",
+"closed": "0001-01-01T00:00:00Z",
+"account": "",
+"parentXDRIncident": "INCIDENT-529",
+"droppedCount": 0,
+"rawJSON": "",
+"sourceInstance": "",
+"lastJobRunTime": "0001-01-01T00:00:00Z",
+"activated": "0001-01-01T00:00:00Z",
+"reminder": "0001-01-01T00:00:00Z",
+"status": 0,
+"dbotMirrorLastSync": "0001-01-01T00:00:00Z",
+"rawPhase": "",
+"OWNER": {
+"owner": "",
+"rawName": "Rare unsigned binary connected to a globally rare external host",
+"exported": false,
+"rawCloseReason": "",
+"feedBased": false,
+"dbotCurrentDirtyFields": null,
+"notifyTime": "0001-01-01T00:00:00Z",
+"linkedCount": 0,
+"dbotMirrorInstance": "",
+"version": 0,
+"playbookId": "",
+"incidentSchedulingKey": "",
+"dedupID": "",
+"haIntegrationEventID": "",
+"type": "Unclassified",
+"id": "133150",
+"phase": "",
+"closingUserId": "",
+"dbotMirrorTags": null,
+"closeReason": "",
+"cacheVersn": 0,
+"dbotMirrorDirection": "",
+"dbotMirrorId": "",
+"runStatus": "",
+"severity": 2,
+"investigationId": "133150",
+"category": "",
+"openDuration": 0,
+"os_actor_process_image_sha256": [
+"8ddf64f5e0831de63794a6474b73636ce52768b491fcff658a3304b9679f229b"
+],
+"os_actor_thread_thread_id": [
+17700
+],
+"actor_process_image_md5": [
+"059060791187766dfed2a08eeb089e45"
+],
+"alert_category": "Command and Control",
+"causality_actor_process_image_name": [
+"TeknoMW3_Client_Launcher.exe"
+],
+"actor_process_command_line": [
+"C:\\Call of Duty Modern Warfare 3\\TeknoMW3_Client_Launcher.exe\" "
+],
+"actor_process_image_path": [
+"C:\\Call of Duty Modern Warfare 3\\TeknoMW3_Client_Launcher.exe"
+],
+"fw_is_phishing": [
+"NOT_AVAILABLE"
+],
+"mitre_tactic_id_and_name": [
+"TA0011 - Command and Control"
+],
+"agent_ip_addresses": [
+"192.168.169.76"
+],
+"action_local_ip": [
+"192.168.169.76"
+],
+"os_actor_process_image_name": [
+"TeknoMW3_Client_Launcher.exe"
+],
+"actor_thread_thread_id": [
+17700
+],
+"actor_process_image_sha256": [
+"8ddf64f5e0831de63794a6474b73636ce52768b491fcff658a3304b9679f229b"
+],
+"os_actor_process_image_md5": [
+"059060791187766dfed2a08eeb089e45"
+],
+"dbotcreated": "2026-07-30T20:36:33.326Z",
+"os_actor_process_os_pid": [
+32760
+],
+"alert_domain": "DOMAIN_SECURITY",
+"fw_app_id": [
+"ip,tcp,ssl"
+],
+"causality_actor_process_image_md5": [
+"059060791187766dfed2a08eeb089e45"
+],
+"status.progress": "STATUS_010_NEW",
+"actor_process_image_name": [
+"TeknoMW3_Client_Launcher.exe"
+],
+"last_update_timestamp": "2026-07-30T22:06:41.613Z",
+"actor_process_os_pid": [
+32760
+],
+"causality_actor_process_signature_status": [
+"SIGNATURE_UNSIGNED"
+],
+"agent_hostname": "NB-AMUNOZ",
+"is_excepted": false,
+"os_actor_process_signature_status": [
+"SIGNATURE_UNSIGNED"
+],
+"external_id": "68ae13f4-e43c-460d-a5bc-9c259de7e0e9",
+"action_remote_port": [
+443
+],
+"local_insert_ts": "2026-07-30T20:40:35.837Z",
+"is_whitelisted": false,
+"matching_service_rule_id": "91a94867-03ff-4361-a592-47bc82fc3418",
+"variation_rule_id": "891e3a6b-5b19-4033-8d20-c2e2377ccdc1",
+"action_process_signature_status": [
+"SIGNATURE_UNAVAILABLE"
+],
+"actor_process_signature_status": [
+"SIGNATURE_UNSIGNED"
+],
+"family_tags": [
+"DT:EDR Windows C2 Analytics",
+"DS:PANW/XDR Agent",
+"DOM:Security"
+],
+"mitre_technique_id_and_name": [
+"T1071.001 - Application Layer Protocol: Web Protocols"
+],
+"causality_actor_causality_id": [
+"Ad0gYxbip8MAAH/4AAAAAA=="
+],
+"action_remote_ip": [
+"94.242.58.56"
+],
+"alert_action_status": "DETECTED",
+"contains_featured_ip": [
+"NO"
+],
+"actor_effective_username": [
+"TECHNOMA\\albertmunoz"
+],
+"is_rule_triggering": false,
+"tags": [
+"DT:EDR Windows C2 Analytics",
+"DS:PANW/XDR Agent",
+"DOM:Security"
+],
+"contains_featured_host": [
+"NO"
+],
+"causality_actor_process_command_line": [
+"C:\\Call of Duty Modern Warfare 3\\TeknoMW3_Client_Launcher.exe\" "
+],
+"agent_os_sub_type": "Windows 11 [10.0 (Build 26200)]",
+"causality_actor_process_image_path": [
+"C:\\Call of Duty Modern Warfare 3\\TeknoMW3_Client_Launcher.exe"
+],
+"agent_os_type": "AGENT_OS_WINDOWS",
+"contains_featured_user": [
+"NO"
+],
+"causality_actor_process_image_sha256": [
+"8ddf64f5e0831de63794a6474b73636ce52768b491fcff658a3304b9679f229b"
+],
+"os_actor_process_command_line": [
+"C:\\Call of Duty Modern Warfare 3\\TeknoMW3_Client_Launcher.exe\" "
+],
+"action_external_hostname": [
+"teknogods.com"
+],
+"action_local_port": [
+8450
+],
+"starred": false,
+"event_type": [
+102
+]
+}
+}

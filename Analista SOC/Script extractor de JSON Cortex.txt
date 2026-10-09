@@ -1,0 +1,154 @@
+(async () => {
+    console.log("⏳ Iniciando extracción, reparación y copiado forzado... No muevas el mouse.");
+    
+    const viewport = document.querySelector('cdk-virtual-scroll-viewport');
+    if (!viewport) {
+        console.error("❌ No se encontró el contenedor del Virtual Scroll.");
+        return;
+    }
+
+    const lineasExtraidas = new Map();
+    let ultimoScrollTop = -1;
+    
+    const capturarLineasVisibles = () => {
+        const lineasDom = viewport.querySelectorAll('pan-json-viewer-line');
+        lineasDom.forEach(linea => {
+            const numEl = linea.querySelector('.line__number');
+            const contentEl = linea.querySelector('.line__content');
+            if (numEl && contentEl) {
+                const num = parseInt(numEl.textContent.trim(), 10);
+                if (!lineasExtraidas.has(num)) {
+                    lineasExtraidas.set(num, contentEl.textContent.trim());
+                }
+            }
+        });
+    };
+
+    // Hacer scroll controlado para capturar la memoria volátil de Angular
+    while (viewport.scrollTop !== ultimoScrollTop) {
+        ultimoScrollTop = viewport.scrollTop;
+        capturarLineasVisibles();
+        viewport.scrollTop += 250;
+        await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    capturarLineasVisibles();
+
+    const lineasOrdenadas = Array.from(lineasExtraidas.keys())
+        .sort((a, b) => a - b)
+        .map(num => lineasExtraidas.get(num));
+
+    // --- MOTOR REPARADOR DE SINTAXIS JSON ---
+    let tokensLimpios = [];
+    
+    lineasOrdenadas.forEach((linea) => {
+        let trimmed = linea.trim();
+        if (!trimmed) return;
+
+        // 1. Normalizar nulos globales de Cortex
+        if (/:NULL\b/i.test(trimmed)) trimmed = trimmed.replace(/:NULL/i, ":null");
+        if (trimmed === "NULL") trimmed = "null";
+
+        // 2. Manejar cierres de estructuras estructurales
+        if (trimmed === "}" || trimmed === "]" || trimmed === "}," || trimmed === "],") {
+            tokensLimpios.push(trimmed.replace(',', ''));
+            return;
+        }
+
+        // 3. Caso: Índices de arrays de Cortex (ej. 0:"valor" o 1:true)
+        if (/^\d+:/.test(trimmed)) {
+            let valor = trimmed.replace(/^\d+:/, '').trim();
+            if ((valor.startsWith('"') && valor.endsWith('"')) || valor.startsWith('""')) {
+                let interno = valor.replace(/^"+|"+$/g, ''); // Limpiar comillas repetidas tóxicas
+                let limpio = interno.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+                valor = `"${limpio}"`;
+            }
+            tokensLimpios.push(valor);
+            return;
+        }
+
+        // 4. Caso: Aperturas de objetos o arrays (ej. issue:{ o tags:[)
+        let matchBrackets = trimmed.match(/^([a-zA-Z0-9_\.]+):\s*([\{\[])/);
+        if (matchBrackets) {
+            tokensLimpios.push(`"${matchBrackets[1]}": ${matchBrackets[2]}`);
+            return;
+        }
+
+        // 5. Caso: Clave/Valor estándar
+        let matchKV = trimmed.match(/^([a-zA-Z0-9_\.]+):\s*(.*)$/);
+        if (matchKV) {
+            let clave = matchKV[1];
+            let valor = matchKV[2].trim();
+            if (valor.endsWith(',')) valor = valor.slice(0, -1).trim();
+
+            if ((valor.startsWith('"') && valor.endsWith('"')) || valor.startsWith('""')) {
+                let interno = valor.replace(/^"+|"+$/g, '');
+                let limpio = interno.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+                valor = `"${limpio}"`;
+            }
+            tokensLimpios.push(`"${clave}": ${valor}`);
+            return;
+        }
+
+        tokensLimpios.push(trimmed);
+    });
+
+    // --- RECONSTRUCTOR DE COMAS INTERMEDIAS ---
+    let jsonCrudoEstructurado = ""; // <-- CORREGIDO AQUÍ (Sin espacio)
+    for (let i = 0; i < tokensLimpios.length; i++) {
+        let actual = tokensLimpios[i];
+        let siguiente = tokensLimpios[i + 1];
+        
+        jsonCrudoEstructurado += actual;
+        
+        if (siguiente && !siguiente.startsWith('}') && !siguiente.startsWith(']')) {
+            if (!actual.endsWith('{') && !actual.endsWith('[')) {
+                jsonCrudoEstructurado += ",";
+            }
+        }
+        jsonCrudoEstructurado += "\n";
+    }
+
+    // Asegurar envoltura raíz
+    if (!jsonCrudoEstructurado.trim().startsWith('{')) {
+        jsonCrudoEstructurado = "{\n" + jsonCrudoEstructurado + "\n}";
+    }
+
+    // --- FORMATEO ESTÁNDAR FINAL ---
+    let jsonFinal = jsonCrudoEstructurado;
+    try {
+        let objetoValidado = JSON.parse(jsonCrudoEstructurado);
+        jsonFinal = JSON.stringify(objetoValidado, null, 2);
+    } catch (e) {
+        console.log("⚠️ Estructura armada de forma secuencial.");
+    }
+
+    console.log("%c👇 JSON REPARADO Y COMPLETO 👇", "color: #00ff00; font-weight: bold; font-size: 14px;");
+    console.log(jsonFinal);
+    
+    // --- BYPASS DE SEGURIDAD PARA EL PORTAPAPELES ---
+    let copiadoExitoso = false;
+    try {
+        copy(jsonFinal); 
+        copiadoExitoso = true;
+    } catch (err) {
+        try {
+            const txtArea = document.createElement('textarea');
+            txtArea.value = jsonFinal;
+            txtArea.setAttribute('readonly', '');
+            txtArea.style.position = 'absolute';
+            txtArea.style.left = '-9999px';
+            document.body.appendChild(txtArea);
+            txtArea.select();
+            copiadoExitoso = document.execCommand('copy');
+            document.body.removeChild(txtArea);
+        } catch (e2) {
+            copiadoExitoso = false;
+        }
+    }
+
+    if (copiadoExitoso) {
+        console.log("📋 %c¡PORTAPAPELES CONFIGURADO! El JSON se guardó perfectamente estructurado. Ya puedes pegarlo.", "color: #00ffff; font-weight: bold; font-size: 13px;");
+    } else {
+        console.log("⚠️ El navegador bloqueó los métodos de copia automática. Haz clic derecho sobre el bloque de arriba y selecciona 'Copy string contents'.");
+    }
+})();

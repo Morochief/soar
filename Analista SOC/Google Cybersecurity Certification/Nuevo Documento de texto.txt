@@ -1,0 +1,885 @@
+Find what you need with Linux
+Transcripción
+00:00
+Now that we covered: pwd, ls, and cd and are familiar with these basic commands for navigating the
+00:07
+Linux file system, let's look at a couple of ways to find what you need within this system.
+00:14
+As a security analyst, your work will likely involve filtering for the information you need.
+00:20
+Filtering means searching your system for specific information that can help you solve complex problems.
+00:27
+For example, imagine that your team determines a piece of malware contains a string of characters.
+00:33
+You might be tasked with finding other files with the same string to determine if those files contain the same malware.
+00:39
+Later, we'll learn more about how you can use SQL to filter a database, but Linux is a good place to start basic filtering.
+00:47
+First, we'll start with grep.
+00:48
+The grep command searches a specified file and returns all lines in the file containing a specified string.
+00:56
+Here's an example of this.
+00:58
+Let's say we have a file called updates.txt, and we're currently looking for lines that contain the word: OS.
+01:08
+If the file is large, it would take a long time to visually scan for this.
+01:13
+Instead, after navigating to the directory that contains updates.txt, we'll type the command: grep OS updates.txt into the shell.
+01:24
+Notice how the grep command is followed by two arguments.
+01:28
+The first argument is the string we're searching for; in this case, OS.
+01:33
+The second argument is the name of the file we're searching through, updates.txt.
+01:39
+When we press enter, Bash returns all lines containing the word OS.
+01:46
+Now let's talk about piping.
+01:49
+Piping is a Linux command that can be used for a variety of purposes.
+01:54
+In a moment, we'll focus on how it can be used for filtering.
+01:58
+But first, let's talk about the general idea of piping.
+02:02
+The piping command sends a standard output of one command as standard input into another command for further processing.
+02:10
+It's represented by the vertical bar character.
+02:12
+In our context, we can refer to this as the pipe character.
+02:16
+Take a moment and imagine a physical pipe.
+02:18
+Physical pipes have two ends.
+02:20
+On one end, for example, water might enter the pipe from a hot water tank.
+02:25
+Then, it travels through the pipe and comes out on the other end in a sink.
+02:29
+Similarly, in Linux, piping also involves redirection.
+02:35
+Output from one command is sent through the pipe and then is used on the other side of the pipe.
+02:41
+Earlier in this video, I explained how grep can be used to filter for strings of characters within a file.
+02:47
+Grep can also be incorporated after a pipe.
+02:51
+Let's focus on this example.
+02:52
+The first command, ls, instructs the operating system to output the file and directory contents of their reports subdirectory.
+03:01
+But because the command is followed by the pipe, the output isn't returned to the screen.
+03:06
+Instead, it's sent to the next command.
+03:09
+As we just learned, grep searches for a specified string of characters; in this case, it's users.
+03:17
+But where is it searching?
+03:18
+Since grep follows a pipe, the output of the previous command indicates where to search.
+03:24
+In this case, that output is a list of files and directories within the reports subdirectory.
+03:31
+It will return all files and directories that contain the word: users.
+03:36
+Let's explore this in Bash.
+03:38
+So we can better understand how the filter works, let's first output everything in the reports directory.
+03:43
+If we were already in the directory, we would just need to input ls.
+03:48
+But since we're not, we'll also specify the path to this directory.
+03:52
+When we press enter, the output indicates there are seven files in the reports directory.
+03:58
+Because we want to return only the files that contain the word users, we'll combine this ls command with piping and the grep command.
+04:07
+As the output demonstrates, Linux has been instructed to return only files that contain the word users.
+04:14
+The two files that don't contain this string no longer appear.
+04:20
+So now you have two different ways that you can filter in Linux while working as an analyst.
+04:25
+Navigating through files and filtering are just part of what you need to know.
+04:29
+Let's keep exploring the Linux command line.
+
+
+---------------------------------------------------------------------------------------------------------------------------------------
+Create and modify directories and files
+Transcripción
+00:00
+Let's make some branches!
+00:02
+What do I mean by that?
+00:04
+Well, in a previous video, we discussed root directories and how other subdirectories branch off of the root directory.
+00:11
+Let's think again about the file directory system as a tree.
+00:15
+The subdirectories are the branches of the tree.
+00:19
+They're all connected from the same root but can grow to make a complex tree.
+00:24
+In this video, we'll create directories and files and learn how to modify them.
+00:30
+When it comes to working with data in security, organization is key.
+00:34
+If we know where information is located, it makes it easier to detect issues and keep information safe.
+00:41
+In a previous video, we've already discussed navigating between directories, but let's take a moment to examine directories more closely.
+00:50
+It's possible you're familiar with the concept of folders for organizing information.
+00:54
+In Linux, we have directories.
+00:57
+Directories help organize files and subdirectories.
+01:01
+For example, within a directory for reports, an analyst may need to create two subdirectories: one for drafts and one for final reports.
+01:11
+Now that we know why we need directories, let's take a look at some essential Linux commands for managing directories and files.
+01:18
+First, let's take note of commands for creating and removing directories.
+01:23
+The mkdir command creates a new directory.
+01:27
+In contrast, rmdir removes or deletes a directory.
+01:33
+A helpful feature of this command is its built-in warning that lets you know a directory is not empty.
+01:39
+This saves you from accidentally deleting files.
+01:43
+Next, you'll use other commands for creating and removing files.
+01:47
+The touch command creates a new file, and then the rm command removes or deletes a file.
+01:54
+And last, we have our commands for copying and moving files or directories.
+02:00
+The mv command moves a file or directory to new location, and cp copies a file or directory into a new location.
+02:11
+Now, we're ready to try out these commands.
+02:13
+First, let's use the pwd command, and then let's display the names of the files and directories in the analyst directory with the ls command.
+02:23
+Imagine that we no longer need the oldreports directory that appears among the file contents.
+02:29
+Let's take a look at how to remove it.
+02:32
+We input the rmdir command and follow it with the name of the directory we want to remove: oldreports.
+02:40
+We can use the ls command to confirm that oldreports has been deleted and no longer appears among the contents.
+02:48
+Now, let's make another change.
+02:50
+We want a new directory for drafts of reports.
+02:53
+We need to use the command: mkdir and specify a name for this directory: drafts.
+03:00
+If we input ls again, we'll notice the new directory drafts included among the contents of the analyst directory.
+03:07
+Let's change into this new directory by entering: cd drafts.
+03:13
+If we run ls, it doesn't return any output, indicating that this directory is currently empty.
+03:22
+But next, we'll add some files to it.
+03:25
+Let's say we want to draft new reports on recently installed email and OS patches.
+03:30
+To create these files, we input: touch email_patches.txt and then: touch OS_patches.txt.
+03:45
+Running ls indicates that these files are now in the drafts directory.
+03:51
+What if we realize that we only need a new report on OS patches and we want to delete the email patches report?
+03:58
+To do this, we input the rm command and specify the file to delete as: email_patches.txt.
+04:07
+Running ls confirms that it's been deleted.
+04:11
+Now, let's focus on our commands for moving and copying.
+04:15
+We realized that we have a file called email policy in the reports folder that is currently in draft format.
+04:22
+We want to move it into the newly created drafts folder.
+04:26
+To do this, we need to change into the directory that currently has that file.
+04:35
+Running ls in that directory indicates that it contains several files, including email_policy.txt.
+04:44
+Then to move that file, we'll enter the mv command followed by two arguments.
+04:50
+The first argument after mv identifies the file to be moved.
+04:56
+The second argument indicates where to move it.
+05:00
+If we change directories into drafts and then display its contents, we'll notice that the email policy file has been moved to this directory.
+05:09
+We'll change back into reports.
+05:12
+Displaying the file contents confirms that email_policy is no longer there.
+05:20
+Okay, one more thing.
+05:22
+vulnerabilities.txt is a file that we want to keep in the reports directory.
+05:28
+But since it affects an upcoming project, we also want to copy it into the project's directory.
+05:35
+Since we're already in the directory that has this file, we'll use the cp command to copy it into the projects directory.
+05:43
+Notice that the first argument indicates which file to copy, and the second argument provides the path to the directory that it will be copied into.
+05:52
+When we press Enter, this copies the vulnerabilities file into the projects directory while also leaving the original within reports.
+06:01
+Isn't it cool what we can do with these commands?
+06:05
+Now, let's focus on one more concept related to modifying files.
+06:08
+In addition to using commands, you can also use applications to help you edit files.
+06:14
+As a security analyst, file editors are often necessary for your daily tasks, like writing or editing reports.
+06:21
+A popular file editor is nano.
+06:24
+It's good for beginners.
+06:26
+You can access this tool through the nano command.
+06:29
+Let's get familiar with nano together.
+06:32
+We'll add a title to our new draft report: OS_patches.txt.
+06:39
+First, we change into the directory containing that file, then we input nano followed by the name of the file we want to edit: OS_patches.txt.
+06:52
+This brings up the nano file editor with that file open.
+06:57
+For now, we'll just enter the title OS Patches by typing this into the editor.
+07:03
+We need to save this before returning to the command line, and to do so, we press Ctrl+O and then enter to save it with the current file name.
+07:13
+Then to exit, we press Ctrl+X.
+07:19
+Great work!
+07:21
+We've covered a lot of topics here—from creating and removing directories and files to copying or moving them, and just now, we've added editing files.
+07:30
+You're well on your way to learning Linux commands!
+---------------------------------------------------------------------------------------------------------------------------------------
+File permissions and ownership
+Transcripción
+00:00
+Hi there.
+00:00
+It's great to have you back!
+00:03
+Let's continue to learn more about how to work in Linux as a security analyst.
+00:08
+In this video, we'll explore file and directory permissions.
+00:12
+We'll learn how Linux represents permissions and how you can check for the permissions associated with files and directories.
+00:20
+Permissions are the type of access granted for a file or directory.
+00:24
+Permissions are related to authorization.
+00:26
+Authorization is the concept of granting access to specific resources in a system.
+00:32
+Authorization allows you to limit access to specified files or directories.
+00:36
+A good rule to follow is that data access is on a need-to-know basis.
+00:41
+You can imagine the security risk it would impose if anyone could access or modify anything they wanted to on a system.
+00:49
+There are three types of permissions in Linux that an authorized user can have.
+00:53
+The first type of permission is read.
+00:56
+On a file, read permissions means contents on the file can be read.
+01:02
+On a directory, this permission means you can read all files in that directory.
+01:07
+Next are write permissions.
+01:09
+Write permissions on a file allow modifications of contents of the file.
+01:14
+On a directory, write permissions indicate that new files can be created in that directory.
+01:20
+Finally, there are also execute permissions.
+01:23
+Execute permissions on files mean that the file can be executed if it's an executable file.
+01:30
+Execute permissions on directories allow users to enter into a directory and access its files.
+01:38
+Permissions are granted for three different types of owners.
+01:40
+The first type is the user.
+01:42
+The user is the owner of the file.
+01:44
+When you create a file, you become the owner of the file, but the ownership can be changed.
+01:51
+Group is the next type.
+01:53
+Every user is a part of a certain group.
+01:57
+A group consists of several users, and this is one way to manage a multi-user environment.
+02:03
+Finally, there is other.
+02:06
+Other can be considered all other users on the system.
+02:10
+Basically, anyone else with access to the system belongs to this group.
+02:15
+In Linux, file permissions are represented with a 10-character string.
+02:20
+For a directory with full permissions for the user group, this string would be: drwxrwxrwx.
+02:30
+Let's examine what this means more closely.
+02:32
+The first character indicates the file type.
+02:36
+As shown in this example, d is used to indicate it is a directory.
+02:40
+If this character contains a hyphen instead, it would be a regular file.
+02:45
+The second, third, and fourth characters indicate the permissions for the user.
+02:51
+In this example, r indicates the user has read permissions, w indicates the user has write permissions, and x indicates the user has execute permissions.
+03:04
+If one of these permissions was missing, there would be a hyphen instead of the letter.
+03:09
+In the same way, the fifth, sixth, and seventh characters indicate permissions for the next owner type group.
+03:16
+As it shows here, the type group also has read, write, and execute permissions.
+03:22
+There are no hyphens to indicate that any of these permissions haven't been granted.
+03:28
+Finally, the eighth through tenth characters indicate permissions for the last owner type: other.
+03:35
+They also have read, write, and execute permissions in this example.
+03:41
+Ensuring files and directories are set with their appropriate access permissions is critical to protecting sensitive files and maintaining the overall security of a system.
+03:50
+For example, payroll departments handle sensitive information.
+03:54
+If someone outside of the payroll group could read this file, this would be a privacy concern.
+03:59
+Another example is when the user, the group, and other can all write to a file.
+04:04
+This type of file is considered a world-writable file.
+04:08
+World-writable files can pose significant security risks.
+04:13
+So how do we check permissions?
+04:15
+First, we need to understand what options are.
+04:18
+Options modify the behavior of the command.
+04:21
+The options for a command can be a single letter or a full word.
+04:25
+Checking permissions involves adding options to the ls command.
+04:30
+First, ls -l displays permissions to files and directories.
+04:37
+You might also want to display hidden files and identify their permissions.
+04:42
+Hidden files, which begin with a period before their name, don't normally appear when you use ls to display file contents.
+04:49
+Entering ls -a displays hidden files.
+04:54
+Then you can combine these two options to do both.
+04:59
+Entering ls -la displays permissions to files and directories, including hidden files.
+05:10
+Let's get into Bash and try out these options.
+05:12
+Right now, we're in the project subdirectory.
+05:15
+First, let's use the ls command to display its contents.
+05:20
+The output displays the files in this directory, but we don't know anything about their permissions.
+05:25
+By using ls -l instead, we get expanded information on these files.
+05:30
+Let's do this.
+05:33
+The file names are now on the right side of each row.
+05:37
+The first piece of information in each row shows the permissions in the format that we discussed earlier.
+05:44
+Since these are all files and not directories, notice how the first character is a hyphen.
+05:51
+Let's focus on one specific file: project1.txt.
+05:57
+The second through fourth characters of its permissions show us the user has both read and write permissions but lacks execute permissions.
+06:06
+In both the fifth through seventh characters and eighth through tenth characters, the sequence is r--.
+06:14
+This means group and other have only read privileges.
+06:19
+After the permissions, ls -l first displays the username.
+06:24
+Here, that's us, analyst.
+06:27
+Next comes the group name; in our case, the security group.
+06:32
+Now let's use ls -a The output includes two more files—hidden files with the names: .
+06:43
+hidden1.txt and .
+06:46
+hidden2.txt Finally, we can also use ls -la to show the permissions for all files, including these hidden files.
+06:56
+I thought that was pretty interesting.
+06:58
+Did you?
+06:58
+You now know a little more about file permissions and ownership.
+07:02
+This will be helpful when working in security because monitoring and setting correct permissions is essential for protecting information.
+07:10
+Take a small break and meet me in the next video.
+---------------------------------------------------------------------------------------------------------------------------------------
+Change permissions
+Transcripción
+00:00
+Hi there!
+00:00
+In the previous video, you learned how to check permissions for a user.
+00:06
+In this video, we're going to learn about changing permissions.
+00:11
+When working as a security analyst, there may be many reasons to change permissions for a user.
+00:16
+A user may have changed departments or been assigned to a different work group.
+00:20
+A user might simply no longer be working on a project that requires certain permissions.
+00:26
+These changes are necessary in order to protect system files from being accidentally or deliberately altered or deleted.
+00:35
+Let's explore a related command that helps control this access.
+00:38
+In this video, we'll learn about chmod.
+00:42
+chmod changes permissions on files and directories.
+00:46
+The command chmod stands for change mode.
+00:51
+There are two modes for changing permissions, but we'll focus on symbolic.
+00:53
+The best way to learn about how chmod works is through an example.
+01:00
+I know this has a lot of details, but we'll break this down.
+01:04
+Also, please keep in mind that, like many Linux commands, you don't have to memorize the information and can always find a reference.
+01:13
+With chmod, you need to identify which file or directory you want to adjust permissions for.
+01:19
+This is the final argument, in this case, a file named: access.txt.
+01:24
+The first argument, added directly after the chmod command, indicates how to change permissions.
+01:30
+Right now, this might seem hard to interpret, but soon we'll understand why this is called symbolic mode.
+01:38
+Previously, we learned about the three types of owners: user, group, and other.
+01:43
+To identify these with chmod, we use u to represent the user, g to represent the group, and o to represent other.
+01:53
+In this particular example, g indicates we will make some changes to group permissions, and o to permissions for other.
+02:02
+These owner types are separated by a comma in this argument.
+02:07
+But do we want to add or take away permissions?
+02:09
+Well, for this, we use mathematical operators.
+02:13
+So, the plus sign after g means we want to add permissions for group.
+02:18
+The minus sign after o means we want to take them away from other.
+02:23
+And the last question is: what kind of changes?
+02:26
+We've already learned that r represents read permissions, w represents write permissions, and x represents execute permissions.
+02:36
+So in this case, the w indicates that we're adding write permissions to the group, and r indicates that we are taking away read permissions from other.
+02:46
+This is still very complex.
+02:49
+But now that we've broken it down, perhaps it doesn't seem quite so much like a foreign language.
+02:54
+And remember, you don't have to memorize this all.
+02:59
+Let's give this new command a try.
+03:00
+We'll start out in the logs sub-directory.
+03:03
+If we use the ls -l command, it will output the permissions for the file.
+03:08
+It shows the permissions for the only file in this directory: access.txt.
+03:14
+Previously, we learned how to read these permissions.
+03:17
+The second through fourth characters indicate that the user has read and write permissions.
+03:22
+The fifth through seventh characters show the group only has read permissions.
+03:27
+And the eighth to tenth characters show that other only has read permissions.
+03:32
+We need to adjust these permissions.
+03:35
+We want to ensure analysts in the security group have write permission, but takeaway read permissions
+03:39
+from the owner-type other, so we add write permissions for group and remove read permissions for other.
+03:46
+Let's run ls -l again.
+03:50
+This shows a change in the permissions for access.txt.
+03:54
+Notice how in the middle segment of permissions for the group, w has been added to give write permissions.
+04:01
+And another change is that the r has been removed in the last segment, indicating that read permissions for other have been removed.
+04:10
+As mentioned earlier, these hyphens indicate a lack of permissions.
+04:15
+Now, other is lacking all permissions.
+04:19
+Though it requires practice, working in Linux becomes more natural with time.
+04:22
+I'm glad you're learning a little more about how to use Linux.
+---------------------------------------------------------------------------------------------------------------------------------------
+Add and delete users
+Transcript
+00:00
+Welcome back!
+00:00
+In this video, we are going to discuss adding and deleting users.
+00:05
+This is related to the concept of authentication.
+00:09
+Authentication is the process of a user proving that they are who they say they are in the system.
+00:16
+Just like in a physical building, not all users should be allowed in.
+00:19
+Not all users should get access to the system.
+00:22
+But we also want to make sure everyone who should have access to the system has it.
+00:27
+That's why we need to add users.
+00:30
+New users can be new to the organization or new to a group.
+00:34
+This could be related to a change in organizational structure or simply a directive from management to move someone.
+00:42
+And also, when users leave the organization, they need to be deleted.
+00:46
+They should no longer have access to any part of the system.
+00:50
+Or if they simply changed groups, they should be deleted from groups that they are no longer a part of.
+00:56
+Now that we've sorted out why it's important to add and delete users, let's discuss a different type of user, the root user.
+01:02
+A root user, or superuser, is a user with elevated privileges to modify the system.
+01:09
+Regular users have limitations, where the root does not.
+01:14
+Individuals who need to perform specific tasks can be temporarily added as root users.
+01:19
+Root users can create, modify, or delete any file and run any program.
+01:25
+Only root users or accounts with root privileges can add new users.
+01:31
+So you may be wondering how you become a superuser.
+01:34
+Well, one way is logging in as the root user, but running commands as the root user is considered to be bad practice when using Linux.
+01:43
+Why is running commands as a root user potentially problematic?
+01:46
+The first problem with logging in as root is the security risks.
+01:51
+Malicious actors will try to breach the root account.
+01:54
+Since it's the most powerful account, to stay safe, the root account should have logins disabled.
+02:00
+Another problem is that it's very easy to make irreversible mistakes.
+02:06
+It's very easy to type the wrong command in the CLI, and if you're running as the
+02:09
+root user, you run a higher risk of making an irreversible mistake, such as permanently deleting a directory.
+02:16
+Finally, there's the concern of accountability.
+02:19
+In a multi-user environment like Linux, there are many users.
+02:24
+If a user is running as root, there is no way to track who exactly ran a command.
+02:30
+One solution to help solve this problem is sudo.
+02:35
+sudo is a command that temporarily grants elevated permissions to specific users.
+02:39
+This provides more of a controlled approach compared to root, which runs every command with root privileges.
+02:47
+sudo solves lots of problems associated with running as root.
+02:51
+sudo comes from super-user-do and lets you execute commands as an elevated user without having to sign in and out of another account.
+02:59
+Running sudo will prompt you to enter the password for the user you're currently logged in as.
+03:05
+Not all users on a system can become a superuser.
+03:09
+Users must be granted sudo access through a configuration file called the sudoers file.
+03:16
+Now that we've learned about sudo, let's learn how we can use it with another command to add users.
+03:21
+This command is useradd.
+03:23
+useradd adds a user to the system.
+03:27
+Only root or users with sudo privileges can use a useradd command.
+03:32
+Let's look at a specific example in which we need to add a user.
+03:36
+We'll imagine a new representative is joining the sales department and will be given the username of salesrep7.
+03:43
+We're tasked with adding them to the system.
+03:47
+Let's try adding the new user.
+03:48
+First, we need to use the sudo command, followed by the useradd command, and then last, the username we want to add, in this case, salesrep7.
+03:58
+This command doesn't display anything on the screen.
+04:01
+But since we get a new Bash cursor and not an error message, we can feel confident that the command worked successfully.
+04:07
+If it didn't, an error message would have appeared.
+04:11
+Sometimes an error has to do with something simple like misspelling useradd.
+04:15
+Or, it might be because we didn't have sudo privileges.
+04:20
+Now let's learn how to do the opposite.
+04:22
+Let's learn how to delete a user with userdel.
+04:25
+userdel deletes a user from the system.
+04:28
+Similarly, we need root permissions that we'll access through sudo to use userdel.
+04:34
+Let's go back to our example of the user we added.
+04:37
+Let's imagine two months later, the sales representative that we just added to the system leaves the company.
+04:43
+That user should no longer have access to the system.
+04:47
+Let's delete that user from the system.
+04:51
+Again, the sudo command is used first, then we add the userdel command.
+04:56
+Last, we add the name of the user we want to delete.
+05:00
+Again, we know it ran successfully because there is a new Bash cursor and not an error message.
+05:07
+Now, we've covered how to add and delete users and how these actions require sudo.
+05:12
+When using sudo, we have to use our best judgment.
+05:16
+These special privileges must be used responsibly to ensure a secure system.
+---------------------------------------------------------------------------------------------------------------------------------------
+Damar: My journey into Linux commands
+Transcript
+00:00
+My name is Damar.
+00:00
+I'm a security engineer here at Google.
+00:04
+I've always wanted to get into cybersecurity since I was a kid.
+00:08
+A lot of the cartoons I watched, they had like floppy disks or flash drives and they would put that in the computer and kind of like cause havoc.
+00:16
+So I always thought that was really cool.
+00:17
+I've had quite a bit of jobs before coming to Google.
+00:20
+I've originally started out making smoothies with Jamba Juice.
+00:23
+I got my first like IT technological kind of job at Geek Squad.
+00:27
+And then eventually I came here and became a security engineer.
+00:30
+My advice to people trying to get into cybersecurity is it may be a lot easier than you think.
+00:36
+It definitely was a lot easier than I thought.
+00:38
+Something that I learned jumping in myself is that you're not going to be able to
+00:42
+learn everything all at once and you're not going to need to know everything all at once.
+00:47
+Linux is very important because it's broadly used across pretty much every company.
+00:52
+You may use Linux to curate logs.
+00:56
+It's a very common practice.
+00:57
+You may also use Linux to set up bash jobs that will help with routine tasks within Linux.
+01:04
+I first got interested in learning Linux from the Jurassic Park movie.
+01:09
+There's a scene in the movie where they need to reactivate the electrical doors and they have to use a Unix operating system to do so.
+01:19
+Later on I learned what Unix was and how Linux came from it.
+01:23
+And it inspired me to learn more about Linux.
+01:27
+The best advice I can give someone that's trying to learn Linux and Linux commands is don't get discouraged by any small hiccups that come up.
+01:35
+Just keep with it.
+01:36
+Stick with it.
+01:37
+Think of it as when you first learned to swim, right?
+01:41
+You probably weren't that great at it.
+01:43
+It was frustrating and you were probably a little scared, but you stuck with it and I hope that you're able to swim now.
+01:50
+There are a plethora of support resources when learning Linux.
+01:55
+Another avenue of support for learning Linux is just Googling answers, using Stack Overflow, maybe even making a Reddit post.
+02:03
+I love working in cybersecurity.
+02:05
+It's pretty satisfying to know that me and my team and then like all of the other
+02:10
+security teams here at Google are helping protect people online from things they may not even know about.
+---------------------------------------------------------------------------------------------------------------------------------------
+The Linux community
+Transcript
+00:00
+There are so many others just like you who will be using the command line.
+00:05
+Linux's popularity and ease of use has created a large online community that constantly publishes information to help users learn how to operate Linux.
+00:15
+Since Linux is open-source, it has become a global community of users that contribute frequently.
+00:22
+This global community is a huge resource for all Linux users because users can find answers for everyday tasks.
+00:28
+Just searching on the internet will provide many answers.
+00:32
+The easiest way to troubleshoot a task is to search and read about how someone else has done it.
+00:38
+Looking for resources on how to execute a task is a good way for beginners to continue learning.
+00:45
+So far, you've learned how to add users, but imagine if later you want to add a new group.
+00:49
+One way to learn how to do this is to search online.
+00:52
+Let's give this a try through a Google search.
+00:55
+The search results give us many options for adding a group in Linux.
+01:01
+Another reputable source is a Unix & Linux Stack Exchange.
+01:05
+Their answers are ranked with points to display high-quality answers.
+01:10
+Many questions relate to more advanced users and are geared towards troubleshooting.
+01:16
+Well, now you know where to get some extra support whenever in doubt about topics in Linux.
+01:20
+There is a lot of support just a click away.
+01:22
+Coming up, we'll learn how to get support from within the command line itself.
+01:27
+Join me.
+---------------------------------------------------------------------------------------------------------------------------------------
+Man pages within the Shell
+Transcript
+00:00
+Welcome back!
+00:00
+In this video, we're going to discuss some resources that are available directly through the shell and can help you while working in Linux.
+00:10
+One of the great things about Linux is that you can get help right through the command line.
+00:15
+The first command that can help you in this way is: man. man displays information on other commands and how they work.
+00:24
+The name of this command comes from the word manual.
+00:27
+Let's examine this more closely by using man to get information about the usermod command.
+00:34
+After man, we type the name of this command.
+00:37
+The information that man returns includes a general description.
+00:42
+It also contains information about each of usermod's options.
+00:47
+For example, the option -d can be added to usermod to change a user's home directory.
+00:53
+man provides a lot of information, but sometimes we just need a quick reference on what a command does.
+00:59
+In that case, you use whatis.
+01:02
+whatis displays a description of a command on a single line.
+01:08
+Let's say you heard a co-worker mention a command like tail.
+01:12
+You've never heard of this command before, but you can find out what it does.
+01:16
+Simply use the command, whatis tail, and learn that it outputs the last part of files.
+01:24
+Sometimes we might not even know what command to look up.
+01:26
+This is where apropos can help us.
+01:29
+apropos searches the manual page descriptions for a specified string.
+01:32
+Let's try it out.
+01:35
+Let's say you have a task that requires you to change a password, but you're not quite sure how to do this.
+01:40
+If we use the apropos command with the string password, this will display a large number of commands with that word.
+01:46
+This helps somewhat, but it still may be difficult to find what we need.
+01:50
+But we can filter this by adding the -a option and an additional string.
+01:55
+This option will return only the commands that contain both strings.
+01:59
+In our case, since we want to change the password, let's look for commands with both: change and password.
+02:05
+Now, the output has been limited to the most relevant commands.
+02:10
+These commands make it a lot easier to navigate the Linux command line.
+02:14
+As a new analyst, you won't have all the answers all the time, but you can learn where to find them.
+---------------------------------------------------------------------------------------------------------------------------------------
+Wrap-up
+Transcript
+00:00
+Congratulations!
+00:00
+You completed another section in this course.
+00:05
+Take a minute to think about what you've achieved.
+00:07
+You learned a lot in this section.
+00:09
+Let's recap what we covered.
+00:13
+In this section, you utilized the command line to communicate with the OS.
+00:16
+Part of this was using commands for navigating and managing the file system.
+00:21
+And you used other commands for authenticating and authorizing users.
+00:25
+These are all tasks that a security analyst is likely to encounter.
+00:30
+Finally, you learned about accessing resources that support learning new Linux commands.
+00:34
+With this knowledge, you'll be able to continue learning more and more about using the command line.
+00:42
+We did it! we learned how to communicate with Linux.
+00:44
+That's a great accomplishment, and one that will be very useful to you in your career as a security analyst.
+00:51
+You should be proud of the work that you've done so far.
+---------------------------------------------------------------------------------------------------------------------------------------
+
+---------------------------------------------------------------------------------------------------------------------------------------

@@ -1,0 +1,75 @@
+Failed to install CRTSETUP,UNINSTALLER64,SED64,MCS,SSE64,SFS64,SHS,UI64,AMSI64,SME64,ESH64,LIVETERMINAL64,EFW64,LiveQuery64,NTP64,SDU64,HMPA64,SAUXG: 80041f00,80041f00,80041f00,80041f00,80041f00,80041f00,80041f00,80041f00,80041f00,80041f00,80041f00,80041f00,80041f00,80041f00,80041f00,80041f00,80041f00,80041f00
+
+Device name
+CJPPA046
+OS
+Windows 10 Pro
+Last user
+CAJAANDE\CJPPA1242684
+Last active
+Aug 7, 2026 8:39 AM
+Group
+Caja_Ande
+
+
+Device name
+CJPPA026
+OS
+Windows 10 Pro
+Last user
+CAJAANDE\Ktroche
+Last active
+Aug 7, 2026 8:40 AM
+Group
+Caja_Ande
+
+
+Device name
+CJPPA021
+OS
+Windows 10 Pro
+Last user
+CAJAANDE\gocampos
+Last active
+Aug 7, 2026 8:42 AM
+Group
+Caja_Ande
+
+
+
+# 1. Descargar e importar el certificado oficial DigiCert G5
+$certPath = "$env:TEMP\DigiCertCSRSA4096RootG5.crt"
+$certUrl = "https://cacerts.digicert.com/DigiCertCSRSA4096RootG5.crt"
+Invoke-WebRequest -Uri $certUrl -OutFile $certPath
+Import-Certificate -FilePath $certPath -CertStoreLocation Cert:\LocalMachine\Root
+Remove-Item -Path $certPath -Force
+
+# 2. Forzar la actualización de Sophos
+Start-Process "C:\Program Files\Sophos\AutoUpdate\SophosUpdate.exe"
+
+
+
+
+
+
+
+
+
+
+
+
+Failed to install CRTSETUP: general error.
+
+Device name
+CJPPA005
+OS
+Windows 10 Pro
+Last user
+CAJAANDE\4806661
+Last active
+Aug 7, 2026 9:57 AM
+Group
+Caja_Ande
+
+
+

@@ -1,0 +1,75 @@
+# =============================================================================
+# .gitignore — TECHNOMA SOC COCKPIT & FORENSIC SUITE
+# =============================================================================
+
+# 1. ENTORNO VIRTUAL LOCAL (VENV)
+# (NO subir binarios de Python específicos de la máquina Windows)
+Scripts/
+Lib/
+Include/
+share/
+pyvenv.cfg
+.venv/
+venv/
+env/
+soc-env/
+
+# 2. SECRETOS Y CREDENCIALES (CRÍTICO - PREVENCIÓN DE FUGAS)
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.pfx
+
+# 3. BASES DE DATOS LOCALES Y CACHÉ BINARIA
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+feeds_intel.db
+*.db
+*.sqlite
+*.sqlite3
+
+# 4. ARCHIVOS TEMPORALES, BACKUPS Y SCRATCH
+*.bak
+*.bak*
+*.tmp
+*.temp
+_archivo_historico/
+scratch/
+.system_generated/
+
+# 5. REGISTROS Y LOGS DE OPERACIÓN
+logs/
+*.log
+historial_caidas.log
+
+# 6. DATOS Y EXPORTACIONES CONFIDENCIALES DE CLIENTES
+*.tsv
+*.csv
+tickets_pdf/
+XDR_Cases_*.tsv
+XDR_Issues_*.tsv
+cases - *.csv
+bitacora_auto_export.tsv
+
+# 7. DOCUMENTOS PERSONALES Y BORRADORES
+CV*.pdf
+Documento sin título.pdf
+
+# Permitir documentación técnica de referencia si aplica
+!NIST.SP.800-61r3.pdf
+
+# 8. SISTEMA Y EDITORES (IDEs)
+*.lnk
+**/.venv/
+**/scratch/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db

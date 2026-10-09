@@ -1,0 +1,131 @@
+{
+    "took": 5124,
+    "timed_out": false,
+    "_shards": {
+        "total": 293,
+        "successful": 292,
+        "skipped": 0,
+        "failed": 1,
+        "failures": [
+            {
+                "shard": 0,
+                "index": "logs-crowdstrike_lookup.dest_aidmaster-1",
+                "node": "4mUPMws5S66BGqLiR40i6Q",
+                "reason": {
+                    "type": "query_shard_exception",
+                    "reason": "No mapping found for [@timestamp] in order to sort on",
+                    "index_uuid": "nu5bmYkOTg-AxBlWEkYhcg",
+                    "index": "logs-crowdstrike_lookup.dest_aidmaster-1"
+                }
+            }
+        ]
+    },
+    "hits": {
+        "total": {
+            "value": 10000,
+            "relation": "gte"
+        },
+        "max_score": null,
+        "hits": [
+            {
+                "_index": ".ds-logs-zeek-so-2026.07.02-000001",
+                "_id": "onq3I58BZdKEGIweLDpe",
+                "_score": null,
+                "_source": {
+                    "container": {
+                        "id": "syslog.log"
+                    },
+                    "server": {
+                        "port": "514",
+                        "ip": "192.168.15.70"
+                    },
+                    "metadata": {
+                        "pipeline": "zeek.syslog",
+                        "input": {
+                            "beats": {
+                                "host": {
+                                    "ip": "192.168.15.71"
+                                }
+                            }
+                        },
+                        "raw_index": "logs-zeek-so",
+                        "stream_id": "filestream-filestream.filestream-zeek-logs",
+                        "beat": "filebeat",
+                        "type": "_doc",
+                        "version": "9.3.3+build202604082258",
+                        "input_id": "filestream-filestream-zeek-logs"
+                    },
+                    "log": {
+                        "file": {
+                            "inode": "141979606",
+                            "path": "/nsm/zeek/logs/current/syslog.log",
+                            "device_id": "64514"
+                        },
+                        "offset": 1006616629,
+                        "id": {
+                            "uid": "CaOrbp2tIl4FcgAMod"
+                        }
+                    },
+                    "elastic_agent": {
+                        "id": "b0661c56-a383-41c1-8dc1-c41efc52de1a",
+                        "version": "9.3.3+build202604082258",
+                        "snapshot": false
+                    },
+                    "destination": {
+                        "port": 514,
+                        "ip": "192.168.15.70"
+                    },
+                    "syslog": {
+                        "severity_label": "INFO",
+                        "facility_label": "LOCAL7"
+                    },
+                    "source": {
+                        "port": 17338,
+                        "ip": "10.99.99.1"
+                    },
+                    "message": "date=2026-07-02 time=13:43:50 devname=\"FG-Technoma\" devid=\"FG120GTK24022543\" eventtime=1783010629553185988 tz=\"-0300\" logid=\"0100026001\" type=\"event\" subtype=\"system\" level=\"information\" vd=\"root\" logdesc=\"DHCP Ack log\" interface=\"WiFi_Corp\" dhcp_msg=\"Ack\" mac=\"5C:B4:7E:7C:86:A2\" ip=192.168.169.16 lease=3600 hostname=\"NB-NOC1\" msg=\"DHCP server sends a DHCPACK\"",
+                    "tags": [
+                        "elastic-agent",
+                        "input-soc-onion",
+                        "beats_input_codec_plain_applied",
+                        "syslog"
+                    ],
+                    "network": {
+                        "protocol": "udp"
+                    },
+                    "pipeline": "syslog",
+                    "input": {
+                        "type": "filestream"
+                    },
+                    "observer": {
+                        "name": "securityonion"
+                    },
+                    "@timestamp": "2026-07-02T16:43:50.297Z",
+                    "ecs": {
+                        "version": "8.0.0"
+                    },
+                    "data_stream": {
+                        "namespace": "so",
+                        "type": "logs",
+                        "dataset": "zeek"
+                    },
+                    "@version": "1",
+                    "client": {
+                        "port": "17338",
+                        "ip": "10.99.99.1"
+                    },
+                    "event": {
+                        "agent_id_status": "missing",
+                        "ingested": "2026-07-02T16:43:54Z",
+                        "module": "zeek",
+                        "category": "network",
+                        "dataset": "zeek.syslog"
+                    }
+                },
+                "sort": [
+                    1783010630297
+                ]
+            }
+        ]
+    }
+}

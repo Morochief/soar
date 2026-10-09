@@ -1,0 +1,8 @@
+# Material de Apoyo: Refine your professional statement
+
+Aquí hay algunas sugerencias tácticas que te animamos a considerar para ayudarte a refinar y fortalecer continuamente tu declaración profesional a lo largo del programa:
+
+1. **Investiga ejemplos reales en la industria:** Localiza ejemplos de declaraciones de profesionales de la ciberseguridad actuales. Busca perfiles en repositorios de **GitHub** o redes profesionales como **LinkedIn**. Compara tu borrador con las declaraciones que encontraste en línea y determina formas en que podrías adoptar un tono similar, más técnico y corporativo.
+2. **Revisión ortográfica y gramatical estricta:** Usa el corrector ortográfico de un procesador de texto o herramientas especializadas para asegurarte de que tu declaración esté absolutamente libre de errores. En ciberseguridad se valora la atención a los detalles; un error ortográfico en tu portafolio resta credibilidad inmediatamente.
+3. **Pide retroalimentación (Feedback):** Comparte tu declaración profesional con colegas de confianza y pídeles su opinión sincera. Una segunda opinión (idealmente de alguien con conocimiento técnico) es muy útil para asegurar que estás transmitiendo tus ideas de manera efectiva sin sonar genérico o arrogante.
+4. **Analiza ofertas de trabajo reales (Alineación de Keywords):** Investiga ofertas de trabajo actuales (ej. *Junior SOC Analyst*, *Cybersecurity Analyst Tier 1*) y **extrae las palabras clave** técnicas que más se repiten. Considera integrar orgánicamente esos términos (como *SIEM, Incident Response, NIST, Linux, SQL*) dentro de tu declaración profesional. Esto aumentará masivamente las probabilidades de que los sistemas de filtrado automático de currículums (ATS) detecten tu perfil.

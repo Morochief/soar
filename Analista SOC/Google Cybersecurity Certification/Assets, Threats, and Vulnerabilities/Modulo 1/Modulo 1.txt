@@ -1,0 +1,786 @@
+Introduction to Course 5
+Transcript
+00:00
+What do you picture when you think about the security field?
+00:03
+This might make you think of a dark room with people hunched over their computers.
+00:07
+Maybe you picture a person in a lab carefully analyzing evidence.
+00:12
+Or, maybe you imagine a guard standing watch in front of a building.
+00:15
+The truth is, no matter what thoughts cross your mind, all of these examples are part of the wide world of security.
+00:23
+Hi, my name is Da'Queshia.
+00:25
+I have worked as a security engineer for four years.
+00:28
+I'm excited to be your instructor for this course and share some of my experience with you.
+00:33
+At Google, I'm part of a diverse team of security professionals who all have different backgrounds and unique perspectives.
+00:40
+For example, in my role, I work to secure Gmail.
+00:44
+Part of my daily activities include developing new security features and fixing vulnerabilities in the application to make email safer for our users.
+00:53
+Some members of my team began working in security after graduating from college.
+00:57
+Many others found their way into the field after years of working in another industry.
+01:01
+Security teams come in all different shapes and sizes.
+01:04
+Each member of a team has a role to play.
+01:07
+While our specific functions within the group differ, we all share the same objective: protecting valuable assets from harm.
+01:15
+Accomplishing this mission involves a combination of people, processes, and tools.
+01:20
+In this course, you'll learn about each of these in detail.
+01:25
+First, you'll be introduced to the world of asset security.
+01:27
+You'll learn about the variety of assets that organizations protect and how these factor into a company's overall approach to security.
+01:35
+Then, you'll begin exploring the security systems and controls that teams use to proactively protect people and their information.
+01:43
+All systems have weaknesses that can be improved upon.
+01:47
+When those weaknesses are neglected or ignored, they can lead to serious problems.
+01:52
+In this section of the course, you'll focus on common vulnerabilities in systems and the ways security teams stay ahead of potential problems.
+02:00
+Finally, you'll learn about the threats to asset security.
+02:03
+You'll also be introduced to the threat modeling process that security teams use to stay one step ahead of potential attacks.
+02:10
+In this field, we try to do everything possible to avoid being put in a compromised position.
+02:15
+By the end of this course, you'll have a clearer picture of the ways people, processes, and technology work together to protect all that's important.
+02:23
+Throughout the course, you'll also get an idea of the exciting career opportunities available to you.
+02:29
+Security truly is an interdisciplinary field.
+02:32
+Your background and perspective is an asset.
+02:35
+Whether you're a recent college graduate or starting a new career path, the security field presents a wide range of possibilities.
+02:42
+So what do you say?
+02:44
+Are you ready to go on this journey with me?
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Da'Queshia: My path to cybersecurity
+Transcript
+00:03
+Hi.
+00:03
+My name is Da'Queshia.
+00:06
+I'm a security engineer.
+00:07
+That basically means I work securing Google's products so users like you aren't vulnerable.
+00:14
+Before I entered cybersecurity, I worked installing Internet.
+00:18
+I also worked at a chip factory.
+00:20
+I worked in fast food.
+00:21
+I sold shoes at the mall.
+00:23
+I did a lot of things before I made it here.
+00:25
+A lot of what I learned in my past jobs I actually use every day.
+00:29
+Some of it is my soft skills like time management, people skills, and communication.
+00:36
+As a new cybersecurity analyst, it's important to be able to communicate, take feedback, and feel uncomfortable, not with the people around
+00:43
+you, but with the problems you're trying to solve because sometimes it requires you to think outside of the box and be challenged.
+00:50
+I would describe my job as a Google security guard because I work on the Gmail security team, it's my job to protect Gmail.
+00:57
+Some of those threats are people who are sending you bad emails, who are trying to get your user credentials or get you to click on a phishing link.
+01:05
+When it comes to vulnerabilities, some of those could be something like unsanitized input, which can lead to trouble.
+01:11
+My typical work day starts like everyone else.
+01:14
+I check my emails and then from there I go into my bug queue; it's essentially when people tell me there's a problem with one of our products.
+01:20
+I start doing a little bit of research and then I like to explore the bug a little bit more.
+01:24
+I like to figure out if this can break this, can it also break this, and if it can, what else can I do with it?
+01:30
+Then from there, I look for a solution to make sure that I fix that hole and then any other holes that we might have in our security.
+01:36
+Some of the things you learned about in this course is threat modeling, and that's something I use every day.
+01:41
+Whenever I get a bug, it's part of my job to figure out the attack tree and what type of vectors we use to take advantage of vulnerabilities.
+01:48
+No one is born knowing everything.
+01:51
+I know that sounds really cliche or like super obvious, but it helps me because it helps put
+01:56
+some perspective the time and effort that everyone has to put in in order to learn something new.
+02:02
+So be patient with yourself.
+02:04
+Don't let anyone discourage you from cybersecurity.
+02:06
+Taking this course is one step closer to getting into your goal.
+02:10
+Don't get discouraged now.
+02:11
+Keep going.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Welcome to module 1
+Transcript
+00:00
+We all depend on technology so much nowadays.
+00:03
+Examples of this are all around us.
+00:06
+Personal devices, like smartphones, help keep us in touch with friends and families across the globe.
+00:11
+Wearable technologies help us achieve personal goals and be more productive.
+00:16
+Businesses have also come to embrace technology in everyday life.
+00:20
+From streamlining operations to automating processes, our world is more connected because of technology.
+00:27
+The more we rely on technology, the more information we share.
+00:30
+As a result, an enormous amount of data is created every day.
+00:34
+This huge surge in data creation presents unique challenges.
+00:38
+As businesses become more reliant on technology, cybercriminals become more sophisticated in how they affect organizations.
+00:45
+Data breaches are becoming increasingly serious due to all the sensitive data businesses are storing.
+00:51
+One positive aspect of these challenges is a growing need for individuals like you!
+00:57
+Security is a team effort.
+00:59
+Unique perspectives, like yours, are an asset to any organization.
+01:03
+A team filled with diverse backgrounds, cultures, and experiences is more likely to solve problems and be innovative.
+01:11
+As breach after breach hits the headlines, it's clear that organizations need more professionals focused on security.
+01:17
+Companies around the globe are working hard to keep up with the demands of a rapidly changing digital landscape.
+01:23
+As the environment continues to transform, the more your personal experience is valuable.
+01:30
+In this section, we'll start by exploring how assets, threats, and vulnerabilities factor into security plans.
+01:36
+After that, we'll discuss the use of asset inventories in protecting the wide range of assets that companies have.
+01:43
+Then, we'll consider the challenges in this rapidly changing digital world.
+01:47
+And finally, you'll gain an understanding of the building blocks of a security plan: its policies, standards, and procedures.
+01:55
+We'll examine the NIST Cybersecurity Framework that companies use to create security plans that protect their customers and their brands.
+02:03
+I hope you're as excited to go on this journey into this world of security as I am.
+02:08
+Now, let's get started!
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+The what, why, and how of asset security
+Transcript
+00:00
+Painting a portrait.
+00:00
+Perfecting a new basketball move.
+00:03
+Playing a solo on guitar.
+00:04
+They all share something in common.
+00:07
+Can you guess what it is?
+00:09
+If you thought "practice," you're absolutely correct!
+00:13
+It takes time, dedication, and focus to improve these skills.
+00:17
+The security profession is no different.
+00:19
+Planning for the future is a core skill that you'll need to practice all the time in security.
+00:25
+We all deal with uncertainty by trying to solve problems before they arise.
+00:28
+For example, if you're going on a trip, you might think about the length of the trip and how much to pack.
+00:33
+Maybe you're traveling somewhere cold.
+00:34
+You might bring coats and sweaters to help keep you warm.
+00:38
+We all want to feel the security of knowing that there's a plan if something goes wrong.
+00:43
+Businesses are no different.
+00:44
+Just like you, organizations try their best to plan ahead by analyzing risk.
+00:51
+Security teams help companies by focusing on risk.
+00:54
+In security, a risk is anything that can impact the confidentiality, integrity, or availability of an asset.
+01:02
+Our primary focus as security practitioners is to maintain confidentiality, integrity, and availability, which are the three components of the CIA triad.
+01:11
+The process of security risk planning is the first step toward protecting these cornerstones.
+01:16
+Each organization has their own unique security plan based on the risk they face.
+01:21
+Thankfully, you don't need to be familiar with every possible security plan to be a good security practitioner.
+01:27
+All you really need to know are the basics of how these plans are put together.
+01:32
+Security plans are based on the analysis of three elements: assets, threats, and vulnerabilities.
+01:38
+Organizations measure security risk by analyzing how each can have an effect on confidentiality, integrity, and availability of their information and systems.
+01:48
+Basically, they each represent the what, why, and how of security.
+01:52
+Let's spend a little time exploring each of these in more detail.
+01:56
+As you might imagine, an asset is an item perceived as having value to an organization.
+02:01
+This often includes a wide range of things.
+02:04
+Buildings, equipment, data, and people are all examples of assets that businesses want to protect.
+02:11
+Let's examine this idea more by analyzing the assets of a home.
+02:16
+Inside a home, there's a wide range of assets, like people and personal belongings.
+02:20
+The outside structure of a home is made of assets too, like the walls, roof, windows, and doors.
+02:26
+All of these assets have value, but they differ in how they might be protected.
+02:30
+Someone might place a lower priority on protecting the outside walls than on the front door, for example.
+02:35
+This is because a burglar is more likely to enter through the front door than a wall.
+02:40
+That's why we have locks.
+02:41
+With so many types of assets to think of, security plans need to prioritize resources.
+02:48
+After all, no matter how large a security team is, it would be impossible to monitor every single asset at all hours of the day.
+02:57
+Security teams can prioritize their efforts based on threats.
+03:00
+In security, a threat is any circumstance or event that can negatively impact assets.
+03:06
+Much like assets, threats include a wide range of things.
+03:10
+Going back to the example of a home, a threat can be a burglar who's trying to gain access.
+03:17
+Burglars aren't the only type of threat that affect the security of windows and doors.
+03:21
+What if either broke by accident?
+03:23
+Strong winds can blow the door open during a bad storm.
+03:26
+Or, kids playing with a ball nearby can accidentally damage a window.
+03:30
+If any of these thoughts crossed your mind, great job!
+03:33
+You're already demonstrating a security mindset.
+03:38
+The final element of a security plan that we're going to cover are vulnerabilities.
+03:41
+In security, a vulnerability is a weakness that can be exploited by a threat.
+03:46
+A weak lock on a front door, for example, is a vulnerability that can be exploited by a burglar.
+03:51
+And old, cracked wood is a different vulnerability on that same front door that can increase the chances of storm damage.
+03:59
+In other words, think of vulnerabilities as flaws within an asset.
+04:03
+Assets can have many different types of vulnerabilities that are an easy target for attackers.
+04:09
+We'll explore different types of threats and vulnerabilities in greater detail later.
+04:13
+For now, just understand that security teams need to account for a wide range of assets, threats, and vulnerabilities to effectively plan for the future.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Tri: Life in asset security
+Transcript
+00:04
+I'm Tri, a security engineer at Google.
+00:07
+My department is Detection and Response.
+00:10
+Let's see, what does my everyday look like?
+00:12
+Well, of course I have the free lunch and coffee, which is nice.
+00:17
+And then I finally get to my desk and I open up the SIEM to see what kind of exciting
+00:20
+events are there for me to look into and what threats there could be out there for me to analyze.
+00:26
+Also, I work on improving our analysis for detection of potential threats.
+00:32
+So my security passion developed at a young age.
+00:35
+I was a victim of a hack, believe it or not.
+00:39
+After school every day at that time I would go home and play a computer game.
+00:43
+One day I got home, I brought it up and it said, "Your CD key
+00:46
+is in use by...", and then it gave some strange name there that I didn't recognize.
+00:52
+At first I felt shocked.
+00:54
+I had bought this game myself and somebody stole my CD key, but it did provide me this motivation to start to learn how to defend myself.
+01:02
+For example, I learned about manual removal of malware, and that became one of my favorite topics.
+01:08
+Also, for fun, I started doing some white hat hacker activity against some of my friends.
+01:15
+Asset security is a very important field, and there's many varieties of assets that you could be looking into to protect.
+01:23
+My favorite part is building the detections that actually have the potential to catch malicious behavior.
+01:32
+In asset management security, you have the ability to accurately inventory all of the assets which include IP, user
+01:42
+data, employee machines, and to make sure you have a security posture that's on par with what you need.
+01:53
+There's always new technology coming on the scene, new hardware, and we are responsible for understanding what potential new threats are out there.
+02:03
+Problem solving ability and creative thinking is important in cybersecurity because there's always complex problems, and people need to be
+02:10
+able to think outside of the box, think creatively, and think holistically as they approach their solutions to mitigate risks.
+02:20
+Cybersecurity is a noble occupation.
+02:23
+Many things can happen.
+02:25
+Many bad things can happen on the Internet, but we can be there to stand up against it and we can be there to do something about it.
+02:34
+We can be there to protect our users, or family members, or friends.
+02:38
+That responsibility is heavy.
+02:41
+But also, of course, it's a very important mission.
+02:45
+And I am proud to be within the security team.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Security starts with asset classification
+Transcript
+00:00
+It can be really stressful when you have trouble finding something important.
+00:05
+You're late to an appointment and can't find your keys!
+00:08
+We all find ourselves in situations like these at one time or another.
+00:12
+Believe it or not, organizations deal with the same kind of trouble.
+00:16
+Take a few seconds to think of the number of important assets you have nearby.
+00:21
+I'm thinking of my phone, wallet, and keys, for example.
+00:26
+Next, imagine that you've just joined a security team for a small online retailer.
+00:31
+The company has been growing over the past few years, adding more and more customers.
+00:35
+As a result, they're expanding their security department to protect the increasing numbers of assets they have.
+00:41
+Let's say each of you are responsible for 10 assets.
+00:44
+That's a lot of assets!
+00:46
+Even in this small business setting, that's an incredible amount of things that need protecting.
+00:52
+A fundamental truth of security is you can only protect the things you account for.
+00:56
+Asset management is the process of tracking assets and the risks that affects them.
+01:01
+All security plans revolve around asset management.
+01:04
+Recall that assets include any item perceived as having value to an organization.
+01:10
+Equipment, data, and intellectual property are just a few of the wide range of assets businesses want to protect.
+01:17
+A critical part of every organization's security plan is keeping track of its assets.
+01:24
+Asset management starts with having an asset inventory, a catalog of assets that need to be protected.
+01:29
+This is a central part of protecting organizational assets.
+01:33
+Without this record, organizations run the risk of losing track of all that's important to them.
+01:38
+A good way to think of asset inventories is as a shepherd protecting sheep.
+01:43
+Having an accurate count of the number of sheep help in a lot of ways.
+01:47
+For example, it will be easier to allocate resources, like food, to take care of them.
+01:53
+Another benefit of asset inventory might be that you'd get an alert if one of them goes missing.
+02:00
+Once more, think of the important assets you have nearby.
+02:03
+Just like me, you're probably able to rate them according to the level of importance.
+02:08
+I would rank my wallet ahead of my shoes, for example.
+02:12
+In security, this practice is known as asset classification.
+02:16
+In general, asset classification is the practice of labeling assets based on the sensitivity and importance to an organization.
+02:25
+Organizations label assets differently.
+02:27
+Many of them follow a basic classification scheme: public, internal-only, confidential, and restricted.
+02:37
+Public assets can be shared with anyone.
+02:39
+Internal-only can be shared with anyone in the organization but should not be shared outside of it.
+02:44
+And confidential assets should only be accessed by those working on a specific project.
+02:50
+Assets classified as restricted are typically highly sensitive and must be protected.
+02:56
+Assets with this label are considered need-to-know.
+02:59
+Examples include intellectual property and health or payment information.
+03:04
+For example, a growing online retailer might mark internal emails about a new product as confidential because those working on the new product should know about it.
+03:13
+They might also label the doors at their offices with the restricted sign to keep everyone out who doesn't have a specific reason to be in there.
+03:21
+These are just a couple of everyday examples that you may be familiar with from your prior experience.
+03:28
+For the most part, classification determines whether an asset can be disclosed, altered, or destroyed.
+03:33
+Asset management is a continuous process, one that helps uncover unexpected gaps in security for potential risks.
+03:41
+Keeping track of all that's important to a organization is an essential part of security planning.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Assets in a digital world
+Transcript
+00:00
+Welcome back!
+00:00
+We've covered a lot of information so far.
+00:05
+I hope you're having as much fun exploring the role of security as I am!
+00:09
+We've explored what organizational assets are and why they need protection.
+00:13
+You've also gotten a sense of the tremendous amount of assets security teams protect.
+00:18
+Previously, we began examining security asset management and the importance of keeping track of everything that's important to an organization.
+00:26
+Security teams classify assets based on value.
+00:30
+Next, let's expand our security mindset and think about this question.
+00:35
+What exactly is valuable about an asset?
+00:39
+These days, the answer is often information.
+00:41
+Most information is in a digital form.
+00:44
+We call this data.
+00:45
+Data is information that is translated, processed, or stored by a computer.
+00:51
+We live in a connected world.
+00:53
+Billions of devices around the world are linked to the internet and are exchanging data with each other all the time.
+00:59
+In fact, millions of pieces of data are being passed to your device right now!
+01:05
+When compared to physical assets, digital assets have additional challenges.
+01:10
+What you need to understand is that protecting data depends on where that data is and what it's doing.
+01:16
+Security teams protect data in three different states: in use, in transit, and at rest.
+01:22
+Let's investigate this idea in greater detail.
+01:26
+Data in use is data being accessed by one or more users.
+01:30
+Imagine being at a park with your laptop.
+01:32
+It's a nice sunny day, and you stop at a bench to check your email.
+01:36
+This is an example of data in use.
+01:38
+As soon as you log in, your inbox is considered to be in use.
+01:43
+Next, is data in transit.
+01:44
+Data in transit is data traveling from one point to another.
+01:47
+While you're signed into your account, a message from one of your friends appears.
+01:52
+They sent you an interesting article about the growing security industry.
+01:56
+You decide to reply, thanking them for sending this to you.
+02:00
+When you click send, this is now an example of data in transit.
+02:05
+Finally, there's data at rest.
+02:07
+Data at rest is data not currently being accessed.
+02:11
+In this state, data is typically stored on a physical device.
+02:15
+An example of data at rest would be when you finish checking your email and close your laptop.
+02:20
+You then decide to pack up and go to a nearby cafe for breakfast.
+02:24
+As you make your way from the park towards the cafe, the data in your laptop is at rest.
+02:30
+So now that we understand these states of data, let's connect this back to asset management.
+02:36
+Earlier, I mentioned that information is one of the most valuable assets that companies can have.
+02:41
+Information security, or InfoSec, is the practice of keeping data in all states away from unauthorized users.
+02:49
+Weak information security is a serious problem.
+02:52
+It can lead to things like identity theft, financial loss, and reputational damage.
+02:57
+These events have potential to harm organizations, their partners, and their customers.
+03:04
+And there's more to consider in your work as a security analyst.
+03:06
+As our digital world continually changes, we are adapting our understanding of data at rest.
+03:12
+Physical devices like our smartphones more commonly store data in the cloud, meaning that our information isn't necessarily at rest just because our phone is resting on a table.
+03:22
+We should always be mindful of new vulnerabilities as our world becomes increasingly connected.
+03:29
+Remember, protecting data depends on where the data is and what it's doing.
+03:33
+Keeping track of information is part of the puzzle that companies solve when considering their security plan.
+03:38
+Understanding the three states of data enable security teams to analyze risk and determine an asset management plan for different situations.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Elements of a security plan
+Transcript
+00:00
+Security is all about people, processes, and technology.
+00:04
+It's a team effort, and I mean that literally.
+00:07
+Protecting assets extends well beyond one person or a group of people in an IT department.
+00:13
+The truth of the matter is that security is a culture.
+00:17
+It's a shared set of values that spans all levels of an organization.
+00:21
+These values touch everyone, from employees, to vendors, to customers.
+00:26
+Protecting digital and physical assets requires everyone to participate, which can be a challenge.
+00:33
+That's what security plans are for!
+00:34
+Plans come in many shapes and sizes, but they all share a common goal: to be prepared for risks when they happen.
+00:42
+Placing the focus on people is what leads to the most effective security plans.
+00:47
+Considering the diverse backgrounds and perspectives of everyone involved ensures that no one is left out when something goes wrong.
+00:55
+We talked earlier about the risk as being anything that can impact the confidentiality, integrity, or availability of an asset.
+01:03
+Most security plans address risks by breaking them down according to categories and factors.
+01:09
+Some common risk categories might include, the damage, disclosure, or loss of information.
+01:14
+Any of these can be due to factors like the physical damage or malfunctions of a device.
+01:20
+There are also factors like attacks and human error.
+01:23
+For example, a new school teacher may be asked to sign a contract before their first day of class.
+01:28
+The agreement may warn against some common risks associated with human error, like using a personal email to send sensitive information.
+01:35
+A security plan may require that all new hires sign off on this agreement, effectively spreading the values that ensure everyone's in alignment.
+01:44
+This is just one example of the types and causes of risk that a plan might address.
+01:49
+These things vary widely depending on the company.
+01:52
+But how these plans are communicated is similar across industries.
+01:57
+Security plans consist of three basic elements: policies, standards, and procedures.
+02:01
+These three elements are how companies share their security plans.
+02:04
+These words tend to be used interchangeably outside of security, but you'll soon discover that they each have a very specific meaning and function in this context.
+02:13
+A policy in security is a set of rules that reduce risk and protects information.
+02:18
+Policies are the foundation of every security plan.
+02:21
+They give everyone in and out of an organization guidance by addressing questions like, what are we protecting and why?
+02:28
+Policies focus on the strategic side of things by identifying the scope, objectives, and limitations of a security plan.
+02:36
+For instance, newly hired employees at many companies are required to sign off on acceptable use policy, or AUP.
+02:45
+These provisions outline secure ways that an employee may access corporate systems.
+02:51
+Standards are the next part.
+02:52
+These have a tactical function, as they concern how well we're protecting assets.
+02:57
+In security, standards are references that inform how to set policies.
+03:02
+A good way to think of standards is that they create a point of reference.
+03:06
+For example, many companies use the password management standard identified in NIST Special Publication 800-63B to
+03:14
+improve their security policies by specifying that employees' passwords must be at least eight characters long.
+03:23
+The last part of a plan is its procedures.
+03:25
+Procedures are step-by-step instructions to perform a specific security task.
+03:30
+Organizations usually keep multiple procedure documents that are used throughout the company, like how employees
+03:36
+can choose secure passwords, or how they can securely reset a password if it's been locked.
+03:43
+Sharing clear and actionable procedures with everyone creates accountability, consistency, and efficiency across an organization.
+03:52
+Policies, standards, and procedures vary widely from one company to another because they are tailored to each organization's goals.
+03:59
+Simply understanding the structure of security plans is a great start.
+04:04
+For now, I hope you have a clearer picture of what policies, standards, and procedures are, and how they are essential to making security a team effort.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+The NIST Cybersecurity Framework
+Transcript
+00:01
+Having a plan is just one part of securing assets.
+00:04
+Once the plan is in action, the other part is making sure everyone's following along.
+00:08
+In security, we call this compliance.
+00:12
+Compliance is the process of adhering to internal standards and external regulations.
+00:17
+Small companies and large organizations around the world place security compliance at the top of their list of priorities.
+00:24
+At a high-level, maintaining trust, reputation, safety, and the integrity of your data are just a few reasons to be concerned about compliance.
+00:33
+Fines, penalties, and lawsuits are other reasons.
+00:37
+This is particularly true for companies in highly regulated industries, like health care, energy, and finance.
+00:43
+Being out of compliance with a regulation can cause long lasting financial and reputational effects that can seriously impact a business.
+00:52
+Regulations are rules set by a government or other authority to control the way something is done.
+00:57
+Like policies, regulations exist to protect people and their information, but on a larger scale.
+01:04
+Compliance can be a complex process because of the many regulations that exist all around the world.
+01:10
+For our purpose, we're going to focus on a framework of security compliance, the U.S. based NIST Cybersecurity Framework.
+01:18
+Earlier in the program, you learned the National Institute of Standards and Technology, or NIST.
+01:22
+One of the primary roles of NIST is to openly provide companies with a set of frameworks and security standards that reflect key security related regulations.
+01:32
+The NIST Cybersecurity Framework is a voluntary framework that consists of standards, guidelines, and best practices to manage cybersecurity risk.
+01:41
+Commonly known as the CSF, this framework was developed to help businesses secure one of their most important assets, information.
+01:51
+The CSF consists of three main components: the core, it's tiers, and it's profiles.
+01:58
+Let's explore each of these together to build a better understanding of how NIST's CSF is used.
+02:06
+The core is basically a simplified version of the functions, or duties, of a security plan.
+02:11
+The CSF core identifies five broad functions: identify, protect, detect, respond, and recover.
+02:19
+Think of these categories of the core as a security checklist.
+02:23
+After the core, the next NIST component we'll discuss is its tiers.
+02:28
+These provide security teams with a way to measure performance across each of the five functions of the core.
+02:34
+Tiers range from Level-1 to Level-4.
+02:37
+Level-1, or passive, indicates a function is reaching bare minimum standards.
+02:43
+Level-4, or adaptive, is an indication that a function is being performed at an exemplary standard.
+02:50
+You may have noticed that CSF tiers aren't a yes or no proposition; instead, there's a range of values.
+02:57
+That's because tiers are designed as a way of showing organizations what is and isn't working with their security plans.
+03:06
+Lastly, profiles are the final component of CSF.
+03:08
+These provide insight into the current state of a security plan.
+03:13
+One way to think of profiles is like photos capturing a moment in time.
+03:17
+Comparing photos of the same subject taken at different times can provide useful insights.
+03:23
+For example, without these photos, you might not notice how this tree has changed.
+03:27
+It's the same with NIST profiles.
+03:32
+Good security practice is about more than avoiding fines and attacks.
+03:34
+It demonstrates that you care about people and their information.
+03:38
+Before we go, let's visit the core's functions one more time to look at where we've been and where we're going.
+03:45
+The first function is identify.
+03:46
+Our previous discussions on asset management and risk assessment relates to that function.
+03:53
+Coming up, we're going to focus on many of the categories of the second function, the protect function.
+03:59
+Meet you there!
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Wrap-up
+Transcript
+00:00
+Well done!
+00:00
+You made it to the end of this section!
+00:04
+Being a security practitioner takes commitment and a desire to learn.
+00:08
+A big part of the job involves keeping current with best practices and emerging trends.
+00:14
+Thinking back on my own journey into the world of security, I'm so proud of you for your continued commitment.
+00:19
+We've covered a lot of material this week, and this is a good time to reflect and look back on the key concepts we explored together.
+00:27
+We covered the building blocks of organizational risk management: assets, threats, and vulnerabilities.
+00:34
+We also spent some time demonstrating the importance of asset inventories.
+00:38
+It's much easier to protect company assets if you know where they are and who's responsible for them.
+00:44
+After that, we moved on to explore the challenges in a rapidly changing digital world.
+00:49
+Part of protecting data in this world is understanding if it's in use, in transit, or at rest.
+00:56
+Finally, in our high-level exploration of policies, standards, and procedures, we talked about how each of them factor into achieving security goals.
+01:04
+There's no one-size-fits-all approach to achieving security.
+01:08
+While exploring the NIST Cybersecurity Framework, you gained an appreciation of how it supports good security practices.
+01:16
+Attackers are also constantly building their skills and finding new ways to break through the defenses we put up.
+01:21
+Remember, the landscape is always changing.
+01:24
+There's always more to learn if you want to be a good security practitioner.
+01:29
+Next up, we're going to expand our security mindset by learning more about the different systems security teams use to protect organizational assets.
+01:37
+I'm looking forward to it!
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

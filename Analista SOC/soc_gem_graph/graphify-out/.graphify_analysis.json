@@ -1,0 +1,52 @@
+{
+  "communities": {
+    "0": [
+      "soc_gem_graph_soc_gem_v2_memoria_institucional",
+      "soc_gem_graph_soc_gem_v2_nist_800_61",
+      "soc_gem_graph_soc_gem_v2_reglas_oro"
+    ],
+    "1": [
+      "soc_gem_graph_soc_gem_v2_ms_samr",
+      "soc_gem_graph_soc_gem_v2_samr_protocol"
+    ]
+  },
+  "cohesion": {
+    "0": 0.6666666666666666,
+    "1": 1.0
+  },
+  "gods": [
+    {
+      "id": "soc_gem_graph_soc_gem_v2_reglas_oro",
+      "label": "Reglas de Oro Operacionales",
+      "degree": 2
+    },
+    {
+      "id": "soc_gem_graph_soc_gem_v2_memoria_institucional",
+      "label": "Memoria Institucional",
+      "degree": 1
+    },
+    {
+      "id": "soc_gem_graph_soc_gem_v2_nist_800_61",
+      "label": "NIST SP 800-61 Rev3",
+      "degree": 1
+    },
+    {
+      "id": "soc_gem_graph_soc_gem_v2_samr_protocol",
+      "label": "SAMR Protocol",
+      "degree": 1
+    },
+    {
+      "id": "soc_gem_graph_soc_gem_v2_ms_samr",
+      "label": "MS-SAMR Protocol Specification",
+      "degree": 1
+    }
+  ],
+  "surprises": [],
+  "questions": [
+    {
+      "type": "isolated_nodes",
+      "question": "What connects `Memoria Institucional`, `NIST SP 800-61 Rev3`, `SAMR Protocol` to the rest of the system?",
+      "why": "4 weakly-connected nodes found - possible documentation gaps or missing edges."
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+python -m markitdown "C:\Users\kevinmoraes\Downloads\Analista SOC\Google Cybersecurity Certification\Play It Safe Manage Security Risks\Modulo 2\module-3-the-future-of-siem-tools.en.pdf" -o "C:\Users\kevinmoraes\Downloads\Analista SOC\Google Cybersecurity Certification\Play It Safe Manage Security Risks\Modulo 2\module-3-the-future-of-siem-tools.en.md"
+
+powershell -Command "Remove-Item -Path 'C:\Users\kevinmoraes\Downloads\Analista SOC\Google Cybersecurity Certification\Play It Safe Manage Security Risks\Modulo 2\module-2-the-relationship-between-frameworks-and-controls.md' -Force"
+
+python -m markitdown "C:\Users\kevinmoraes\Downloads\Analista SOC\Google Cybersecurity Certification\Tools of the Trade Linux and SQL\Modulo 4\wildfire-appliance-es-es.pdf" -o "C:\Users\kevinmoraes\Downloads\Analista SOC\Google Cybersecurity Certification\Tools of the Trade Linux and SQL\Modulo 4\wildfire-appliance-es-es.md"

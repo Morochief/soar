@@ -1,0 +1,808 @@
+Welcome to module 3
+Transcript
+00:00
+Wow!
+00:00
+We've covered a lot together!
+00:03
+It's hard to believe we've reached the midpoint of this course.
+00:07
+I hope you're getting a clearer picture of this exciting field and all the opportunities it has to offer.
+00:12
+And most importantly, I hope you're having fun doing it.
+00:16
+We've come a long ways from where we started.
+00:18
+When we began our journey together, we were introduced to the three building blocks of every security program: assets, threats, and vulnerabilities.
+00:27
+We focused a lot on assets early on and the wide range of things security professionals work to protect.
+00:35
+We then turned our attention to a core component of asset security, protecting assets.
+00:39
+You learned about the importance of guarding sensitive information.
+00:42
+You also learned about some security controls that protect information from being lost or stolen.
+00:49
+On the next part of our journey, we're going to turn our focus to vulnerabilities.
+00:53
+Every asset we protect has a series of vulnerabilities, or flaws, that we need to be aware of.
+00:59
+Staying informed of these things is a critical part of protecting people and organizations from harm.
+01:05
+In this next part of the course, you'll gain an understanding of the vulnerability management process.
+01:10
+First, you'll explore a common approach to vulnerability management: the defense and depth model.
+01:15
+Then, you will learn about how vulnerabilities are documented in online libraries like the CVE list.
+01:21
+We'll discuss the attack surfaces security teams protect.
+01:25
+And lastly, you'll expand your attacker mindset by exploring the common attack vectors cybercriminals try to exploit.
+01:34
+Security analysts play an important role in identifying and correcting vulnerabilities in systems.
+01:39
+I know I'm excited to keep exploring, are you?
+01:42
+Then let's go!
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Vulnerability management
+Transcript
+00:01
+For every asset that needs protecting, there are dozens of vulnerabilities.
+00:05
+Finding those vulnerabilities and fixing them before they become a problem is the key to keep an asset safe.
+00:12
+We've already covered what a vulnerability is.
+00:14
+Recall that a vulnerability is a weakness that can be exploited by a threat.
+00:19
+That word, can, is an important part of this description.
+00:22
+Why is that?
+00:24
+Let's explore that together to find out more.
+00:28
+Imagine I handed you an important document and asked you to keep it safe.
+00:31
+How would you do that?
+00:33
+Some of you might first think about locking it up in a safe place.
+00:37
+Behind this is the understanding that, because documents can be easily moved, they are vulnerable to theft.
+00:44
+When other vulnerabilities come to mind, like how paper burns easily or doesn't resist water, you might add other protections.
+00:52
+Similar to this example, security teams plan to protect assets according to their vulnerabilities and how they can be exploited.
+00:59
+In security, an exploit is a way of taking advantage of a vulnerability.
+01:03
+Besides finding vulnerabilities, security planning relies a lot on thinking of exploits.
+01:09
+For example, there are burglars out there who want to cause harm.
+01:13
+Homes have vulnerable systems that can be exploited by a burglar.
+01:16
+An example are the windows.
+01:18
+Glass is vulnerable to being broken.
+01:22
+A burglar can exploit this vulnerability by using a rock to break the window.
+01:27
+Thinking of this vulnerability and exploit ahead of time allows us to plan ahead.
+01:32
+We can have an alarm system in place to scare the burglar away and alert the police.
+01:38
+Security teams spend a lot of time finding vulnerabilities and thinking of how they can be exploited.
+01:44
+They do this with the process known as vulnerability management.
+01:48
+Vulnerability management is the process of finding and patching vulnerabilities.
+01:53
+Vulnerability management helps keep assets safe.
+01:56
+It's a method of stopping threats before they can become a problem.
+02:00
+Vulnerability management is a four step process.
+02:03
+The first step is to identify vulnerabilities.
+02:06
+The next step is to consider potential exploits of those vulnerabilities.
+02:11
+Third is to prepare defenses against threats.
+02:13
+And finally, the fourth step is to evaluate those defenses.
+02:20
+When the last step ends, the process starts again.
+02:23
+Vulnerability management happens in a cycle.
+02:26
+It's a regular part of what security teams do because there are always new vulnerabilities to be concerned about.
+02:33
+This is exactly why a diverse set of perspectives is useful!
+02:36
+Having a wide range of backgrounds and experiences only strengthens security teams and their ability to find exploits.
+02:43
+However, even large and diverse security teams can't keep track of everything.
+02:50
+New vulnerabilities are constantly being discovered.
+02:52
+These are known as zero-day exploits.
+02:54
+A zero-day is an exploit that was previously unknown.
+02:58
+The term zero-day refers to the fact that the exploit is happening in real time with zero days to fix it.
+03:05
+These kind of exploits are dangerous.
+03:07
+They represent threats that haven't been planned for yet.
+03:12
+For example, we can anticipate the possibility of a burglar breaking into our home.
+03:15
+We can plan for this type of threat by having defenses in place, like locks on the doors and windows.
+03:21
+A zero-day exploit would be something totally unexpected, like the lock on the door falling off from intense heat.
+03:28
+Zero-day exploits are things that don't normally come to mind.
+03:31
+For example, this might be a new form of spyware infecting a popular website.
+03:37
+When zero-day exploits happen, they can leave assets even more vulnerable to threats than they already are.
+03:43
+Vulnerability management is the process of finding vulnerabilities and fixing their exploits.
+03:47
+That's why the process is performed regularly at most organizations.
+03:52
+Perhaps the most important step of the process is identifying vulnerabilities.
+03:56
+We'll explore this step in more details next time we get together.
+04:00
+I'll meet you again then!
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defense in depth strategy
+Transcript
+00:00
+A layered defense is difficult to penetrate.
+00:03
+When one barrier fails, another takes its place to stop an attack.
+00:07
+Defense in depth is a security model that makes use of this concept.
+00:12
+It's a layered approach to vulnerability management that reduces risk.
+00:16
+Defense in depth is commonly referred to as the castle approach because it resembles the layered defenses of a castle.
+00:25
+In the Middle Ages, these structures were very difficult to penetrate.
+00:28
+They featured different defenses, each unique in its design, that posed different challenges for attackers.
+00:35
+For example, a water-filled barrier called a moat usually formed a circle around the castle, preventing threats like large groups of attackers from reaching the castle walls.
+00:45
+The few soldiers that made it past the first layer of defense were then faced with a new challenge, giant stone walls.
+00:54
+A vulnerability of these structures were that they could be climbed.
+00:58
+If attackers tried exploiting that weakness, guess what?
+01:01
+They were met with another layer of defense, watch towers, filled with defenders ready to shoot arrows and keep them from climbing!
+01:08
+Each level of defense of these medieval structures minimized the risk of attacks by identifying vulnerabilities and implementing a security control should one system fail.
+01:21
+Defense in depth works in a similar way.
+01:23
+The defense in depth concept can be used to protect any asset.
+01:27
+It's mainly used in cybersecurity to protect information using a five layer design.
+01:33
+Each layer features a number of security controls that protect information as it travels in and out of the model.
+01:41
+The first layer of defense in depth is the perimeter layer.
+01:44
+This layer includes some technologies that we've already explored, like usernames and passwords.
+01:50
+Mainly, this is a user authentication layer that filters external access.
+01:55
+Its function is to only allow access to trusted partners to reach the next layer of defense.
+02:02
+Second, the network layer is more closely aligned with authorization.
+02:06
+The network layer is made up of other technologies like network firewalls and others.
+02:12
+Next, is the endpoint layer.
+02:13
+Endpoints refer to the devices that have access on a network.
+02:17
+They could be devices like a laptop, desktop, or a server.
+02:22
+Some examples of technologies that protect these devices are anti-virus software.
+02:28
+After that, we get to the application layer.
+02:31
+This includes all the interfaces that are used to interact with technology.
+02:35
+At this layer, security measures are programmed as part of an application.
+02:40
+One common example is multi-factor authentication.
+02:44
+You may be familiar with having to enter both your password and a code sent by SMS.
+02:50
+This is part of the application layer of defense.
+02:55
+And finally, the fifth layer of defense is the data layer.
+02:57
+At this layer, we've arrived at the critical data that must be protected, like personally identifiable information.
+03:05
+One security control that is important here in this final layer of defense is asset classification.
+03:12
+Like I mentioned earlier, information passes in and out of each of these five layers whenever it's exchanged over a network.
+03:19
+There are many more security controls aside from the few that I mentioned that are part of the defense in depth model.
+03:26
+A lot of businesses design their security systems using the defense in-depth model.
+03:31
+Understanding this framework hopefully gives you a better sense of how an organization's security controls work together to protect important assets.
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Common vulnerabilities and exposures
+Transcript
+00:00
+We've discussed before that security is a team effort.
+00:05
+Did you know the group extends well beyond a single security team?
+00:09
+Protecting information is a global effort!
+00:14
+When it comes to vulnerabilities, there are actually online public libraries.
+00:17
+Individuals and organizations use them to share and document common vulnerabilities and exposures.
+00:24
+We've been focusing a lot on vulnerabilities.
+00:26
+Exposures are similar, but they have a key difference.
+00:30
+While a vulnerability is a weakness of a system, an exposure is a mistake that can be exploited by a threat.
+00:38
+For example, imagine you're asked to protect an important document.
+00:42
+Documents are vulnerable to being misplaced.
+00:45
+If you laid the document down near an open window, it could be exposed to being blown away.
+00:52
+One of the most popular libraries of vulnerabilities and exposures is the CVE list.
+00:57
+The common vulnerabilities and exposures list, or CVE list, is an openly accessible dictionary of known vulnerabilities and exposures.
+01:06
+It is a popular resource.
+01:09
+Many organizations use a CVE list to find ways to improve their defenses.
+01:13
+The CVE list was originally created by MITRE corporation in 1999.
+01:18
+MITRE is a collection of non-profit research and development centers.
+01:23
+They're sponsored by the US government.
+01:26
+Their focus is on improving security technologies around the world.
+01:31
+The main purpose of the CVE list is to offer a standard way of identifying and categorizing known vulnerabilities and exposures.
+01:38
+Most CVEs in the list are reported by independent researchers, technology vendors, and ethical hackers, but anyone can report one.
+01:48
+Before a CVE can make it onto the CVE list, it first goes through a strict review process by a CVE Numbering Authority, or CNA.
+02:00
+A CNA is an organization that volunteers to analyze and distribute information on eligible CVEs.
+02:06
+All of these groups have an established record of researching vulnerabilities and demonstrating security advisory capabilities.
+02:14
+When a vulnerability or exposure is reported to them, a rigorous testing process takes place.
+02:21
+The CVE list tests four criteria that a vulnerability must have before it's assigned an ID.
+02:26
+First, it must be independent of other issues.
+02:30
+In other words, the vulnerability should be able to be fixed without having to fix something else.
+02:36
+Second, it must be recognized as a potential security risk by whoever reports it.
+02:42
+Third, the vulnerability must be submitted with supporting evidence.
+02:48
+And finally, the reported vulnerability can only affect one codebase, or in other words, only one program's source code.
+02:57
+For instance, the desktop version of Chrome may be vulnerable, but the Android application may not be.
+03:04
+If the reported flaw passes all of these tests, it is assigned a CVE ID.
+03:10
+Vulnerabilities added to the CVE list are often reviewed by other online vulnerability databases.
+03:16
+These organizations put them through additional tests to reveal how significant the flaws are and to determine what kind of threat they pose.
+03:25
+One of the most popular is the NIST National Vulnerabilities Database.
+03:30
+The NIST National Vulnerabilities Database uses what's known as the common vulnerability scoring system, or CVSS, which is a measurement system that scores the severity of a vulnerability.
+03:43
+Security teams use CVSS as a way of calculating the impact a vulnerability could have on a system.
+03:51
+They also use them to determine how quickly a vulnerability should be patched.
+03:57
+The NIST National Vulnerabilities Database provides a base score of CVEs on a scale of 0-10.
+04:02
+Base scores reflect the moment a vulnerability is evaluated, so they don't change over time.
+04:08
+In general, a CVSS that scores below a 4.0 is considered to be low risk and doesn't require immediate attention.
+04:17
+However, anything above a 9.0 is considered to be a critical risk to company assets that should be addressed right away.
+04:26
+Security teams commonly use the CVE list and CVSS scores as part of their vulnerability management strategy.
+04:33
+These references provide recommendations for prioritizing security fixes, like installing software updates before patches.
+04:42
+Libraries like the CVE list, help organizations answer questions.
+04:46
+Is a vulnerability dangerous to our business?
+04:48
+If so, how soon should we address it?
+04:52
+These online libraries bring together diverse perspectives from across the world.
+04:56
+Contributing to this effort is one of my favorite parts of working in this field.
+05:01
+Keep gaining experience, and I hope you'll participate too!
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Vulnerability assessments
+Transcript
+00:00
+Our exploration of the vulnerability management process so far has been focused on a couple of topics.
+00:07
+We've discussed how vulnerabilities influence the design of defenses.
+00:11
+We've also talked about how common vulnerabilities are shared.
+00:14
+A topic we're yet to cover is how vulnerabilities are found in the first place.
+00:20
+Weaknesses and flaws are generally found during a vulnerability assessment.
+00:24
+A vulnerability assessment is the internal review process of an organization's security systems.
+00:30
+These assessments work similar to the process of identifying and categorizing vulnerabilities on the CVE list.
+00:37
+The main difference is the organization's security team performs, evaluates, scores, and fixes them on their own.
+00:45
+Security analysts play a key role throughout this process.
+00:50
+Overall, the goal of a vulnerability assessment is to identify weak points and prevent attacks.
+00:55
+They're also how security teams determine whether their security controls meet regulatory standards.
+01:01
+Organizations perform vulnerability assessments a lot.
+01:05
+Because companies have so many assets to protect, security teams sometimes need to select which area to focus on through vulnerability assessments.
+01:15
+Once they decide what to focus on, vulnerability assessments typically follow a four-step process.
+01:21
+The first step is identification.
+01:23
+Here, scanning tools and manual testing are used to find vulnerabilities.
+01:28
+During the identification step, the goal is to understand the current state of a security system, like taking a picture of it.
+01:37
+A large number of findings usually appear after identification.
+01:40
+The next step of the process is vulnerability analysis.
+01:44
+During this step, each of the vulnerabilities that were identified are tested.
+01:49
+By being a digital detective, the goal of vulnerability analysis is to find the source of the problem.
+01:56
+The third step of the process is risk assessment.
+01:58
+During this step of the process, a score is assigned to each vulnerability.
+02:03
+This score is assigned based on two factors: how severe the impact would be if the vulnerability were to be exploited and the likelihood of this happening.
+02:14
+Vulnerabilities uncovered during the first two steps of this process often outnumber the people available to fix them.
+02:20
+Risk assessments are a way of prioritizing resources to handle the vulnerabilities that need to be addressed based on their score.
+02:29
+The fourth and final step of vulnerability assessment is remediation.
+02:32
+It's during this step that the vulnerabilities that can impact the organization are addressed.
+02:37
+Remediation occurs depending on the severity score assigned during the risk assessment step.
+02:44
+This part of the process is normally a joint effort between the security staff and IT
+02:48
+teams to come up with the best approach to fixing the vulnerabilities that were uncovered earlier.
+02:53
+Examples of remediation steps might include things like enforcing new security procedures, updating operating systems, or implementing system patches.
+03:03
+Vulnerability assessments are great for identifying the flaws of a system.
+03:07
+Most organizations use them to search for problems before they happen.
+03:11
+But how do we know where to search?
+03:14
+When we get together again, we'll explore how companies figure this out.
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Omad: My learning journey into cybersecurity
+Transcript
+00:00
+[MUSIC] My name is Omad, I'm a corporate operations engineer at Google.
+00:07
+All I do is solve problems.
+00:09
+Googlers have problems, they need somebody to talk to, they usually talk to us.
+00:13
+If you asked me at 18 years old where I'd be now, I would have never told you I'd be working as a security engineer.
+00:18
+I would have told you I'd be working in a prison or I'd be working
+00:21
+as a police officer in some township and just working a regular 9 to 5 shift.
+00:25
+After high school, I went on to work at Trenton State Prison, which is the only maximum security prison in New Jersey.
+00:31
+It was very stressful, but at the same time it's what I wanted to do at
+00:33
+the time, or at least, that's what I thought I wanted to do at that time.
+00:37
+Five years after becoming a correction officer, I took the test again to be a sheriff's officer.
+00:42
+And on the last day of that academy, I decided this wasn't for me. I
+00:45
+was tired of being on my face doing pushups, I was tired of being yelled at.
+00:48
+I went home and I did what everybody else would do, do a Google search.
+00:52
+And I saw one for Google and it was a residency program, it was at the top of the list and I applied to it as a joke.
+00:57
+I even told my friends at the time, I'm just going to apply this, I'm not going to get in.
+01:00
+I had no reference, no connections, I knew nobody that worked at Google.
+01:03
+And within a couple of days a recruiter reached out to me, she said, "I think you're a great
+01:06
+fit, you're a career changer. I like your application, I like your resume, I think you'd be a great fit."
+01:11
+All the interviewers liked my background, they liked that I was self taught.
+01:14
+A lot of interviewers were able to relate to me.
+01:16
+They said, "Hey, I did the same thing."
+01:18
+From there, I was offered the job and I started my career.
+01:21
+When I was in orientation, somebody right next to me was actually the valedictorian of Princeton.
+01:26
+Here I am with no college degree, no exposure, no work experience, and I'm in the same company.
+01:31
+For career changers, what you have that other people don't have is a different mindset.
+01:36
+You're coming from experience outside of the technical space that you can transfer into the technical space.
+01:42
+Don't forget that we all have skillsets that can help you in the field.
+01:45
+That's what employers are looking for, that's what hiring managers are looking for.
+01:48
+One thing I learned as a correction officer is how to assess risk.
+01:51
+Every situation is different, just like the security space.
+01:52
+Every risk is different.
+01:54
+Every vulnerability is different.
+01:55
+Every threat is different.
+01:57
+You can teach somebody tech, but you can't teach them a life of skills outside of tech.
+02:03
+If I were to go back and tell my 18 year old self one piece of advice, it would be, don't be scared, do it.
+02:08
+A career in cybersecurity is very fun.
+02:11
+It's very interesting.
+02:11
+It will work your brain.
+02:13
+It changed my life, it'll change yours as well.
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Protect all entry points
+Transcript
+00:00
+There's a wide range of vulnerabilities and systems that need to be found.
+00:05
+Assessing those weaknesses is a time-consuming process.
+00:08
+To position themselves ahead of threats and make the most of their limited resources, companies start by understanding the environment surrounding their operations.
+00:18
+An important part of this is getting a sense of their attack surface.
+00:23
+An attack surface is all the potential vulnerabilities that a threat actor could exploit.
+00:28
+Analyzing the attack surface is usually the first thing security teams do.
+00:34
+For example, imagine being part of a security team of an old castle.
+00:38
+Your team would need to decide how to allocate resources to defenses.
+00:42
+Giant walls, stone towers, and wooden gates are a few common security controls of these structures.
+00:49
+While these are all designed to protect the assets inside from attacks, they don't exactly account for all the possibilities.
+00:57
+What if the castle were near the ocean?
+00:59
+If it were, these defenses would be vulnerable to long range attacks by ship.
+01:04
+A proper understanding of the attack surface would mean your security team equipped the castle with catapults that could deal with these kinds of threats.
+01:13
+Modern organizations need to concern themselves with both a physical and digital attack surface.
+01:18
+The physical attack surface is made up of people and their devices.
+01:22
+This surface can be attacked from both inside and outside the organization, which makes it unique.
+01:30
+For example, let's consider an unattended laptop in a public space, like a coffee shop.
+01:35
+The person responsible for it walked away while sensitive company information was visible on the screen.
+01:42
+This information is vulnerable to external threats, like a business competitor, who can easily record the information and exploit it.
+01:49
+An internal threat of this attack surface, on the other hand, is often angry employees.
+01:55
+These employees might share an organization's private information on purpose.
+02:00
+In general, the physical attack surface should be filled with obstacles that deter attacks from happening.
+02:06
+We call this process security hardening.
+02:09
+Security hardening is the process of strengthening a system to reduce its vulnerabilities and attack surface.
+02:17
+In other words, hardening is the act of minimizing the attack surface by limiting its points of entry.
+02:25
+We do this a lot in security because the smaller the attack surface, the easier it is to protect.
+02:30
+In fact, some security controls that we've explored previously, like organization policies and access controls, are common ways that organizations harden their physical attack surface.
+02:42
+The digital attack surface is a big tougher to harden.
+02:44
+The digital attack surface includes everything that's beyond our organization's firewall.
+02:50
+In other words, it includes anything that connects to an organization online.
+02:56
+In the past, organizations stored their data in a single location.
+02:59
+This mainly consisted of servers that were managed on-site.
+03:02
+Accessing the information stored on those servers required connecting to the network the workplace managed.
+03:10
+These days, information is accessed outside of an organization's network because it's stored in the cloud.
+03:15
+Information can be accessed from anywhere in the world.
+03:19
+A person can be in one part of the world, fly to another place, and continue working.
+03:22
+All while outside of their organization's network.
+03:28
+Cloud computing has essentially expanded the digital attack surface.
+03:31
+Quicker access to information is something we all benefit from, but it comes with a cost.
+03:37
+Organizations of all sizes are under more pressure to defend against threats coming from different entry points.
+03:45
+When we get together next time, we'll explore why this is such a challenge.
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Niru: Adopt an attacker mindset
+Transcript
+00:00
+[MUSIC] Hi, I'm Niru, and I lead the red team at Google.
+00:06
+The red team at Google simulates attackers that are trying to hack into Google.
+00:11
+They function as a sparring partner for the blue team, that is, the teams that build security controls, detection pipelines, or respond to incidents.
+00:20
+So we help test all of those by simulating adversaries.
+00:25
+So we hack into Google to make it harder to hack into Google.
+00:28
+So it's like, hey, we found these issues with your system, now here are some recommendations we have, and how can we help you fix this?
+00:36
+Thinking like an attacker is approaching a problem like an adversary.
+00:41
+I generally have a predisposition to think like an attacker.
+00:44
+[LAUGH].
+00:45
+It started when I was a kid and I used to play video games, and I
+00:48
+used to ask, oh, do I have to beat the game in the way it's intended?
+00:53
+Do I have to get the objective in the standard path?
+00:56
+Looking at a system and asking the question, can I break into it?
+01:00
+How do I break into it?
+01:02
+What is likely to fail?
+01:03
+If it fails, what does that give me?
+01:06
+It's about taking apart systems and trying to understand it.
+01:09
+Threat modeling is integral to almost anything a security professional does.
+01:13
+It's about challenging assumptions.
+01:15
+It's about approaching things from a different perspective.
+01:18
+Rather than looking at the system from the perspective of a developer who is thinking about, how do I build the system in a way that works for people?
+01:26
+You're putting on the hat of an attacker and saying, if I looked at the system, how would I break into it?
+01:32
+It's important for all security professionals to think like an attacker because you code more defensively, you build things more defensively, and you break things more offensively.
+01:42
+And what that means is you're building in this resilience into the system, and you're building
+01:46
+in all these safeguards that are going to help protect the data, the systems, and the people.
+01:51
+In order to build my attacker mindset, what I did is I would go pick people's brains.
+01:58
+What that means is I can grab time with them and say, hey, how do you approach the system?
+02:03
+What are the assumptions you're making?
+02:06
+How do you build out the security safeguards that you're thinking about?
+02:09
+My advice for people who are trying to build their own attacker mindset is go talk to people,
+02:15
+be it in local meetups, in conferences, find yourself a CTF group and play these competitions with them.
+02:23
+See how each person in the team approaches certain things and solves for it.
+02:27
+Almost everything we do on a daily basis is online these days, like banking is online, grocery shopping is online, the electricity grid, the water supplies.
+02:37
+All of this has happened in a short span of time, and now people are taking a step back and say, what does that mean for us?
+02:45
+And cybersecurity folks are the ones who help make sure these systems are locked down and protected against these adversaries.
+02:53
+If you're inquisitive, if you like taking things apart, if you like solving things, if you want to help make things secure, you should join cybersecurity.
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Pathways through defenses
+Transcript
+00:00
+To defend against attacks, organizations need to have more than just the understanding of the growing digital landscape around them.
+00:08
+Positioning themselves ahead of a cyber threat also takes understanding the type of attacks that can be used against them.
+00:16
+Last time, we began exploring how the cloud has expanded the digital attack surface that organizations protect.
+00:22
+As a result, cloud computing has led to an increase in the number attack vectors available.
+00:29
+Attack vectors refer to the pathways attackers use to penetrate security defenses.
+00:34
+Like the doors and windows of a home, these pathways are the exploitable features of an attack surface.
+00:40
+One example of an attack vector would be social media.
+00:44
+Another would be removable media, like a USB drive.
+00:49
+Most people outside of security assume that cyber criminals are the only ones out there exploiting attack vectors.
+00:55
+While attack vectors are used by malicious hackers to steal information, other groups use them too.
+01:01
+For example, employees occasionally exploit attack vectors unintentionally.
+01:07
+This happens a lot with social media platforms.
+01:10
+Sometimes, employees post sensitive company news that shouldn't have been shared.
+01:15
+At times, this same kind of thing happens on purpose.
+01:18
+Social media platforms are also vectors that disgruntled employees use to intentionally share confidential information that can harm the company.
+01:28
+We all treat attack vectors as critical risks to asset security.
+01:32
+Attackers typically put forth a lot of effort planning their attacks before carrying them out.
+01:38
+It's up to us as security professionals to put an even greater amount of effort into stopping them.
+01:45
+Security teams do this by thinking of each vector with an attacker mindset.
+01:49
+This starts with a simple question, "how would we exploit this vector?"
+01:54
+We then go through a step-by-step process to answer our question.
+01:59
+First, when practicing an attacker mindset, we identify a target.
+02:03
+This could be specific information, a system, a person, a group, or the organization itself.
+02:11
+Next, we determine how the target can be accessed.
+02:14
+What information is available that an attacker might take advantage of to reach the target?
+02:20
+Based on that information, the third step is to evaluate the attack vectors that can be exploited to gain entry.
+02:27
+And finally, we find the tools and methods of attack.
+02:29
+What will the attackers use to carry this out?
+02:33
+Along the way, practicing an attacker mindset provides valuable insight into the best security controls to implement and the vulnerabilities that need to be monitored.
+02:42
+Every organization has a long list of attack vectors to defend.
+02:46
+While there are a lot of ways to protect them, there are a few common rules for doing this.
+02:52
+One key to defending attack vectors is educating users about security vulnerabilities.
+02:57
+These efforts are usually tied to an event.
+03:00
+For example, advising them about a new phishing exploit that is targeting users in the organization.
+03:07
+Another rule is applying the principle of least privilege.
+03:09
+We've explored least privilege earlier in this section.
+03:12
+It's the idea that access rights should be limited to what's required to perform a task.
+03:17
+Like we previously explored, this practice closes multiple security holes inside an organization's attack surface.
+03:26
+Next, using the right security controls and tools can go a long way towards defending attack vectors.
+03:31
+Even the most knowledgeable employees make security mistakes, like accidentally clicking on a malicious link in an email.
+03:38
+Having the right security tools in place, like antivirus software, helps to defend attack vectors more efficiently and reduce the risk of human error.
+03:48
+Last but not least, is building a diverse security team.
+03:51
+This is one of the best ways to reduce the risk of attack vectors and prevent future attacks.
+03:58
+Your own unique perspective can greatly improve the security team's ability to apply an attacker's mindset and stay one step ahead of potential threats.
+04:05
+Keeping yourself informed is always important in this field.
+04:09
+You're already off to a great start, so keep up the good work!
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Wrap-up
+Transcript
+00:00
+Here we are at the end of this section!
+00:02
+Can you believe it?
+00:04
+I had so much fun exploring the world of vulnerabilities.
+00:08
+I hope you felt the same.
+00:09
+More importantly, I hope you got a better sense of how complex a landscape the digital world is.
+00:15
+This environment is filled with gaps that attackers can use to gain unauthorized access to assets, making it a challenge to defend.
+00:24
+We've explored a lot of information this time around, so let's quickly recap what we've covered.
+00:30
+You learned about the vulnerability management process, starting with the defense-in-depth model.
+00:35
+You learned about the layers of this security framework and how each of them work together to build a stronger defense.
+00:42
+You then learned about the CVE list that's used to find cataloged vulnerabilities.
+00:46
+This is a great addition to your growing security toolbox.
+00:51
+After that, you learned of the attack surfaces that businesses protect.
+00:54
+We discussed physical and digital surfaces and the challenges of defending the cloud.
+01:00
+We finished up by exploring common attack vectors, where you learned how security teams use an attacker mindset to identify the security gaps that cyber criminals try to exploit.
+01:12
+Every one of the vulnerabilities that we've discussed so far is faced with a number of threats.
+01:17
+When we get back together, we're going to expand our attacker mindset even further by exploring specific type of attacks that cybercriminals commonly use.
+01:25
+We'll look at things like malware and the techniques attackers use to compromise defense systems.
+01:31
+By exploring how these tools and tactics work, you'll gain a clearer understanding of the threats they pose.
+01:36
+We'll then wrap up by investigating how security teams stop these threats from damaging our organizations' operations, their reputation, and most importantly, their customers and employees.
+01:49
+You've done a fantastic job getting to this point.
+01:51
+When you're ready, let's finish the journey together.
+01:54
+I'm looking forward to being back with you again.
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
