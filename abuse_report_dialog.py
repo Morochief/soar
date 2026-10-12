@@ -66,20 +66,107 @@ ABUSE_CONTACTS_MAP = {
 _RDAP_CACHE: Dict[str, Dict[str, Optional[str]]] = {}
 
 
-def consultar_rdap_abuse_info(ip: str) -> Dict[str, Optional[str]]:
-    """Consulta la API de RDAP para extraer dinámicamente el correo de abuso validado y la organización titular."""
-    if not ip:
-        return {"email": None, "org": None}
-    if ip in _RDAP_CACHE:
-        return _RDAP_CACHE[ip]
+def consultar_asn_abuse_info(asn: Any) -> Optional[Dict[str, str]]:
+    """Consulta el buzón de abuso del Sistema Autónomo BGP vía RDAP aut-num y socket Whois port 43."""
+    if not asn:
+        return None
+    asn_clean = str(asn).upper().replace("AS", "").strip()
+    if not asn_clean.isdigit():
+        return None
 
-    result: Dict[str, Optional[str]] = {"email": None, "org": None}
+    import urllib.request
+    import socket
+
+    endpoints = [
+        f"https://rdap.db.ripe.net/aut-num/AS{asn_clean}",
+        f"https://rdap.org/aut-num/{asn_clean}",
+        f"https://rdap.arin.net/registry/aut-num/{asn_clean}",
+        f"https://rdap.apnic.net/aut-num/{asn_clean}",
+        f"https://rdap.afrinic.net/rdap/aut-num/{asn_clean}"
+    ]
+    for url in endpoints:
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "TechnomaSOC/1.0", "Accept": "application/json"})
+            with urllib.request.urlopen(req, timeout=2.5) as resp:
+                if resp.status == 200:
+                    data = json.loads(resp.read().decode("utf-8", errors="ignore"))
+                    # Remarks
+                    for rem in data.get("remarks", []):
+                        for d in rem.get("description", []):
+                            m = re.search(r'([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)', d)
+                            if m and "abuse" in d.lower():
+                                return {"email": m.group(1).strip(), "asn": f"AS{asn_clean}", "holder": data.get("name", "")}
+
+                    # Entities
+                    def _find_abuse(entities):
+                        for ent in entities:
+                            roles = ent.get("roles", [])
+                            vcards = (ent.get("vcardArray") or [[], []])[1]
+                            for card in vcards:
+                                if isinstance(card, list) and len(card) > 3 and card[0] == "email":
+                                    em = str(card[3]).strip()
+                                    if "abuse" in roles or "abuse" in em.lower():
+                                        return em
+                            sub = _find_abuse(ent.get("entities", []))
+                            if sub:
+                                return sub
+                        return None
+
+                    em = _find_abuse(data.get("entities", []))
+                    if em:
+                        return {"email": em, "asn": f"AS{asn_clean}", "holder": data.get("name", "")}
+        except Exception:
+            continue
+
+    # Fallback Socket Port 43
+    for srv in ["whois.ripe.net", "whois.radb.net", "whois.arin.net", "whois.apnic.net"]:
+        try:
+            s = socket.create_connection((srv, 43), timeout=2.5)
+            s.sendall(f"AS{asn_clean}\r\n".encode())
+            raw = b""
+            while True:
+                d = s.recv(4096)
+                if not d:
+                    break
+                raw += d
+            s.close()
+            text = raw.decode("utf-8", errors="ignore")
+            m = re.search(r'abuse-mailbox:\s*([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-.]+)', text, re.I)
+            if m:
+                return {"email": m.group(1).strip(), "asn": f"AS{asn_clean}", "holder": ""}
+            m2 = re.search(r'Abuse contact.*?([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-.]+)', text, re.I)
+            if m2:
+                return {"email": m2.group(1).strip(), "asn": f"AS{asn_clean}", "holder": ""}
+        except Exception:
+            pass
+
+    return None
+
+
+def consultar_rdap_abuse_info(ip: str, asn_num: Any = None) -> Dict[str, Optional[str]]:
+    """Consulta la API de RDAP y Whois para extraer el correo de abuso validado (IP o ASN BGP) y titular del bloque."""
+    if not ip:
+        return {"email": None, "org": None, "netname": None, "tech_email": None, "asn_abuse": None}
+    cache_key = f"{ip}_{asn_num or ''}"
+    if cache_key in _RDAP_CACHE:
+        return _RDAP_CACHE[cache_key]
+
+    result: Dict[str, Optional[str]] = {
+        "email": None,
+        "org": None,
+        "netname": None,
+        "tech_email": None,
+        "asn_abuse": None
+    }
     try:
         import urllib.request
         endpoints = [
             f"https://rdap.org/ip/{ip}",
+            f"https://rdap.db.ripe.net/ip/{ip}",
             f"https://rdap.arin.net/registry/ip/{ip}",
-            f"https://rdap.db.ripe.net/ip/{ip}"
+            f"https://rdap.afrinic.net/rdap/ip/{ip}",
+            f"https://rdap.apnic.net/ip/{ip}",
+            f"https://rdap.lacnic.net/rdap/ip/{ip}"
         ]
         for url in endpoints:
             try:
@@ -90,63 +177,111 @@ def consultar_rdap_abuse_info(ip: str) -> Dict[str, Optional[str]]:
                 with urllib.request.urlopen(req, timeout=3.0) as resp:
                     if resp.status == 200:
                         data = json.loads(resp.read().decode("utf-8", errors="ignore"))
-                        def _search_abuse_vcard(obj):
+                        result["netname"] = data.get("name")
+
+                        def _search_rdap(obj):
                             if isinstance(obj, dict):
                                 roles = obj.get("roles", [])
-                                if "abuse" in roles and "vcardArray" in obj and isinstance(obj["vcardArray"], list):
-                                    cards = obj["vcardArray"][1] if len(obj["vcardArray"]) > 1 else []
-                                    for c in cards:
-                                        if isinstance(c, list) and len(c) > 3:
-                                            if c[0] == "email" and not result["email"]:
-                                                result["email"] = str(c[3]).strip()
-                                            elif c[0] == "org" and not result["org"]:
-                                                result["org"] = str(c[3]).strip()
+                                vcards = obj.get("vcardArray", [])
+                                cards = vcards[1] if isinstance(vcards, list) and len(vcards) > 1 else []
+
+                                for c in cards:
+                                    if isinstance(c, list) and len(c) > 3:
+                                        prop_type = c[0]
+                                        prop_val = str(c[3]).strip()
+                                        if prop_type == "email":
+                                            if ("abuse" in roles or "abuse" in prop_val.lower()) and not result["email"]:
+                                                result["email"] = prop_val
+                                            elif any(r in roles for r in ["technical", "administrative", "tech", "admin"]) and not result["tech_email"]:
+                                                result["tech_email"] = prop_val
+                                        elif prop_type in ["org", "fn"] and not result["org"]:
+                                            if prop_val and not prop_val.endswith("-MNT") and "role object" not in prop_val.lower():
+                                                if any(r in roles for r in ["registrant", "administrative", "owner"]):
+                                                    result["org"] = prop_val
+
                                 for v in obj.values():
-                                    _search_abuse_vcard(v)
+                                    _search_rdap(v)
                             elif isinstance(obj, list):
                                 for item in obj:
-                                    _search_abuse_vcard(item)
+                                    _search_rdap(item)
 
-                        _search_abuse_vcard(data)
-                        if result["email"]:
+                        _search_rdap(data)
+
+                        if not result["org"] and result["netname"]:
+                            clean_nn = result["netname"].replace("_", " ").strip()
+                            if clean_nn:
+                                result["org"] = clean_nn
+
+                        if result["email"] and result["org"]:
                             break
             except Exception:
                 continue
     except Exception:
         pass
 
+    # 2. Si no se encontró buzón directo de abuso en el objeto IP, consultar el ASN BGP
+    effective_asn = asn_num
+    if not effective_asn:
+        try:
+            req_bgp = urllib.request.Request(
+                f"https://stat.ripe.net/data/network-info/data.json?resource={ip}",
+                headers={"User-Agent": "TechnomaSOC/1.0", "Accept": "application/json"}
+            )
+            with urllib.request.urlopen(req_bgp, timeout=2.5) as resp_bgp:
+                if resp_bgp.status == 200:
+                    d_bgp = json.loads(resp_bgp.read().decode("utf-8", errors="ignore"))
+                    asns_list = d_bgp.get("data", {}).get("asns", [])
+                    if asns_list:
+                        effective_asn = asns_list[0]
+        except Exception:
+            pass
+
+    if effective_asn:
+        asn_contact = consultar_asn_abuse_info(effective_asn)
+        if asn_contact and asn_contact.get("email"):
+            result["asn_abuse"] = asn_contact["email"]
+            if not result["email"]:
+                result["email"] = asn_contact["email"]
+
+    # 3. Fallback a contacto técnico si aún no hay email de abuso
+    if not result["email"] and result["tech_email"]:
+        result["email"] = result["tech_email"]
+
+    _RDAP_CACHE[cache_key] = result
     _RDAP_CACHE[ip] = result
     return result
 
 
 def detectar_buzones_abuso(org_name: str, asn_num: Any = None, ip: Optional[str] = None) -> tuple[str, str]:
     """
-    Identifica TODOS los correos de abuso aplicables (BGP/Hosting + Dueño del bloque en RDAP/Whois).
-    Si existen dos entidades distintas (ej. Datacamp y BraveWay), combina ambos correos
-    separados por coma para enviar la notificación a ambas partes simultáneamente.
+    Identifica TODOS los correos de abuso aplicables (BGP/Hosting + Dueño del bloque en RDAP/Whois + ASN aut-num).
+    Si existen dos entidades distintas (ej. Datacamp y BraveWay, o Cloud Innovation y VPSVAULT.HOST),
+    combina ambos correos y ambas entidades para máxima precisión en el asunto y cuerpo del reporte.
     Retorna (correos_combinados, org_label_completa).
     """
     emails: List[str] = []
     org_clean = (org_name or "").strip()
     org_lower = org_clean.lower()
 
-    # 1. Buzón del proveedor de BGP / Hosting según catálogo
+    # 1. Buzón del proveedor según catálogo local
     for kw, email in ABUSE_CONTACTS_MAP.items():
         if kw in org_lower:
             if email not in emails:
                 emails.append(email)
             break
 
-    # 2. Consultar en vivo a RDAP para encontrar el titular del bloque IP
+    # 2. Consultar en vivo a RDAP / WHOIS para IP y ASN BGP
     rdap_org = None
     if ip:
-        rdap_info = consultar_rdap_abuse_info(ip)
+        rdap_info = consultar_rdap_abuse_info(ip, asn_num=asn_num)
         rdap_email = rdap_info.get("email")
+        asn_abuse = rdap_info.get("asn_abuse")
+        tech_email = rdap_info.get("tech_email")
         rdap_org = rdap_info.get("org")
-        if rdap_email:
-            # Si el correo de RDAP es diferente, agregarlo para enviar a ambos
-            if rdap_email.lower() not in [e.lower() for e in emails]:
-                emails.append(rdap_email)
+
+        for em in [asn_abuse, rdap_email, tech_email]:
+            if em and em.lower() not in [e.lower() for e in emails] and "@" in em:
+                emails.append(em)
 
     # 3. Construir etiqueta de organización conjunta si hay dos entidades distintas
     org_label = org_clean if org_clean and org_clean != "Desconocido" else ""
@@ -156,7 +291,7 @@ def detectar_buzones_abuso(org_name: str, asn_num: Any = None, ip: Optional[str]
         if not org_label:
             org_label = rdap_org
         elif clean_curr and clean_rdap and clean_curr not in clean_rdap and clean_rdap not in clean_curr:
-            org_label = f"{org_label} / {rdap_org}"
+            org_label = f"{rdap_org} / {org_label}"
 
     if not org_label:
         org_label = "Desconocido"

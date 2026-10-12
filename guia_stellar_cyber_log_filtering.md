@@ -47,6 +47,35 @@ En Stellar Cyber v7.0.0s, el sensor implementa un pipeline de procesamiento por 
 
 ---
 
+## 1.1. Principio Rector de Seguridad SOC: Mandamiento de Filtrado Quirúrgico (Política de Cero Puntos Ciegos)
+
+> [!CAUTION]
+> ### 🛑 REGLA DE ORO DE GOBERNANZA SOC (ZERO BLIND SPOT POLICY)
+> **ESTÁ TERMINANTEMENTE PROHIBIDO crear filtros de descarte basados únicamente en:**
+> * `action: deny` o `action: drop` a nivel de una regla de firewall completa.
+> * `rule_id` o `fw_policy_id` sin especificar el destino, aplicación o servicio benigno.
+> 
+> *Hacer un descarte genérico de denegaciones es el equivalente de seguridad a apagar la alarma de incendios porque una tostadora echó humo.*
+
+### ¿Por qué un descarte genérico de denegaciones destruye la seguridad del SOC?
+1. **Malware / C2 Beaconing Silenciado:**  
+   Si una laptop en el Wi-Fi o segmento de usuarios se infecta con ransomware, un troyano o un script malicioso e intenta comunicarse hacia un servidor de Comando y Control (C2) en Internet, el firewall **bloqueará la conexión por la regla de denegación perimetral**.  
+   *Si el analista configuró un filtro que descarta todos los `deny` de esa regla, el evento se evapora en el sensor y **el SOC jamás se enterará de que hay un host comprometido intentando salir**.*
+2. **Escaneos de Red y Descubrimiento Lateral Ocultos:**  
+   Un atacante o empleado desleal ejecutando sondeos de puertos o fuerza bruta hacia segmentos restringidos será bloqueado por el firewall, pero la telemetría nunca llegará al motor de Machine Learning ni a los tableros de Threat Hunting.
+3. **Pérdida de la Cadena de Ataque (MITRE ATT&CK):**  
+   Los eventos denegados en borde son la evidencia primordial de las fases **Initial Attempts**, **Execution** y **Command & Control**. Descartarlos a ciegas rompe la correlación del XDR.
+
+### El Método del Bisturí (Surgical Filtering Rule):
+Todo filtro de denegación de firewall debe contener **como mínimo 3 dimensiones obligatorias**:
+
+$$\text{Filtro Válido} = \text{Dispositivo/Política} + \text{Acción} + \mathbf{Destino\ Específico\ o\ Aplicación\ Benigna}$$
+
+* ❌ **Filtro Prohibido (Hacha):** `fw_policy_id: FG-Technoma_214 AND action: deny` *(Crea punto ciego absoluto).*
+* ✅ **Filtro Quirúrgico (Bisturí):** `fw_policy_id: FG-Technoma_214 AND action: deny AND appid_name: Fortinet-FortiGuard` *(Solo descarta el software benigno de Fortinet).*
+
+---
+
 ## 2. Pre-DPI Filters: Filtrado de Red a Nivel de Kernel (Deep Dive)
 
 ### 2.1. ¿Por qué utilizar Pre-DPI Filters?
@@ -493,6 +522,32 @@ A continuación se presentan las recetas estandarizadas para mitigar los cuatro 
 
 ---
 
+### Receta 5: Descarte Quirúrgico de Telemetría FortiGuard DoT/HTTPS (WiFi-Corp Regla 214 - Caso #16302)
+* **Fecha de Identificación / Caso:** **10/10/2026** (Caso Stellar Cyber #16302 con más de 3,700 alertas acumuladas).
+* **Problema:** Un endpoint corporativo (`192.168.169.102`) en la red Wi-Fi tiene instalado software de Fortinet (FortiClient o navegador con DNS seguro) que intenta comunicarse continuamente mediante **DNS sobre TLS (DoT - TCP 853)** hacia `dns1.fortiguard.net` (`96.45.45.45`), `dns2.fortiguard.net` (`96.45.46.46`) y telemetría HTTPS (`173.243.140.18:443`). El firewall FortiGate (`FG-Technoma`) bloquea las conexiones mediante la regla 214 (`Block_WIFI-Corp`), generando miles de denegaciones cíclicas que disparan la anomalía *External Firewall Denial Anomaly*.
+* **Por qué JAMÁS descartar la regla 214 entera:** Si se filtrara `fw_policy_id: FG-Technoma_214 AND action: deny`, cualquier malware o C2 beaconing que intente salir desde el Wi-Fi y sea bloqueado por el firewall quedaría invisible para el SOC.
+* **Configuración del Log Filter Quirúrgico:**
+  * **Log Filter Name:** `Drop_FW_Denial_WiFiCorp_FortiGuard_214`
+  * **Tenant:** `technoma`
+  * **Log Source:** `fortinet_firewall` (o dejar vacío para captura universal)
+  * **Condición 1:**
+    * *Field:* `fw_policy_id` | *Field Type:* `string` | *Operator:* `is` | *Value:* `FG-Technoma_214`
+  * **Condición 2:**
+    * *Field:* `action` | *Field Type:* `string` | *Operator:* `is` | *Value:* `deny`
+  * **Condición 3 (El Bisturí):**
+    * *Field:* `appid_name` | *Field Type:* `string` | *Operator:* `is` | *Value:* `Fortinet-FortiGuard`
+    *(Alternativa por IPs si no se dispone del campo appid_name:* `dstip` | `ip` | `matches` | `96.45.45.45, 96.45.46.46, 173.243.140.18`*)*.
+* **Vinculación:** Perfil de Sensor Modular $\rightarrow$ **Log Forwarder | Data Filtering**.
+
+#### Matriz de Evaluación de Seguridad (Cero Puntos Ciegos):
+* **Lo que se Descarta:** Únicamente intentos bloqueados hacia los servicios oficiales de resolución y telemetría de Fortinet (`Fortinet-FortiGuard`) por la política 214.
+* **Lo que se Conserva 100% Intacto:**
+  * ✅ Si la máquina `192.168.169.102` u otra laptop en Wi-Fi intenta conectarse a un C2 en Internet, malware, minería o cualquier servicio NO oficial de Fortinet, **el evento se procesa y alerta normalmente**.
+  * ✅ Escaneos de puertos y protocolos sospechosos (SSH, RDP, SMB).
+  * ✅ Firmas de IPS, Antivirus y Web Filtering del FortiGate.
+
+---
+
 ## 10. Auditoría, Métricas de Descarte y Verificación
 
 Para justificar el trabajo técnico ante auditorías o en reuniones de capacidad y licencias del SOC:
@@ -523,16 +578,18 @@ show logfilter <filter-id>
 
 ## 11. Checklist de Verificación para el Analista N2
 
-Antes de dar por concluido un procedimiento de filtrado, verifique:
+Antes de dar por concluido un procedimiento de filtrado, verifique obligatoriamente:
 
+- [ ] **Auditoría Anti-Puntos Ciegos:** ¿El filtro descarta denegaciones genéricas de una regla? Si la respuesta es SÍ, **RECHAZAR EL FILTRO**. Debe incluir destino (`dstip`), aplicación (`appid_name`) o servicio benigno específico.
+- [ ] ¿Se verificó mediante rDNS o WHOIS que el destino/aplicación a descartar pertenece 100% a infraestructura oficial del fabricante?
 - [ ] ¿El filtro necesario es **Pre-DPI** (paquetes brutos en SPAN) o **Log Filter** (eventos de texto en Syslog/Windows)?
 - [ ] Si es **Pre-DPI Filter**, ¿todos los operadores están estrictamente en minúsculas (`and`, `or`, `not`)?
 - [ ] Si es **Pre-DPI Filter**, ¿se contemplaron ambas direcciones para tráfico bidireccional (`src` y `dst` o regla no direccional)?
 - [ ] Si es un **Log Filter**, ¿el nombre sigue la convención `Drop_<Tenant>_<Tecnologia>_<Motivo>`?
 - [ ] ¿Se seleccionó el Tenant correcto (`technoma`, `CAJAANDE`, `Valores` o `All Tenants`)?
 - [ ] Si es para Windows Server o Conectores, ¿se dejó el campo `Log Source` **vacío**?
-- [ ] ¿Los campos utilizados en Log Filter son campos crudos/normalizados por el colector y no campos enriquecidos por el DP?
+- [ ] ¿Los campos utilizados en Log Filter son campos crudos/normalizados por el colector (`fw_policy_id`, `appid_name`, `action`, `dstip`) y no campos inexistentes como `dev_name`?
 - [ ] ¿Se asoció el filtro al perfil del sensor correspondiente (`Log Forwarder | Data Filtering`, pestaña `Windows` o `Pre-DPI Filter`)?
 - [ ] ¿Se verificó en la columna `Hit count` o en la consola del sensor que el contador comience a incrementarse tras 5 a 10 minutos de operación?
-- [ ] ¿Se registró la acción técnica en la Bitácora de Turno del SOC con referencia al Playbook 6.3?
+- [ ] ¿Se registró la acción técnica en la Bitácora de Turno del SOC con referencia al Playbook 6.3 y Matriz de Impacto?
 

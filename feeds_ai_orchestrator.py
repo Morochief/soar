@@ -93,7 +93,7 @@ class FeedsAIOrchestrator:
 
     @classmethod
     def call_nvidia_nim(cls, content: str, api_key: Optional[str] = None, 
-                        model: str = "deepseek-ai/deepseek-v4.1-flash",
+                        model: str = "meta/llama-3.2-11b-vision-instruct",
                         image_base64: Optional[str] = None) -> str:
         """
         Invoca a NVIDIA NIM (DeepSeek v4.1-flash / compatible) mediante la API
@@ -268,13 +268,22 @@ class FeedsAIWorker(QThread):
                 f"Contenido / Resumen Crudo:\n{self.feed_summary}"
             )
 
+            report_markdown = None
             if "nvidia" in self.provider or "deepseek" in self.provider:
                 report_markdown = FeedsAIOrchestrator.call_nvidia_nim(content_payload)
             elif self.provider == "openai":
                 report_markdown = FeedsAIOrchestrator.call_openai(content_payload)
             else:
-                # Default a Gemini (nativo en Technoma OpenXDR)
-                report_markdown = FeedsAIOrchestrator.call_gemini(content_payload)
+                # Intento con Gemini, con fallback automático a NVIDIA NIM si la clave de Gemini expiró
+                try:
+                    report_markdown = FeedsAIOrchestrator.call_gemini(content_payload)
+                except Exception as e_gem:
+                    if "401" in str(e_gem) or "invalid authentication" in str(e_gem).lower() or "not found" in str(e_gem).lower():
+                        # Failover transparente hacia NVIDIA NIM
+                        self.progress_status.emit("Gemini no autenticado. Reenrutando a NVIDIA NIM (Llama 3.2)...")
+                        report_markdown = FeedsAIOrchestrator.call_nvidia_nim(content_payload)
+                    else:
+                        raise e_gem
 
             metadata = FeedsAIOrchestrator.parse_metadata_from_report(report_markdown)
             self.report_ready.emit(self.item_id, report_markdown, metadata)

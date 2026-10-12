@@ -43,6 +43,7 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
 import pandas as pd
 from playbook_engine import PlaybookEngine
 from cti_engine import CtiEngine
+import ui_theme
 
 def format_local_ts(ts_str: Any) -> str:
     """Convierte un timestamp UTC (ISO 8601 con 'Z' o offset) a hora local de Paraguay/SO (YYYY-MM-DD HH:MM:SS)."""
@@ -61,6 +62,7 @@ from email_header_analyzer import PhishingHeaderAnalyzerDialog
 from thn_ticket_generator import TechnomaTicketGeneratorDialog, TechnomaTicketEngine
 from feeds_intel_module import FeedsIntelDialog
 from abuse_report_dialog import AbuseReportDialog
+from cyber_telemetry_widgets import CyberTopProtocolsWidget, CyberInfrastructureHealthWidget
 
 # Desactivar advertencias SSL de forma nativa e indestructible
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -71,12 +73,47 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # Ejecute setup_env_seguro.bat (como Administrador) para registrarlos en el sistema.
 # =============================================================================
 def _cargar_env_seguro() -> Tuple[str, str, str, str]:
-    """Carga y valida todas las credenciales desde variables de entorno del sistema."""
+    """Carga y valida todas las credenciales desde variables de entorno del sistema o archivo .env."""
+    try:
+        from dotenv import load_dotenv
+        env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+        if os.path.exists(env_path):
+            load_dotenv(env_path)
+        else:
+            load_dotenv()
+    except Exception:
+        pass
+
     errores = []
     host          = os.environ.get("STELLAR_HOST")
     email         = os.environ.get("STELLAR_EMAIL")
     stellar_token = os.environ.get("STELLAR_TOKEN")
     gemini_key    = os.environ.get("GEMINI_API_KEY")
+
+    # Fallback resiliente a registro de Windows si faltan variables
+    if not (host and email and stellar_token and gemini_key):
+        try:
+            import winreg
+            for hive in (winreg.HKEY_LOCAL_MACHINE, winreg.HKEY_CURRENT_USER):
+                subkey = r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment" if hive == winreg.HKEY_LOCAL_MACHINE else r"Environment"
+                try:
+                    with winreg.OpenKey(hive, subkey) as reg_key:
+                        if not host:
+                            try: host = str(winreg.QueryValueEx(reg_key, "STELLAR_HOST")[0]).strip()
+                            except Exception: pass
+                        if not email:
+                            try: email = str(winreg.QueryValueEx(reg_key, "STELLAR_EMAIL")[0]).strip()
+                            except Exception: pass
+                        if not stellar_token:
+                            try: stellar_token = str(winreg.QueryValueEx(reg_key, "STELLAR_TOKEN")[0]).strip()
+                            except Exception: pass
+                        if not gemini_key:
+                            try: gemini_key = str(winreg.QueryValueEx(reg_key, "GEMINI_API_KEY")[0]).strip()
+                            except Exception: pass
+                except Exception:
+                    pass
+        except Exception:
+            pass
 
     if not host:          errores.append("STELLAR_HOST")
     if not email:         errores.append("STELLAR_EMAIL")
@@ -88,9 +125,9 @@ def _cargar_env_seguro() -> Tuple[str, str, str, str]:
         QMessageBox.critical(
             None,
             "ERROR CRÍTICO - Variables de Entorno No Configuradas",
-            "Las siguientes variables de entorno no están configuradas en este sistema:\n\n"
+            "Las siguientes variables de entorno no están configuradas en este sistema ni en el archivo .env:\n\n"
             + "\n".join(f"  • {e}" for e in errores)
-            + "\n\nEjecute 'setup_env_seguro.bat' como Administrador y reinicie la sesión de Windows.\n"
+            + "\n\nConfigure el archivo '.env' o ejecute 'setup_env_seguro.bat' como Administrador.\n"
             "El Cockpit no puede iniciarse sin credenciales seguras."
         )
         sys.exit(1)
@@ -714,8 +751,15 @@ class MobileAlertsNotifier:
             try:
                 topic = cls.get_topic()
                 url = f"https://ntfy.sh/{topic}"
+                try:
+                    str(title).encode("latin-1")
+                    encoded_title = str(title)
+                except UnicodeEncodeError:
+                    b64_title = base64.b64encode(str(title).encode("utf-8")).decode("ascii")
+                    encoded_title = f"=?utf-8?B?{b64_title}?="
+
                 headers = {
-                    "Title": str(title),
+                    "Title": encoded_title,
                     "Priority": str(priority),
                 }
                 if tags:
@@ -736,6 +780,8 @@ class MobileAlertsNotifier:
 
         t = threading.Thread(target=_worker, daemon=True)
         t.start()
+
+MobileNotificationDispatcher = MobileAlertsNotifier
 
 
 # Patrón regex precompilado — cero re.compile() por invocación del fallback path de sanitizar_interflow
@@ -2192,119 +2238,9 @@ class XdrDashboard(QMainWindow):
         self._timer_antisleep = QTimer(self)
         self._timer_antisleep.timeout.connect(self._refresh_antisleep)
 
-        self.setStyleSheet("""
-            QMainWindow { background-color: #070a13; }
-            QWidget { background-color: #070a13; }
-            QLabel { color: #94a3b8; font-family: 'Consolas'; font-size: 12px; }
-            QFrame { border: 1px solid #1e293b; border-radius: 4px; background-color: #0f172a; }
-            QTextEdit { background-color: #020617; color: #10b981; border: 1px solid #1e293b; font-family: 'Consolas'; font-size: 12px; }
-            QLineEdit { background-color: #020617; color: #38bdf8; border: 1px solid #1e293b; padding: 5px; font-family: 'Consolas'; }
-            QPushButton { background-color: #1e293b; color: #f8fafc; border: 1px solid #334155; padding: 6px; font-weight: bold; font-family: 'Consolas'; }
-            QPushButton:hover { background-color: #334155; border: 1px solid #475569; color: #38bdf8; }
-            QComboBox {
-                background-color: #0f172a;
-                color: #f8fafc;
-                border: 1px solid #334155;
-                padding: 3px 6px;
-                font-family: 'Consolas';
-                border-radius: 3px;
-            }
-            QComboBox:hover { border: 1px solid #475569; }
-            QComboBox:focus { border: 1px solid #38bdf8; }
-            QComboBox::drop-down {
-                subcontrol-origin: padding;
-                subcontrol-position: top right;
-                width: 18px;
-                border-left: 1px solid #334155;
-                background-color: #1e293b;
-            }
-            QComboBox QAbstractItemView {
-                background-color: #0f172a;
-                color: #f8fafc;
-                border: 1px solid #334155;
-                selection-background-color: #1e3a5f;
-                selection-color: #38bdf8;
-                outline: none;
-                font-family: 'Consolas';
-            }
-            QComboBox QAbstractItemView::item {
-                padding: 4px 8px;
-                min-height: 22px;
-            }
-            QComboBox QAbstractItemView::item:hover {
-                background-color: #1e293b;
-                color: #38bdf8;
-            }
-            QCheckBox { color: #94a3b8; font-family: 'Consolas'; }
-            QScrollBar:vertical { background: #0f172a; width: 8px; }
-            QScrollBar::handle:vertical { background: #334155; border-radius: 4px; }
-            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0px; }
-
-            /* MENÚS DESPLEGABLES (QMenu / QMenu::item) - ALTO CONTRASTE Y LEGIBILIDAD */
-            QMenu {
-                background-color: #0b1120;
-                color: #f8fafc;
-                border: 1px solid #334155;
-                border-radius: 6px;
-                padding: 6px 4px;
-                font-family: 'Consolas', 'Segoe UI', monospace;
-                font-size: 11px;
-            }
-            QMenu::item {
-                background-color: transparent;
-                color: #f8fafc;
-                padding: 6px 26px 6px 26px;
-                border-radius: 4px;
-                margin: 2px 4px;
-            }
-            QMenu::item:selected {
-                background-color: #1e293b;
-                color: #38bdf8;
-            }
-            QMenu::item:checked {
-                color: #38bdf8;
-                font-weight: bold;
-            }
-            QMenu::item:disabled {
-                color: #64748b;
-            }
-            QMenu::separator {
-                height: 1px;
-                background-color: #1e293b;
-                margin: 4px 6px;
-            }
-
-            /* NAVEGACIÓN DE PESTAÑAS (QTabWidget / QTabBar) - ALTO CONTRASTE Y LEGIBILIDAD */
-            QTabWidget::pane {
-                border: 1px solid #1e293b;
-                background-color: #070a13;
-                top: -1px;
-            }
-            QTabBar::tab {
-                background-color: #0f172a;
-                color: #cbd5e1;
-                border: 1px solid #334155;
-                border-bottom: 2px solid #0f172a;
-                padding: 7px 18px;
-                font-family: 'Consolas';
-                font-size: 12px;
-                font-weight: bold;
-                margin-right: 4px;
-                border-top-left-radius: 5px;
-                border-top-right-radius: 5px;
-            }
-            QTabBar::tab:hover {
-                background-color: #1e293b;
-                color: #38bdf8;
-                border-color: #38bdf8;
-            }
-            QTabBar::tab:selected {
-                background-color: #1e293b;
-                color: #38bdf8;
-                border: 1px solid #38bdf8;
-                border-bottom: 3px solid #38bdf8;
-            }
-        """)
+        # Inicialización del sistema de diseño (fuentes Outfit y QSS unificado)
+        ui_theme.init_soc_fonts(SCRIPT_DIR)
+        self.setStyleSheet(ui_theme.MASTER_QSS)
 
         main_widget = QWidget()
         self.setCentralWidget(main_widget)
@@ -2312,6 +2248,89 @@ class XdrDashboard(QMainWindow):
         # Base layout for main widget
         base_layout = QVBoxLayout(main_widget)
         base_layout.setContentsMargins(0, 0, 0, 0)
+        base_layout.setSpacing(0)
+
+        # =========================================================================
+        # BARRA SUPERIOR GLOBAL DE NAVEGACIÓN Y SUITE DE SEGURIDAD (GLOBAL HEADER)
+        # =========================================================================
+        top_header = QFrame()
+        top_header.setObjectName("topHeaderFrame")
+        layout_header = QHBoxLayout(top_header)
+        layout_header.setContentsMargins(14, 8, 14, 8)
+        layout_header.setSpacing(12)
+
+        # Branding: Logo y Nombre
+        layout_brand = QHBoxLayout()
+        layout_brand.setSpacing(8)
+        lbl_logo = QLabel()
+        logo_path = os.path.join(SCRIPT_DIR, "logo-technoma.png")
+        if os.path.exists(logo_path):
+            from PySide6.QtGui import QPixmap
+            pixmap = QPixmap(logo_path)
+            if not pixmap.isNull():
+                lbl_logo.setPixmap(pixmap.scaledToHeight(24, Qt.SmoothTransformation))
+                layout_brand.addWidget(lbl_logo)
+
+        lbl_app_title = QLabel("TECHNOMA SOC")
+        lbl_app_title.setStyleSheet(f"color: {ui_theme.TEXT_PRIMARY}; font-size: 13px; font-weight: bold; border: none; font-family: {ui_theme.FONT_MAIN}; letter-spacing: 0.5px;")
+        lbl_app_badge = QLabel("OpenXDR Cockpit")
+        lbl_app_badge.setStyleSheet(f"color: {ui_theme.ACCENT_CYBER}; background-color: #0f2438; border: 1px solid #0369a1; border-radius: 4px; padding: 2px 7px; font-size: 10px; font-weight: 600; font-family: {ui_theme.FONT_MAIN};")
+        layout_brand.addWidget(lbl_app_title)
+        layout_brand.addWidget(lbl_app_badge)
+        layout_header.addLayout(layout_brand)
+
+        layout_header.addStretch(1)
+
+        # Acceso Directo a Satélites de la Suite (1-Click Launchers)
+        layout_suite_tools = QHBoxLayout()
+        layout_suite_tools.setSpacing(6)
+
+        btn_h_phishing = QPushButton("✉️ Phishing Headers")
+        btn_h_phishing.setStyleSheet(ui_theme.chip_button_style(ui_theme.ACCENT_CYBER))
+        btn_h_phishing.setToolTip("Abrir Analizador Forense de Cabeceras (.eml)")
+        btn_h_phishing.clicked.connect(self.open_email_header_analyzer)
+
+        btn_h_ticket = QPushButton("🎫 Ticket Oficial THN")
+        btn_h_ticket.setStyleSheet(ui_theme.chip_button_style(ui_theme.COLOR_HIGH))
+        btn_h_ticket.setToolTip("Abrir Generador Oficial de Tickets Technoma (FL-THN-POS-01)")
+        btn_h_ticket.clicked.connect(self.open_thn_ticket_generator)
+
+        btn_h_abuse = QPushButton("🚨 Reporte de Abuso")
+        btn_h_abuse.setStyleSheet(ui_theme.chip_button_style(ui_theme.COLOR_CRITICAL))
+        btn_h_abuse.setToolTip("Abrir Generador y Despachador de Reportes de Abuso")
+        btn_h_abuse.clicked.connect(self.open_abuse_report_dialog)
+
+        btn_h_feeds = QPushButton("🌐 CTI Feeds & IOCs")
+        btn_h_feeds.setStyleSheet(ui_theme.chip_button_style(ui_theme.COLOR_PURPLE))
+        btn_h_feeds.setToolTip("Abrir Módulo de Inteligencia de Amenazas y Feeds")
+        btn_h_feeds.clicked.connect(self.open_feeds_intel_module)
+
+        btn_h_ingesta = QPushButton("📊 Ingesta & Cuota")
+        btn_h_ingesta.setStyleSheet(ui_theme.chip_button_style(ui_theme.ACCENT_PRIMARY))
+        btn_h_ingesta.setToolTip("Abrir Centro de Auditoría Forense de Ingesta, Control de Cuota Stellar Cyber y Log Filters")
+        btn_h_ingesta.clicked.connect(self._abrir_auditoria_ingesta_dialog)
+
+        layout_suite_tools.addWidget(btn_h_phishing)
+        layout_suite_tools.addWidget(btn_h_ticket)
+        layout_suite_tools.addWidget(btn_h_abuse)
+        layout_suite_tools.addWidget(btn_h_feeds)
+        layout_suite_tools.addWidget(btn_h_ingesta)
+        layout_header.addLayout(layout_suite_tools)
+
+        layout_header.addStretch(1)
+
+        # Telemetría de Estado en Vivo (Anti-Sleep)
+        layout_header_status = QHBoxLayout()
+        layout_header_status.setSpacing(8)
+
+        lbl_hdr_antisleep = QLabel("🛡️ ANTI-SLEEP")
+        lbl_hdr_antisleep.setStyleSheet(f"color: {ui_theme.COLOR_SUCCESS}; background-color: #064e3b; border: 1px solid #10b981; border-radius: 4px; padding: 3px 8px; font-size: 10px; font-weight: bold; font-family: {ui_theme.FONT_MAIN};")
+        lbl_hdr_antisleep.setToolTip("Prevención activa de suspensión de pantalla de Windows en turnos 24/7")
+
+        layout_header_status.addWidget(lbl_hdr_antisleep)
+        layout_header.addLayout(layout_header_status)
+
+        base_layout.addWidget(top_header)
         
         # Tabs
         self.tabs = QTabWidget()
@@ -2329,43 +2348,36 @@ class XdrDashboard(QMainWindow):
         # BANNER DE KPIS EN TIEMPO REAL (100% EN MEMORIA / CERO LLAMADAS API EXTRA)
         # =========================================================================
         frame_kpis = QFrame()
-        frame_kpis.setStyleSheet("background-color: #0b1120; border: 1px solid #1e293b; border-radius: 8px;")
+        frame_kpis.setStyleSheet(f"background-color: {ui_theme.BG_SURFACE}; border: 1px solid {ui_theme.BORDER_SUBTLE}; border-radius: 6px;")
         layout_kpis = QHBoxLayout(frame_kpis)
         layout_kpis.setContentsMargins(8, 6, 8, 6)
         layout_kpis.setSpacing(8)
 
         def _create_kpi_card(title: str, default_val: str, accent_color: str):
             card = QFrame()
-            card.setStyleSheet(f"""
-                QFrame {{
-                    background-color: #0f172a;
-                    border: 1px solid #1e293b;
-                    border-left: 3px solid {accent_color};
-                    border-radius: 6px;
-                }}
-            """)
+            card.setStyleSheet(ui_theme.kpi_card_style(accent_color))
             card_layout = QVBoxLayout(card)
-            card_layout.setContentsMargins(10, 5, 10, 5)
+            card_layout.setContentsMargins(10, 6, 10, 6)
             card_layout.setSpacing(2)
             
             lbl_title = QLabel(title)
-            lbl_title.setStyleSheet("color: #94a3b8; font-size: 10px; font-weight: bold; border: none; font-family: 'Consolas';")
+            lbl_title.setStyleSheet(f"color: {ui_theme.TEXT_MUTED}; font-size: 10px; font-weight: 600; border: none; font-family: {ui_theme.FONT_MAIN};")
             
             lbl_val = QLabel(default_val)
-            lbl_val.setStyleSheet(f"color: {accent_color}; font-size: 20px; font-weight: bold; border: none; font-family: 'Consolas';")
+            lbl_val.setStyleSheet(f"color: {accent_color}; font-size: 18px; font-weight: bold; border: none; font-family: {ui_theme.FONT_MAIN};")
             
             card_layout.addWidget(lbl_title)
             card_layout.addWidget(lbl_val)
             return card, lbl_val
 
-        card_crit, self.kpi_crit_high = _create_kpi_card("🔴 CRÍTICOS & ALTOS", "-", "#ef4444")
-        card_unass, self.kpi_unassigned = _create_kpi_card("🟡 SIN ASIGNAR", "-", "#f59e0b")
-        card_inprog, self.kpi_in_progress = _create_kpi_card("🔵 EN CURSO", "-", "#38bdf8")
-        card_resolv, self.kpi_resolved = _create_kpi_card("🟢 RESUELTOS (24H)", "-", "#10b981")
-        card_mttd, self.kpi_avg_mttd = _create_kpi_card("⏱️ MTTD PROM.", "-", "#38bdf8")
-        card_sla, self.kpi_sla_compliance = _create_kpi_card("🎯 SLA CUMPLIDO", "-", "#10b981")
-        card_score, self.kpi_risk_score = _create_kpi_card("⚡ SCORE RIESGO", "-", "#a855f7")
-        card_alerts, self.kpi_total_alerts = _create_kpi_card("🛡️ TOTAL ALERTAS", "-", "#60a5fa")
+        card_crit, self.kpi_crit_high = _create_kpi_card("🔴 CRÍTICOS & ALTOS", "-", ui_theme.COLOR_CRITICAL)
+        card_unass, self.kpi_unassigned = _create_kpi_card("🟡 SIN ASIGNAR", "-", ui_theme.COLOR_MEDIUM)
+        card_inprog, self.kpi_in_progress = _create_kpi_card("🔵 EN CURSO", "-", ui_theme.ACCENT_CYBER)
+        card_resolv, self.kpi_resolved = _create_kpi_card("🟢 RESUELTOS (24H)", "-", ui_theme.COLOR_SUCCESS)
+        card_mttd, self.kpi_avg_mttd = _create_kpi_card("⏱️ MTTD PROM.", "-", ui_theme.ACCENT_CYBER)
+        card_sla, self.kpi_sla_compliance = _create_kpi_card("🎯 SLA CUMPLIDO", "-", ui_theme.COLOR_SUCCESS)
+        card_score, self.kpi_risk_score = _create_kpi_card("⚡ SCORE RIESGO", "-", ui_theme.COLOR_PURPLE)
+        card_alerts, self.kpi_total_alerts = _create_kpi_card("🛡️ TOTAL ALERTAS", "-", ui_theme.COLOR_INDIGO)
 
         layout_kpis.addWidget(card_crit)
         layout_kpis.addWidget(card_unass)
@@ -2382,59 +2394,56 @@ class XdrDashboard(QMainWindow):
         grid_layout.setSpacing(10)
         tab1_layout.addLayout(grid_layout)
 
-        # PANEL 0: TOP PROTOCOLS (COLUMNA IZQUIERDA ARRIBA)
-        frame_protocols = QFrame()
-        layout_p = QVBoxLayout(frame_protocols)
-        lbl_p_title = QLabel("  TOP PROTOCOLS / APP TRAFFIC")
-        lbl_p_title.setStyleSheet("color: #eab308; font-weight: bold; font-size: 13px; border: none;")
-        self.txt_protocols = QTextEdit()
-        self.txt_protocols.setReadOnly(True)
-        self.txt_protocols.setText("<br><span style='color: #6b7280;'>Cargando métricas de protocolos...</span>")
-        layout_p.addWidget(lbl_p_title)
-        layout_p.addWidget(self.txt_protocols)
-        grid_layout.addWidget(frame_protocols, 0, 0, 1, 1)
+        # PANEL 0: TOP PROTOCOLS (COLUMNA IZQUIERDA ARRIBA) - WIDGET CYBER MODERNO
+        self.txt_protocols = CyberTopProtocolsWidget()
+        grid_layout.addWidget(self.txt_protocols, 0, 0, 1, 1)
 
-        # PANEL 1: MONITOR DE SALUD E INGESTA TOTAL EN RICH TEXT (COLUMNA IZQUIERDA ABAJO)
+        # PANEL 1: MONITOR DE SALUD E INGESTA TOTAL - WIDGET CYBER MODERNO
         frame_health = QFrame()
+        frame_health.setStyleSheet("background-color: transparent; border: none;")
         layout_h = QVBoxLayout(frame_health)
-        lbl_h_title = QLabel("  INFRASTRUCTURE HEALTH & DYNAMIC POOL MONITOR")
-        lbl_h_title.setStyleSheet("color: #ef4444; font-weight: bold; font-size: 13px; border: none;")
-        self.txt_health = QTextEdit()
-        self.txt_health.setReadOnly(True)
-        layout_h.addWidget(lbl_h_title)
-        layout_h.addWidget(self.txt_health)
+        layout_h.setContentsMargins(0, 0, 0, 0)
+        layout_h.setSpacing(6)
+        self.txt_health = CyberInfrastructureHealthWidget()
+        layout_h.addWidget(self.txt_health, 1)
 
         # BARRA DE CONTROL AUTOMÁTICO PLAYBOOK 6.3 (GESTIÓN DE INGESTA & BITÁCORA)
         bar_pb63 = QFrame()
-        bar_pb63.setStyleSheet("background-color: #0b1329; border: 1px solid #1e293b; border-radius: 4px;")
+        bar_pb63.setStyleSheet(f"background-color: {ui_theme.BG_INPUT}; border: 1px solid {ui_theme.BORDER_SUBTLE}; border-radius: 5px;")
         layout_pb63 = QHBoxLayout(bar_pb63)
         layout_pb63.setContentsMargins(6, 4, 6, 4)
         layout_pb63.setSpacing(6)
 
         self.lbl_ingestion_badge = QLabel("INGESTA: CALCULANDO...")
-        self.lbl_ingestion_badge.setStyleSheet("color: #94a3b8; font-weight: bold; font-size: 11px; background-color: #1e293b; padding: 4px 8px; border-radius: 3px; border: 1px solid #334155; font-family: 'Consolas';")
+        self.lbl_ingestion_badge.setStyleSheet(f"color: {ui_theme.TEXT_MUTED}; font-weight: bold; font-size: 11px; background-color: {ui_theme.BG_ELEVATED}; padding: 4px 8px; border-radius: 4px; border: 1px solid {ui_theme.BORDER_MUTED}; font-family: {ui_theme.FONT_MAIN};")
         layout_pb63.addWidget(self.lbl_ingestion_badge)
 
         self.btn_copiar_bitacora_ingesta = QPushButton("📋 Copiar Bitácora (PB 6.3)")
-        self.btn_copiar_bitacora_ingesta.setStyleSheet("background-color: #0d9488; color: #ffffff; padding: 4px 10px; font-size: 11px; font-weight: bold; border-radius: 3px;")
+        self.btn_copiar_bitacora_ingesta.setStyleSheet(ui_theme.chip_button_style(ui_theme.COLOR_SUCCESS))
         self.btn_copiar_bitacora_ingesta.setToolTip("Copia al portapapeles la fila de 18 columnas de Playbook 6.3 lista para pegar en Excel/Sheets")
         self.btn_copiar_bitacora_ingesta.clicked.connect(self._copiar_bitacora_ingesta_clip)
         self.btn_copiar_bitacora_ingesta.setEnabled(False)
         layout_pb63.addWidget(self.btn_copiar_bitacora_ingesta)
 
         self.btn_abrir_ticket_ingesta = QPushButton("🎫 Abrir Ticket Escalación (N2)")
-        self.btn_abrir_ticket_ingesta.setStyleSheet("background-color: #b91c1c; color: #ffffff; padding: 4px 10px; font-size: 11px; font-weight: bold; border-radius: 3px;")
+        self.btn_abrir_ticket_ingesta.setStyleSheet(ui_theme.chip_button_style(ui_theme.COLOR_CRITICAL))
         self.btn_abrir_ticket_ingesta.setToolTip("Abre la ventana interactiva de ticket con los datos del sobreconsumo pre-cargados para escalación a N2")
         self.btn_abrir_ticket_ingesta.clicked.connect(self._abrir_ticket_ingesta_dialog)
         self.btn_abrir_ticket_ingesta.setEnabled(False)
         layout_pb63.addWidget(self.btn_abrir_ticket_ingesta)
 
         self.btn_export_pdf_ingesta = QPushButton("📄 Ver / Exportar PDF")
-        self.btn_export_pdf_ingesta.setStyleSheet("background-color: #7c2d12; color: #ffffff; padding: 4px 10px; font-size: 11px; font-weight: bold; border-radius: 3px;")
+        self.btn_export_pdf_ingesta.setStyleSheet(ui_theme.chip_button_style(ui_theme.COLOR_HIGH))
         self.btn_export_pdf_ingesta.setToolTip("Abre o exporta el ticket formal de Playbook 6.3 en documento PDF corporativo con membrete oficial")
         self.btn_export_pdf_ingesta.clicked.connect(self._abrir_pdf_ingesta)
         self.btn_export_pdf_ingesta.setEnabled(False)
         layout_pb63.addWidget(self.btn_export_pdf_ingesta)
+
+        self.btn_auditoria_ingesta = QPushButton("🔍 Telemetría & Log Filters")
+        self.btn_auditoria_ingesta.setStyleSheet(ui_theme.chip_button_style(ui_theme.COLOR_PURPLE))
+        self.btn_auditoria_ingesta.setToolTip("Abre el Centro de Auditoría Forense de Ingesta, Monitoreo de Conectores Cloud e Inventario de Log Filters con Detección de Cegueras SOC")
+        self.btn_auditoria_ingesta.clicked.connect(self._abrir_auditoria_ingesta_dialog)
+        layout_pb63.addWidget(self.btn_auditoria_ingesta)
 
         layout_h.addWidget(bar_pb63)
         grid_layout.addWidget(frame_health, 1, 0)
@@ -2445,15 +2454,15 @@ class XdrDashboard(QMainWindow):
         
         layout_c_header = QHBoxLayout()
         lbl_c_title = QLabel("  COLA DE INCIDENTES ACTIVOS (SOAR QUEUE)")
-        lbl_c_title.setStyleSheet("color: #38bdf8; font-weight: bold; font-size: 13px; border: none;")
+        lbl_c_title.setStyleSheet(ui_theme.section_header_style(ui_theme.ACCENT_CYBER))
         self.btn_manual_refresh = QPushButton("Refrescar Cola")
-        self.btn_manual_refresh.setFixedWidth(120)
+        self.btn_manual_refresh.setStyleSheet(ui_theme.secondary_tool_btn_style())
         self.btn_manual_refresh.clicked.connect(self.trigger_cases_refresh)
         layout_c_header.addWidget(lbl_c_title)
         layout_c_header.addWidget(self.btn_manual_refresh)
         
-        self.lbl_api_health = QLabel("API EN LINEA")
-        self.lbl_api_health.setStyleSheet("color: #10b981; font-size: 11px; font-weight: bold; padding: 2px 8px; background-color: #064e3b; border-radius: 4px; border: 1px solid #10b981; font-family: 'Consolas';")
+        self.lbl_api_health = QLabel("API EN LÍNEA")
+        self.lbl_api_health.setStyleSheet(f"color: {ui_theme.COLOR_SUCCESS}; font-size: 11px; font-weight: bold; padding: 2px 8px; background-color: #064e3b; border-radius: 4px; border: 1px solid #10b981; font-family: {ui_theme.FONT_MAIN};")
         layout_c_header.addWidget(self.lbl_api_health)
 
         # Menu desplegable unificado para motores SOAR (Auto-Guardia y Auto-Remediadores)
@@ -2541,7 +2550,7 @@ class XdrDashboard(QMainWindow):
 
         self.action_soar_guardia = QAction("Auto-Guardia SLA (Proteccion Turno)", self)
         self.action_soar_guardia.setCheckable(True)
-        self.action_soar_guardia.setChecked(True)
+        self.action_soar_guardia.setChecked(False)
         self.action_soar_guardia.setToolTip("Auto-asigna casos libres antes de vencer el MTTD si nadie del turno los tomo")
         self.action_soar_guardia.toggled.connect(self._update_soar_menu_label)
 
@@ -2553,13 +2562,13 @@ class XdrDashboard(QMainWindow):
 
         self.action_soar_translate = QAction("Auto-Cierre Sophos Translate", self)
         self.action_soar_translate.setCheckable(True)
-        self.action_soar_translate.setChecked(True)
+        self.action_soar_translate.setChecked(False)
         self.action_soar_translate.setToolTip("Auto-toma y resuelve como False Positive los casos de Sophos WebControl hacia translate.google.com")
         self.action_soar_translate.toggled.connect(self._update_soar_menu_label)
 
         self.action_soar_sati = QAction("Auto-Cierre SATI VPN (DNS 53 Failover)", self)
         self.action_soar_sati.setCheckable(True)
-        self.action_soar_sati.setChecked(True)
+        self.action_soar_sati.setChecked(False)
         self.action_soar_sati.setToolTip("Auto-toma y resuelve como False Positive las denegaciones en firewall de consultas DNS desde VPN del proveedor SATI")
         self.action_soar_sati.toggled.connect(self._update_soar_menu_label)
 
@@ -2583,9 +2592,8 @@ class XdrDashboard(QMainWindow):
         self.check_mobile_alerts.setStyleSheet("color: #a855f7; font-family: 'Consolas'; font-size: 11px; font-weight: bold;")
 
         self.btn_test_mobile = QPushButton("Probar Movil")
-        self.btn_test_mobile.setFixedWidth(105)
         self.btn_test_mobile.setToolTip("Enviar notificacion push de prueba a la app ntfy en tu celular")
-        self.btn_test_mobile.setStyleSheet("background-color: #581c87; color: #f3e8ff; border: 1px solid #7e22ce; font-family: 'Consolas'; font-size: 11px;")
+        self.btn_test_mobile.setStyleSheet(ui_theme.secondary_tool_btn_style())
         self.btn_test_mobile.clicked.connect(self.test_mobile_notification_action)
 
         layout_c_header.addWidget(self.btn_soar_menu)
@@ -2603,14 +2611,27 @@ class XdrDashboard(QMainWindow):
         lbl_f.setStyleSheet("color: #38bdf8; font-weight: bold; font-family: 'Consolas'; font-size: 11px; border: none;")
 
         self.input_cases_search = QLineEdit()
-        self.input_cases_search.setPlaceholderText("Buscar por Ticket ID, Alerta, Tenant, Analista...")
+        self.input_cases_search.setPlaceholderText("Buscar por Ticket ID, Alerta, Tenant, Analista (Enter p/ On-Demand)...")
         self.input_cases_search.setStyleSheet("background-color: #020617; color: #f8fafc; border: 1px solid #334155; border-radius: 4px; padding: 2px 6px; font-family: 'Consolas'; font-size: 11px;")
         self.input_cases_search.textChanged.connect(self._on_cases_filter_changed)
+        self.input_cases_search.returnPressed.connect(self._on_cases_search_return_pressed)
 
         self.combo_cases_status = QComboBox()
         self.combo_cases_status.addItems(["Activos", "Cerrados", "Todos"])
         self.combo_cases_status.setStyleSheet("background-color: #020617; color: #f8fafc; border: 1px solid #334155; border-radius: 4px; padding: 2px 6px; font-family: 'Consolas'; font-size: 11px;")
         self.combo_cases_status.currentIndexChanged.connect(self._on_cases_filter_changed)
+
+        self.combo_cases_time = QComboBox()
+        self.combo_cases_time.addItems([
+            "Tiempo: 24 Horas",
+            "Tiempo: 1 Hora",
+            "Tiempo: 12 Horas",
+            "Tiempo: 7 Días",
+            "Tiempo: 30 Días (1M)",
+            "Tiempo: Todo el Historial"
+        ])
+        self.combo_cases_time.setStyleSheet("background-color: #020617; color: #f8fafc; border: 1px solid #334155; border-radius: 4px; padding: 2px 6px; font-family: 'Consolas'; font-size: 11px;")
+        self.combo_cases_time.currentIndexChanged.connect(self._on_cases_filter_changed)
 
         self.combo_cases_priority = QComboBox()
         self.combo_cases_priority.addItems(["Prioridad: Todas", "P1 (Critica)", "P2 (Alta)", "P3 (Media)", "P4 (Baja)"])
@@ -2636,12 +2657,13 @@ class XdrDashboard(QMainWindow):
 
         self.btn_load_more_cases = QPushButton("+ Historial (200)")
         self.btn_load_more_cases.setToolTip("Descargar 200 casos adicionales desde la API para auditar historico")
-        self.btn_load_more_cases.setStyleSheet("background-color: #0369a1; color: #ffffff; font-weight: bold; border-radius: 4px; padding: 3px 8px; font-family: 'Consolas'; font-size: 11px;")
+        self.btn_load_more_cases.setStyleSheet(ui_theme.secondary_tool_btn_style())
         self.btn_load_more_cases.clicked.connect(self.trigger_extended_cases_fetch)
 
         layout_cases_tools.addWidget(lbl_f)
         layout_cases_tools.addWidget(self.input_cases_search, 1)
         layout_cases_tools.addWidget(self.combo_cases_status)
+        layout_cases_tools.addWidget(self.combo_cases_time)
         layout_cases_tools.addWidget(self.combo_cases_priority)
         layout_cases_tools.addWidget(self.combo_cases_assignee)
         layout_cases_tools.addWidget(self.combo_cases_sort)
@@ -2708,120 +2730,170 @@ class XdrDashboard(QMainWindow):
         frame_triage = QFrame()
         layout_t = QVBoxLayout(frame_triage)
         lbl_t_title = QLabel("  CASE TRIAGE & COGNITIVE IA INVESTIGATION AREA")
-        lbl_t_title.setStyleSheet("color: #fbbf24; font-weight: bold; font-size: 13px; border: none;")
+        lbl_t_title.setStyleSheet(ui_theme.section_header_style(ui_theme.COLOR_MEDIUM))
         
         self.lbl_triage_sla_status = QLabel("  ⏱️ SLA / SLO STATUS: En espera de selección de caso...")
-        self.lbl_triage_sla_status.setStyleSheet("color: #94a3b8; background-color: #0f172a; padding: 6px 10px; border-radius: 4px; font-weight: bold; font-family: 'Consolas'; font-size: 12px; border: 1px solid #334155;")
+        self.lbl_triage_sla_status.setStyleSheet(f"color: {ui_theme.TEXT_PRIMARY}; background-color: {ui_theme.BG_ELEVATED}; padding: 6px 10px; border-radius: 5px; font-weight: bold; font-family: {ui_theme.FONT_MAIN}; font-size: 12px; border: 1px solid {ui_theme.BORDER_MUTED};")
         
         self.txt_triage = QTextEdit()
         self.txt_triage.setReadOnly(True)
         
         layout_soar_grid = QVBoxLayout()
+        layout_soar_grid.setSpacing(6)
         
-        # Fila 1: Inicialización
+        # Fila 1: Investigación Forense & Telemetría
         row1 = QHBoxLayout()
+        row1.setSpacing(6)
+
         lbl_ticket = QLabel("Ticket:")
+        lbl_ticket.setStyleSheet(f"color: {ui_theme.TEXT_MUTED}; font-weight: bold; font-family: {ui_theme.FONT_MAIN};")
         self.input_case_ticket = QLineEdit()
-        self.input_case_ticket.setPlaceholderText("ID Ticket")
-        self.input_case_ticket.setFixedWidth(80)
+        self.input_case_ticket.setPlaceholderText("ID")
+        self.input_case_ticket.setFixedWidth(75)
         
         btn_take = QPushButton("1. Tomar Caso")
+        btn_take.setStyleSheet(ui_theme.primary_action_btn_style())
         btn_take.clicked.connect(self.take_case_action)
-        
-        btn_comments = QPushButton(" Comentarios")
-        btn_comments.clicked.connect(self.view_comments_action)
+
+        self.btn_reassign = QToolButton()
+        self.btn_reassign.setPopupMode(QToolButton.InstantPopup)
+        self.btn_reassign.setText("👤 Reasignar ▾")
+        self.btn_reassign.setStyleSheet(ui_theme.reassign_btn_style())
+        self.btn_reassign.setToolTip("Reasignar este caso a un compañero del equipo SOC o liberarlo")
+        self.menu_reassign = QMenu(self.btn_reassign)
+        self.menu_reassign.setStyleSheet("""
+            QMenu {
+                background-color: #0b1120;
+                border: 1px solid #0284c7;
+                border-radius: 6px;
+                color: #f8fafc;
+                font-family: 'Segoe UI', 'Consolas';
+                font-size: 11px;
+                padding: 6px 4px;
+            }
+            QMenu::item {
+                background-color: transparent;
+                color: #f8fafc;
+                padding: 6px 20px;
+                border-radius: 4px;
+                margin: 2px 4px;
+            }
+            QMenu::item:selected {
+                background-color: #1e293b;
+                color: #38bdf8;
+            }
+            QMenu::separator {
+                height: 1px;
+                background-color: #1e293b;
+                margin: 4px 8px;
+            }
+        """)
+        self.btn_reassign.setMenu(self.menu_reassign)
+        self._populate_reassign_menu()
         
         btn_triage = QPushButton("2. Ver Triage/Obs")
         btn_triage.clicked.connect(self.launch_triage_action)
-        
-        row1.addWidget(lbl_ticket)
-        row1.addWidget(self.input_case_ticket)
-        row1.addWidget(btn_take)
-        row1.addWidget(btn_comments)
-        row1.addWidget(btn_triage)
-        row1.addStretch()
 
-        # Fila 2: Deep Dive
-        row2 = QHBoxLayout()
+        btn_comments = QPushButton("💬 Comentarios")
+        btn_comments.clicked.connect(self.view_comments_action)
+
+        # Separador visual
+        sep1 = QFrame()
+        sep1.setFrameShape(QFrame.VLine)
+        sep1.setStyleSheet(f"color: {ui_theme.BORDER_MUTED};")
+
         lbl_logs = QLabel("Logs:")
+        lbl_logs.setStyleSheet(f"color: {ui_theme.TEXT_MUTED}; font-weight: bold; font-family: {ui_theme.FONT_MAIN};")
         self.input_case_limit = QLineEdit()
-        self.input_case_limit.setPlaceholderText("Cant JSONs")
-        self.input_case_limit.setFixedWidth(80)
+        self.input_case_limit.setPlaceholderText("Cant")
+        self.input_case_limit.setFixedWidth(55)
         
         btn_interflow = QPushButton("3. Ver Interflow")
         btn_interflow.clicked.connect(self.extract_interflow_action)
-        
-        btn_ai = QPushButton("3B. Análisis IA")
-        btn_ai.setStyleSheet("background-color: #047857; color: #ffffff; border: 1px solid #065f46;")
-        btn_ai.clicked.connect(self.trigger_ai_normal)
-        
-        btn_force_ai = QPushButton(" Forzar Re-análisis")
-        btn_force_ai.setStyleSheet("background-color: #7c2d12; color: #ffffff; border: 1px solid #7c2d12;")
-        btn_force_ai.clicked.connect(self.trigger_ai_forced)
-        
-        btn_mask_demo = QPushButton(" Ver JSON Ofuscado")
-        btn_mask_demo.setStyleSheet("background-color: #1e1b4b; color: #cbd5e1; border: 1px solid #312e81;")
-        btn_mask_demo.clicked.connect(self.show_obfuscated_json_action)
 
-        btn_stellar_ai = QPushButton(" 3C. IA Stellar")
-        btn_stellar_ai.setStyleSheet("background-color: #92400e; color: #fde68a; border: 1px solid #b45309;")
-        btn_stellar_ai.clicked.connect(self.trigger_stellar_autotriage)
-
-        btn_quick_playbook = QPushButton(" 📖 Playbook Sugerido")
-        btn_quick_playbook.setStyleSheet("background-color: #0369a1; color: #ffffff; border: 1px solid #0284c7; font-weight: bold;")
-        btn_quick_playbook.clicked.connect(self.trigger_quick_playbook_action)
-        
-        row2.addWidget(lbl_logs)
-        row2.addWidget(self.input_case_limit)
-        row2.addWidget(btn_interflow)
-        row2.addWidget(btn_ai)
-        row2.addWidget(btn_force_ai)
-        row2.addWidget(btn_stellar_ai)
-        row2.addWidget(btn_quick_playbook)
-
-        btn_quick_terminal = QPushButton("🔬 Investigar en Consola")
-        btn_quick_terminal.setStyleSheet("background-color: #4338ca; color: #ffffff; border: 1px solid #6366f1; font-weight: bold;")
+        btn_quick_terminal = QPushButton("🔬 Consola")
+        btn_quick_terminal.setToolTip("Abrir investigación interactiva profunda en consola terminal")
         btn_quick_terminal.clicked.connect(self.trigger_quick_terminal_investigation)
-        row2.addWidget(btn_quick_terminal)
 
-        row2.addWidget(btn_mask_demo)
-        row2.addStretch()
+        btn_quick_playbook = QPushButton("📖 Playbook")
+        btn_quick_playbook.setToolTip("Ver playbook sugerido para este incidente")
+        btn_quick_playbook.clicked.connect(self.trigger_quick_playbook_action)
 
-        # Fila 3: Resolución (con bloqueo dinámico de justificación obligatoria)
-        row3 = QHBoxLayout()
-        lbl_comment = QLabel("Nota:")
+        # Menú Desplegable Unificado del Copiloto IA (elimina la congestión de 4 botones sueltos)
+        btn_ai_copilot = QToolButton()
+        btn_ai_copilot.setPopupMode(QToolButton.InstantPopup)
+        btn_ai_copilot.setText("🧠 Copiloto IA ▾")
+        btn_ai_copilot.setStyleSheet(ui_theme.ai_action_btn_style())
+        btn_ai_copilot.setToolTip("Seleccionar motor de Inteligencia Artificial para dictamen forense")
+        
+        ai_menu = QMenu(btn_ai_copilot)
+        act_ai_normal = ai_menu.addAction("🟢 3B. Análisis IA Normal")
+        act_ai_normal.triggered.connect(self.trigger_ai_normal)
+        act_ai_forced = ai_menu.addAction("🔄 Forzar Re-análisis IA")
+        act_ai_forced.triggered.connect(self.trigger_ai_forced)
+        act_ai_stellar = ai_menu.addAction("🌐 3C. IA Stellar Cyber (Autotriage)")
+        act_ai_stellar.triggered.connect(self.trigger_stellar_autotriage)
+        ai_menu.addSeparator()
+        act_ai_mask = ai_menu.addAction("🛡️ Ver JSON Ofuscado (Masking)")
+        act_ai_mask.triggered.connect(self.show_obfuscated_json_action)
+        btn_ai_copilot.setMenu(ai_menu)
+
+        row1.addWidget(lbl_ticket)
+        row1.addWidget(self.input_case_ticket)
+        row1.addWidget(btn_take)
+        row1.addWidget(self.btn_reassign)
+        row1.addWidget(btn_triage)
+        row1.addWidget(btn_comments)
+        row1.addWidget(sep1)
+        row1.addWidget(lbl_logs)
+        row1.addWidget(self.input_case_limit)
+        row1.addWidget(btn_interflow)
+        row1.addWidget(btn_quick_terminal)
+        row1.addWidget(btn_quick_playbook)
+        row1.addWidget(btn_ai_copilot)
+        row1.addStretch()
+
+        # Fila 2: Dictamen, Justificación Obligatoria y Cierre Formal (SLA-Compliant)
+        row2 = QHBoxLayout()
+        row2.setSpacing(6)
+
+        lbl_comment = QLabel("Justificación:")
+        lbl_comment.setStyleSheet(f"color: {ui_theme.TEXT_MUTED}; font-weight: bold; font-family: {ui_theme.FONT_MAIN};")
         self.input_case_comment = QLineEdit()
-        self.input_case_comment.setPlaceholderText("Escriba la justificacion obligatoria del veredicto...")
-        
-        lbl_verdict = QLabel("Veredicto:")
-        self.combo_verdict = QComboBox()
-        self.combo_verdict.addItems(["False Positive", "True Positive", "Benign"])
-        self.combo_verdict.setFixedWidth(140)
-        
-        self.btn_resolve = QPushButton("4. Resolver Caso")
-        self.btn_resolve.setEnabled(False)
-        self.btn_resolve.clicked.connect(self.resolve_case_action)
-        
-        btn_copy = QPushButton("Copiar Pantalla")
-        btn_copy.clicked.connect(self.copy_triage_pane_text)
-        
-        btn_download = QPushButton("Descargar .MD")
-        btn_download.clicked.connect(self.download_triage_pane_text)
-        
-        # Conexión de señal dinámica: escucha cada tipeo en el campo de Nota
+        self.input_case_comment.setPlaceholderText("Escriba la justificación analítica obligatoria del veredicto...")
         self.input_case_comment.textChanged.connect(self.validar_justificacion)
         
-        row3.addWidget(lbl_comment)
-        row3.addWidget(self.input_case_comment)
-        row3.addWidget(lbl_verdict)
-        row3.addWidget(self.combo_verdict)
-        row3.addWidget(self.btn_resolve)
-        row3.addWidget(btn_copy)
-        row3.addWidget(btn_download)
+        lbl_verdict = QLabel("Veredicto:")
+        lbl_verdict.setStyleSheet(f"color: {ui_theme.TEXT_MUTED}; font-weight: bold; font-family: {ui_theme.FONT_MAIN};")
+        self.combo_verdict = QComboBox()
+        self.combo_verdict.addItems(["False Positive", "True Positive", "Benign"])
+        self.combo_verdict.setFixedWidth(135)
+        
+        self.btn_resolve = QPushButton("🚀 4. Resolver Caso")
+        self.btn_resolve.setEnabled(False)
+        self.btn_resolve.setStyleSheet(ui_theme.primary_action_btn_style())
+        self.btn_resolve.clicked.connect(self.resolve_case_action)
+        
+        btn_copy = QPushButton("📋 Copiar")
+        btn_copy.setToolTip("Copiar texto del visor forense al portapapeles")
+        btn_copy.setStyleSheet(ui_theme.secondary_tool_btn_style())
+        btn_copy.clicked.connect(self.copy_triage_pane_text)
+        
+        btn_download = QPushButton("💾 Descargar .MD")
+        btn_download.setToolTip("Descargar expediente forense en formato Markdown")
+        btn_download.setStyleSheet(ui_theme.secondary_tool_btn_style())
+        btn_download.clicked.connect(self.download_triage_pane_text)
+        
+        row2.addWidget(lbl_comment)
+        row2.addWidget(self.input_case_comment, 1)
+        row2.addWidget(lbl_verdict)
+        row2.addWidget(self.combo_verdict)
+        row2.addWidget(self.btn_resolve)
+        row2.addWidget(btn_copy)
+        row2.addWidget(btn_download)
         
         layout_soar_grid.addLayout(row1)
         layout_soar_grid.addLayout(row2)
-        layout_soar_grid.addLayout(row3)
         
         layout_t.addWidget(lbl_t_title)
         layout_t.addWidget(self.lbl_triage_sla_status)
@@ -2925,19 +2997,19 @@ class XdrDashboard(QMainWindow):
         self.dt_metrics_end.dateTimeChanged.connect(self.recalculate_executive_metrics)
 
         self.btn_metrics_recalc = QPushButton("🔄 Recalcular")
-        self.btn_metrics_recalc.setStyleSheet("background-color: #0369a1; color: #ffffff; font-weight: bold; padding: 4px 10px; font-size: 11px;")
+        self.btn_metrics_recalc.setStyleSheet(ui_theme.primary_action_btn_style())
         self.btn_metrics_recalc.clicked.connect(self.recalculate_executive_metrics)
 
         self.btn_metrics_load_extended = QPushButton("📊 Cargar Historial (200)")
-        self.btn_metrics_load_extended.setStyleSheet("background-color: #4338ca; color: #ffffff; font-weight: bold; padding: 4px 10px; font-size: 11px;")
+        self.btn_metrics_load_extended.setStyleSheet(ui_theme.secondary_tool_btn_style())
         self.btn_metrics_load_extended.clicked.connect(self.trigger_extended_cases_fetch)
 
         self.btn_metrics_export_md = QPushButton("📥 Descargar .MD")
-        self.btn_metrics_export_md.setStyleSheet("background-color: #059669; color: #ffffff; font-weight: bold; padding: 4px 10px; font-size: 11px;")
+        self.btn_metrics_export_md.setStyleSheet(ui_theme.secondary_tool_btn_style())
         self.btn_metrics_export_md.clicked.connect(self.export_metrics_markdown_action)
 
         self.btn_metrics_copy_md = QPushButton("📋 Copiar Markdown")
-        self.btn_metrics_copy_md.setStyleSheet("background-color: #1e293b; color: #38bdf8; border: 1px solid #334155; padding: 4px 10px; font-size: 11px;")
+        self.btn_metrics_copy_md.setStyleSheet(ui_theme.secondary_tool_btn_style())
         self.btn_metrics_copy_md.clicked.connect(self.copy_metrics_markdown_action)
 
         layout_m_controls.addWidget(lbl_m_period)
@@ -3088,15 +3160,15 @@ class XdrDashboard(QMainWindow):
         self.combo_playbooks.currentIndexChanged.connect(self.on_playbook_combo_changed)
 
         self.btn_pb_recommend = QPushButton("🎯 Auto-Detectar para Ticket Activo")
-        self.btn_pb_recommend.setStyleSheet("background-color: #0284c7; color: #ffffff; font-weight: bold; padding: 4px 10px; border-radius: 4px;")
+        self.btn_pb_recommend.setStyleSheet(ui_theme.primary_action_btn_style())
         self.btn_pb_recommend.clicked.connect(self.trigger_recommend_active_ticket)
 
         self.btn_pb_apply_hitl = QPushButton("🛡️ Aplicar Playbook al Caso (HITL)")
-        self.btn_pb_apply_hitl.setStyleSheet("background-color: #059669; color: #ffffff; font-weight: bold; padding: 4px 10px; border-radius: 4px;")
+        self.btn_pb_apply_hitl.setStyleSheet(ui_theme.primary_action_btn_style(bg="#065f46", border="#059669", hover_bg="#047857"))
         self.btn_pb_apply_hitl.clicked.connect(self.trigger_apply_playbook_hitl)
 
         btn_pb_copy = QPushButton("📋 Copiar Guía")
-        btn_pb_copy.setStyleSheet("background-color: #1e293b; color: #38bdf8; border: 1px solid #334155; padding: 4px 8px; border-radius: 4px;")
+        btn_pb_copy.setStyleSheet(ui_theme.secondary_tool_btn_style())
         btn_pb_copy.clicked.connect(self.copy_current_playbook_text)
 
         layout_pb_controls.addWidget(lbl_pb_select)
@@ -3393,6 +3465,31 @@ class XdrDashboard(QMainWindow):
         for key in (t_id, clean_id):
             if key in self.dict_casos_activos:
                 return self.dict_casos_activos[key].get("_id"), key
+
+        # Revisar en el pool extendido en memoria si ya fue descargado
+        for c in getattr(self, '_extended_cases_pool', []):
+            cid = str(c.get("ticket_id", "")).strip().lstrip("#")
+            if cid == clean_id:
+                self.dict_casos_activos[clean_id] = c
+                self.dict_casos_activos[t_id] = c
+                return c.get("_id"), clean_id
+
+        # Búsqueda On-Demand directa a la API de Stellar Cyber para tickets históricos (ej. casos antiguos)
+        try:
+            manager = RestSessionManager()
+            headers = manager.get_headers()
+            lookup_url = f"https://{HOST}/connect/api/v1/cases?ticket_id={clean_id}"
+            r = manager.session.get(lookup_url, headers=headers, verify=True, timeout=12)
+            if r.status_code == 200:
+                cases = (r.json().get("data", {}) or {}).get("cases", [])
+                if cases:
+                    c = cases[0]
+                    self.dict_casos_activos[clean_id] = c
+                    self.dict_casos_activos[t_id] = c
+                    return c.get("_id"), clean_id
+        except Exception as e:
+            log_to_file(f"[ON-DEMAND CASE LOOKUP ERROR] Ticket {clean_id}: {e}")
+
         return None, None
 
     # Workers que NO deben destruirse: son persistentes y se reutilizan cada ciclo
@@ -3670,6 +3767,91 @@ class XdrDashboard(QMainWindow):
                 message=f"Has tomado el caso #{t_id}. Triaje L1 en curso.\nMTTR restante: {mttr_info['remaining_str']} de {mttr_info['limit_str']}.",
                 priority="high",
                 tags="briefcase,bell"
+            )
+
+    def _populate_reassign_menu(self):
+        """Llena dinámicamente el menú de reasignación con los analistas del equipo SOC."""
+        if not hasattr(self, 'menu_reassign'):
+            return
+        self.menu_reassign.clear()
+
+        # Miembros oficiales del equipo Technoma SOC
+        team_members = [
+            ("Ángel Insaurralde", "angelinsaurralde@technoma.com.py"),
+            ("Armando Saucedo", "armandosaucedo@technoma.com.py"),
+            ("Guillermo Cabañas", "guillermocabanas@technoma.com.py"),
+            ("Hermes Sánchez", "hermessanchez@technoma.com.py"),
+            ("Igor Mayor", "igormayor@technoma.com.py"),
+            ("Iván Centurión", "ivancenturion@technoma.com.py"),
+            ("José Durand", "josedurand@technoma.com.py"),
+            ("Kevin Moraes", "kevinmoraes@technoma.com.py"),
+            ("SOC General", "soc@technoma.com.py"),
+        ]
+
+        seen_emails = {email.lower() for _, email in team_members}
+
+        # Analistas adicionales provenientes de la API si no están en la lista estática
+        extra_members = []
+        for item in getattr(self, '_assignees_list', []):
+            if isinstance(item, dict):
+                email = str(item.get("email") or item.get("username") or item.get("id") or "").strip().lower()
+                name = str(item.get("name") or email).strip()
+            elif isinstance(item, str):
+                email = item.strip().lower()
+                name = item.strip()
+            else:
+                continue
+            if email and email not in seen_emails and "@" in email and email != "todos":
+                seen_emails.add(email)
+                extra_members.append((name, email))
+
+        # Acciones para cada analista
+        for name, email in team_members + extra_members:
+            icon_tag = "👤" if email != "soc@technoma.com.py" else "🏢"
+            act = self.menu_reassign.addAction(f"{icon_tag} {name}")
+            act.setToolTip(email)
+            act.triggered.connect(lambda checked=False, e=email, n=name: self.reassign_case_action(e, n))
+
+        self.menu_reassign.addSeparator()
+
+        # Opción para liberar / quitar asignación
+        act_unassign = self.menu_reassign.addAction("🔓 Liberar Caso (Sin Asignar)")
+        act_unassign.setToolTip("Quita la asignación actual del caso dejándolo libre en la cola")
+        act_unassign.triggered.connect(lambda checked=False: self.reassign_case_action("", "Sin Asignar"))
+
+    def reassign_case_action(self, target_email: str, target_name: str):
+        """Ejecuta la reasignación de un caso hacia otro compañero del equipo o lo libera."""
+        if hasattr(self, 'worker_take') and self.worker_take.isRunning():
+            return
+        case_id, t_id = self._get_target_case_id()
+        if not case_id:
+            self.txt_triage.setText("[!] Error: Ingrese un Ticket ID válido de la cola superior para reasignarlo.")
+            ejecutar_beep(400, 300)
+            return
+
+        self._safe_kill_worker('worker_take')
+
+        target_display = target_name if target_email else "Sin Asignar (Liberado)"
+        email_display = f"({target_email})" if target_email else "(Cola General)"
+
+        self.txt_triage.append(
+            f"\n[*] Solicitando PUT de reasignación para Ticket #{t_id} a: {target_display} {email_display}..."
+        )
+
+        payload = {"assignee": target_email}
+        self.worker_take = UpdateCaseWorker(payload=payload, params={"case_id": case_id})
+        self.worker_take.finished_signal.connect(self.master_signal_router)
+        self.worker_take.error_signal.connect(self.master_error_router)
+        self.worker_take.start()
+
+        ejecutar_beep(800, 150)
+
+        if hasattr(self, 'check_mobile_alerts') and self.check_mobile_alerts.isChecked():
+            MobileAlertsNotifier.send_notification(
+                title=f"[CASO REASIGNADO] #{t_id}",
+                message=f"El caso #{t_id} fue reasignado a {target_display}.",
+                priority="normal",
+                tags="bust_in_silhouette,arrows_counterclockwise"
             )
 
     def extract_interflow_action(self):
@@ -4070,6 +4252,7 @@ class XdrDashboard(QMainWindow):
             except Exception:
                 self._assignees_list = []
             self._populate_analysts_dropdown()
+            self._populate_reassign_menu()
 
         elif action == "top_apps":
             self.display_top_protocols(result.get("top_apps", []))
@@ -4240,6 +4423,47 @@ class XdrDashboard(QMainWindow):
         self._cases_current_page = 1
         self._render_cases_view()
 
+    def _on_cases_search_return_pressed(self):
+        """Si el usuario presiona Enter en el buscador con un ID de ticket numérico, intenta cargarlo on-demand."""
+        query = self.input_cases_search.text().strip() if hasattr(self, 'input_cases_search') else ""
+        if not query:
+            return
+        clean_id = query.lstrip("#").strip()
+        if clean_id.isdigit():
+            # Auto-asignar al input de ticket para acción inmediata
+            if hasattr(self, 'input_case_ticket'):
+                self.input_case_ticket.setText(clean_id)
+            # Verificar si ya está en memoria
+            pool = getattr(self, '_extended_cases_pool', []) or []
+            found = any(str(c.get("ticket_id", "")).strip().lstrip("#") == clean_id for c in pool)
+            if not found:
+                try:
+                    manager = RestSessionManager()
+                    headers = manager.get_headers()
+                    lookup_url = f"https://{HOST}/connect/api/v1/cases?ticket_id={clean_id}"
+                    r = manager.session.get(lookup_url, headers=headers, verify=True, timeout=10)
+                    if r.status_code == 200:
+                        cases = (r.json().get("data", {}) or {}).get("cases", [])
+                        if cases:
+                            c = cases[0]
+                            if not hasattr(self, '_extended_cases_pool') or self._extended_cases_pool is None:
+                                self._extended_cases_pool = []
+                            self._extended_cases_pool.insert(0, c)
+                            if not hasattr(self, 'dict_casos_activos') or self.dict_casos_activos is None:
+                                self.dict_casos_activos = {}
+                            self.dict_casos_activos[clean_id] = c
+                            self.dict_casos_activos[f"#{clean_id}"] = c
+                            # Cambiar filtro de tiempo a 'Todo el Historial' para que no lo oculte el cutoff
+                            if hasattr(self, 'combo_cases_time'):
+                                self.combo_cases_time.blockSignals(True)
+                                self.combo_cases_time.setCurrentIndex(5) # "Tiempo: Todo el Historial"
+                                self.combo_cases_time.blockSignals(False)
+                            self._render_cases_view()
+                            if hasattr(self, 'lbl_cases_count_info'):
+                                self.lbl_cases_count_info.setText(f"✓ Ticket #{clean_id} descargado on-demand desde Stellar Cyber API")
+                except Exception as e:
+                    log_to_file(f"[SEARCH RETURN PRESSED LOOKUP ERROR] Ticket {clean_id}: {e}")
+
     def _on_cases_page_size_changed(self):
         """Ajusta el tamano de pagina y re-renderiza la vista."""
         self._cases_current_page = 1
@@ -4289,6 +4513,27 @@ class XdrDashboard(QMainWindow):
                     c for c in pool
                     if str(c.get("status", "")).strip().lower() not in ["resolved", "cancelled", "closed"]
                 ]
+
+            # 1.1 Filtro por Ventana Temporal (1HR, 12HR, 24HR, 7D, 30D, Todo el Historial)
+            time_filter = self.combo_cases_time.currentText() if hasattr(self, 'combo_cases_time') else "Tiempo: 24 Horas"
+            search_text = self.input_cases_search.text().strip().lower() if hasattr(self, 'input_cases_search') else ""
+            if not search_text and "Todo el Historial" not in time_filter:
+                now_ms = int(time.time() * 1000)
+                if "1 Hora" in time_filter:
+                    cutoff = now_ms - (3600 * 1000)
+                    filtered = [c for c in filtered if int(c.get("created_at") or 0) >= cutoff]
+                elif "12 Horas" in time_filter:
+                    cutoff = now_ms - (12 * 3600 * 1000)
+                    filtered = [c for c in filtered if int(c.get("created_at") or 0) >= cutoff]
+                elif "24 Horas" in time_filter:
+                    cutoff = now_ms - (24 * 3600 * 1000)
+                    filtered = [c for c in filtered if int(c.get("created_at") or 0) >= cutoff]
+                elif "7 Días" in time_filter or "7 Dias" in time_filter:
+                    cutoff = now_ms - (7 * 86400 * 1000)
+                    filtered = [c for c in filtered if int(c.get("created_at") or 0) >= cutoff]
+                elif "30 Días" in time_filter or "30 Dias" in time_filter:
+                    cutoff = now_ms - (30 * 86400 * 1000)
+                    filtered = [c for c in filtered if int(c.get("created_at") or 0) >= cutoff]
 
             # 2. Filtro de Texto (Ticket ID, Alerta, Tenant, Analista, Tags, Descripcion)
             search_text = self.input_cases_search.text().strip().lower() if hasattr(self, 'input_cases_search') else ""
@@ -5234,6 +5479,10 @@ class XdrDashboard(QMainWindow):
         )
 
     def display_top_protocols(self, top_apps):
+        if hasattr(self.txt_protocols, "update_protocols"):
+            self.txt_protocols.update_protocols(top_apps)
+            return
+
         html_lines = []
         html_lines.append("<b style='color: #eab308;'>=========================================================</b>")
         html_lines.append("<b style='color: #ffffff;'>           TOP PROTOCOLOS / APLICACIONES ACTIVAS       </b>")
@@ -5252,6 +5501,11 @@ class XdrDashboard(QMainWindow):
         html_lines = []
         sensores_caidos_alerta = []
         timestamp_log = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        raw_sensors = []
+        tenants_data_consumo = []
+        cuotas_diccionario = {}
+        peak_global_real = 0.0
+        nivel_uso_global_pct = 0.0
         
         try:
             sensors_payload = data.get("sensors", {})
@@ -5437,11 +5691,30 @@ class XdrDashboard(QMainWindow):
                     peak_usage_tenant = max(valores_diarios) if valores_diarios else 0.0
                     acumulado_mes = float(tenant.get("monthly_usage", 0.0))
                     html_lines.append(f"  • <span style='color: #ffffff;'>{t_name_h.ljust(12)}</span> | Hoy: <span style='color: #00ffff;'>{consumo_hoy:.4f} GB</span> | Pico Max: <span style='color: #eab308;'>{peak_usage_tenant:.4f} GB</span> | Mes: <span style='color: #6b7280;'>{acumulado_mes:.2f} GB</span>")
+
+                html_lines.append("")
+                html_lines.append("<span style='color: #a855f7;'>-------------------------------------------------------------------------</span>")
+                html_lines.append("<b style='color: #a855f7;'>  ACCESO RÁPIDO: CENTRO DE TELEMETRÍA, CONECTORES & LOG FILTERS</b>")
+                html_lines.append("<span style='color: #a855f7;'>-------------------------------------------------------------------------</span>")
+                html_lines.append("  • <i>Haga clic en <b>'🔍 Telemetría & Log Filters'</b> en la barra inferior para ver el desglose en tiempo real por sensor/tipo de log, salud de conectores y auditoría de los 65 filtros con detección de cegueras SOC.</i><br>")
         except Exception:
             pass
 
         # --- CIERRE: render y flag ---
-        self.txt_health.setHtml("<br>".join(html_lines))
+        if hasattr(self.txt_health, "update_telemetry"):
+            try:
+                self.txt_health.update_telemetry(
+                    raw_sensors=raw_sensors,
+                    tenants_data_consumo=tenants_data_consumo,
+                    cuotas_diccionario=cuotas_diccionario,
+                    peak_global_real=peak_global_real,
+                    nivel_uso_global_pct=nivel_uso_global_pct,
+                    cuota_pool_global=CUOTA_POOL_GLOBAL
+                )
+            except Exception:
+                self.txt_health.setHtml("<br>".join(html_lines))
+        else:
+            self.txt_health.setHtml("<br>".join(html_lines))
         self.primer_ciclo = False
 
     def enviar_notificacion_popup(self, titulo, mensaje):
@@ -5665,6 +5938,15 @@ class XdrDashboard(QMainWindow):
         )
         if ret == QMessageBox.Yes:
             QDesktopServices.openUrl(QUrl.fromLocalFile(pdf_path))
+
+    def _abrir_auditoria_ingesta_dialog(self):
+        """Abre la ventana interactiva de Auditoría Forense de Ingesta, Conectores y Log Filters."""
+        try:
+            from ingestion_audit_dialog import IngestionAuditDialog
+            dlg = IngestionAuditDialog(self)
+            dlg.exec()
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"No se pudo abrir el Centro de Auditoría de Ingesta: {e}")
 
     def _persistir_bitacora_auto(self, tsv_row: str, ticket_id: str):
         """Guarda persistentemente el registro de bitácora generado en bitacora_auto_export.tsv."""
@@ -6462,45 +6744,45 @@ class XdrDashboard(QMainWindow):
         lbl_ws.setStyleSheet("color: #94a3b8; font-family: 'Consolas'; font-size: 11px; border: none;")
 
         self.btn_term_launch_ps_admin = QPushButton("⚡ PowerShell (Admin)")
-        self.btn_term_launch_ps_admin.setStyleSheet("background-color: #0284c7; color: #ffffff; font-weight: bold; padding: 4px 10px; border-radius: 4px;")
+        self.btn_term_launch_ps_admin.setStyleSheet(ui_theme.secondary_tool_btn_style())
         self.btn_term_launch_ps_admin.setToolTip("Abre una ventana externa de PowerShell o Windows Terminal con elevación de Administrador (UAC)")
         self.btn_term_launch_ps_admin.clicked.connect(self.launch_external_ps_admin)
 
         self.btn_term_launch_wsl = QPushButton("🐧 WSL Terminal")
-        self.btn_term_launch_wsl.setStyleSheet("background-color: #d97706; color: #ffffff; font-weight: bold; padding: 4px 10px; border-radius: 4px;")
+        self.btn_term_launch_wsl.setStyleSheet(ui_theme.secondary_tool_btn_style())
         self.btn_term_launch_wsl.setToolTip("Abre la terminal interactiva de Ubuntu WSL2 en ventana completa")
         self.btn_term_launch_wsl.clicked.connect(self.launch_external_wsl)
 
         self.btn_term_antisleep = QPushButton("[Anti-Sleep: ACTIVO]")
-        self.btn_term_antisleep.setStyleSheet("background-color: #064e3b; color: #34d399; font-weight: bold; border: 1px solid #059669; padding: 4px 10px; border-radius: 4px; font-family: 'Consolas'; font-size: 11px;")
+        self.btn_term_antisleep.setStyleSheet(f"background-color: #064e3b; color: #34d399; font-weight: bold; border: 1px solid #059669; padding: 4px 10px; border-radius: 4px; font-family: {ui_theme.FONT_MAIN}; font-size: 11px;")
         self.btn_term_antisleep.setToolTip("Mantiene el sistema y pantalla despiertos continuamente mientras el Cockpit este activo. Clic para alternar.")
         self.btn_term_antisleep.clicked.connect(self.toggle_antisleep)
 
         self.btn_term_copy_all = QPushButton("📋 Copiar Salida")
-        self.btn_term_copy_all.setStyleSheet("background-color: #1e293b; color: #38bdf8; border: 1px solid #334155; padding: 4px 8px; border-radius: 4px;")
+        self.btn_term_copy_all.setStyleSheet(ui_theme.secondary_tool_btn_style())
         self.btn_term_copy_all.clicked.connect(self.copy_terminal_output)
 
         self.btn_term_clear = QPushButton("🧹 Limpiar")
-        self.btn_term_clear.setStyleSheet("background-color: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 4px 8px; border-radius: 4px;")
+        self.btn_term_clear.setStyleSheet(ui_theme.secondary_tool_btn_style())
         self.btn_term_clear.clicked.connect(self.clear_terminal_output)
 
         self.btn_term_email_analyzer = QPushButton("📬 Analizador Cabeceras (.eml)")
-        self.btn_term_email_analyzer.setStyleSheet("background-color: #0369a1; color: #ffffff; font-weight: bold; padding: 4px 10px; border-radius: 4px; font-size: 11px;")
+        self.btn_term_email_analyzer.setStyleSheet(ui_theme.chip_button_style(ui_theme.ACCENT_CYBER))
         self.btn_term_email_analyzer.setToolTip("Abre el analizador forense de cabeceras de correo para detección de phishing y spoofing en memoria")
         self.btn_term_email_analyzer.clicked.connect(self.open_email_header_analyzer)
 
         self.btn_term_thn_ticket = QPushButton("🎫 Ticket Technoma (THN-SOC)")
-        self.btn_term_thn_ticket.setStyleSheet("background-color: #a81c1c; color: #ffffff; font-weight: bold; padding: 4px 10px; border-radius: 4px; font-size: 11px;")
+        self.btn_term_thn_ticket.setStyleSheet(ui_theme.chip_button_style(ui_theme.COLOR_HIGH))
         self.btn_term_thn_ticket.setToolTip("Generador de Tickets de Escalación THN-SOC y sincronizador de Bitácora (18 Col)")
         self.btn_term_thn_ticket.clicked.connect(self.open_thn_ticket_generator)
 
         self.btn_term_feeds = QPushButton("📡 Feeds CTI")
-        self.btn_term_feeds.setStyleSheet("background-color: #6366f1; color: #ffffff; font-weight: bold; padding: 4px 10px; border-radius: 4px; font-size: 11px;")
+        self.btn_term_feeds.setStyleSheet(ui_theme.chip_button_style(ui_theme.COLOR_PURPLE))
         self.btn_term_feeds.setToolTip("Módulo de Inteligencia de Amenazas CTI (15 Feeds RSS/Atom, SQLite y Reportes con IA)")
         self.btn_term_feeds.clicked.connect(self.open_feeds_intel_module)
 
         self.btn_term_abuse_report = QPushButton("📧 Reportes de Abuso")
-        self.btn_term_abuse_report.setStyleSheet("background-color: #0d9488; color: #ffffff; font-weight: bold; padding: 4px 10px; border-radius: 4px; font-size: 11px;")
+        self.btn_term_abuse_report.setStyleSheet(ui_theme.chip_button_style(ui_theme.COLOR_CRITICAL))
         self.btn_term_abuse_report.setToolTip("Generador y formateador automático de notificaciones de abuso para IPs atacantes/escaneo en Interflow")
         self.btn_term_abuse_report.clicked.connect(self.open_abuse_report_dialog)
 
@@ -6523,7 +6805,7 @@ class XdrDashboard(QMainWindow):
         # 2. Barra de Presets Forenses Rápidos (Estructura de 2 Niveles - Máximo Espacio y Organización)
         frame_term_presets = QFrame()
         frame_term_presets.setFixedHeight(74)
-        frame_term_presets.setStyleSheet("background-color: #080d1a; border: 1px solid #1e293b; border-radius: 6px;")
+        frame_term_presets.setStyleSheet(f"background-color: {ui_theme.BG_SURFACE}; border: 1px solid {ui_theme.BORDER_SUBTLE}; border-radius: 6px;")
         layout_presets_outer = QVBoxLayout(frame_term_presets)
         layout_presets_outer.setContentsMargins(8, 4, 8, 4)
         layout_presets_outer.setSpacing(4)
@@ -6535,48 +6817,48 @@ class XdrDashboard(QMainWindow):
         row1_layout.setSpacing(6)
 
         lbl_target = QLabel("🎯 Objetivo:")
-        lbl_target.setStyleSheet("color: #38bdf8; font-weight: bold; border: none; font-size: 11px;")
+        lbl_target.setStyleSheet(ui_theme.section_header_style(ui_theme.ACCENT_CYBER))
 
         self.input_term_target = QLineEdit()
         self.input_term_target.setPlaceholderText("Ingrese IP, Dominio, URL sospechosa, Hash SHA256 o CVE...")
-        self.input_term_target.setStyleSheet("""
-            QLineEdit {
-                background-color: #020617;
-                color: #38bdf8;
-                border: 1px solid #334155;
+        self.input_term_target.setStyleSheet(f"""
+            QLineEdit {{
+                background-color: {ui_theme.BG_INPUT};
+                color: {ui_theme.ACCENT_CYBER};
+                border: 1px solid {ui_theme.BORDER_MUTED};
                 border-radius: 4px;
                 padding: 3px 8px;
-                font-family: 'Consolas';
+                font-family: {ui_theme.FONT_MONO};
                 font-size: 11px;
-            }
-            QLineEdit:focus {
-                border: 1px solid #0284c7;
-            }
+            }}
+            QLineEdit:focus {{
+                border: 1px solid {ui_theme.ACCENT_PRIMARY};
+            }}
         """)
 
         btn_clear_target = QPushButton("✕")
         btn_clear_target.setToolTip("Limpiar campo objetivo")
         btn_clear_target.setFixedSize(22, 22)
-        btn_clear_target.setStyleSheet("background-color: #1e293b; color: #94a3b8; border: 1px solid #334155; border-radius: 3px; font-size: 10px; font-weight: bold;")
+        btn_clear_target.setStyleSheet(f"background-color: {ui_theme.BG_ELEVATED}; color: {ui_theme.TEXT_MUTED}; border: 1px solid {ui_theme.BORDER_MUTED}; border-radius: 3px; font-size: 10px; font-weight: bold;")
         btn_clear_target.clicked.connect(self.input_term_target.clear)
 
         btn_preset_triscan = QPushButton("⚡ Tri-Scan CTI")
-        btn_preset_triscan.setStyleSheet("background-color: #4c1d95; color: #c084fc; border: 1px solid #7c3aed; padding: 3px 10px; border-radius: 4px; font-size: 11px; font-weight: bold;")
+        btn_preset_triscan.setStyleSheet(ui_theme.primary_action_btn_style())
         btn_preset_triscan.setToolTip("Escaneo 360 integral de reputación en VirusTotal, AbuseIPDB, URLScan y MxToolbox")
         btn_preset_triscan.clicked.connect(self.run_preset_triscan)
 
         btn_preset_anti_spoofing = QPushButton("📧 Anti-Spoofing (TXT)")
-        btn_preset_anti_spoofing.setStyleSheet("background-color: #0e7490; color: #67e8f9; border: 1px solid #06b6d4; padding: 3px 9px; border-radius: 4px; font-size: 11px; font-weight: bold;")
+        btn_preset_anti_spoofing.setStyleSheet(ui_theme.preset_button_style(ui_theme.ACCENT_CYBER))
         btn_preset_anti_spoofing.setToolTip("Verifica registros TXT para SPF, DMARC (_dmarc) y registros MX de forma nativa en WSL o PowerShell")
         btn_preset_anti_spoofing.clicked.connect(self.run_preset_anti_spoofing)
 
         btn_preset_unmask = QPushButton("🕵️ Desemmascarar Origen")
-        btn_preset_unmask.setStyleSheet("background-color: #831843; color: #f472b6; border: 1px solid #db2777; padding: 3px 9px; border-radius: 4px; font-size: 11px; font-weight: bold;")
+        btn_preset_unmask.setStyleSheet(ui_theme.preset_button_style(ui_theme.COLOR_PURPLE))
         btn_preset_unmask.setToolTip("Audita el dominio en busca de la IP real de origen eludiendo el proxy de Cloudflare/CDN (Fugas MX _dc-mx, SPF y subdominios sin proxy)")
         btn_preset_unmask.clicked.connect(self.run_preset_unmask_origin)
 
         btn_preset_phishing = QPushButton("📬 MxToolbox")
-        btn_preset_phishing.setStyleSheet("background-color: #1e3a5f; color: #38bdf8; border: 1px solid #0284c7; padding: 3px 8px; border-radius: 4px; font-size: 11px;")
+        btn_preset_phishing.setStyleSheet(ui_theme.preset_button_style(ui_theme.ACCENT_CYBER))
         btn_preset_phishing.clicked.connect(self.run_preset_mxtoolbox)
 
         row1_layout.addWidget(lbl_target)
@@ -6594,81 +6876,68 @@ class XdrDashboard(QMainWindow):
         row2_layout.setSpacing(4)
 
         lbl_net = QLabel("🌐 Red/Shell:")
-        lbl_net.setStyleSheet("color: #94a3b8; font-size: 10px; font-weight: bold; border: none;")
+        lbl_net.setStyleSheet(f"color: {ui_theme.TEXT_MUTED}; font-size: 10px; font-weight: bold; border: none; font-family: {ui_theme.FONT_MAIN};")
 
         btn_preset_dns = QPushButton("DNS")
-        btn_preset_dns.setStyleSheet("background-color: #1e293b; color: #38bdf8; border: 1px solid #334155; padding: 2px 7px; border-radius: 3px; font-size: 11px;")
+        btn_preset_dns.setStyleSheet(ui_theme.preset_button_style(ui_theme.ACCENT_CYBER))
         btn_preset_dns.clicked.connect(self.run_preset_dns)
 
         btn_preset_ptr = QPushButton("PTR")
-        btn_preset_ptr.setStyleSheet("background-color: #1e293b; color: #38bdf8; border: 1px solid #334155; padding: 2px 7px; border-radius: 3px; font-size: 11px;")
+        btn_preset_ptr.setStyleSheet(ui_theme.preset_button_style(ui_theme.ACCENT_CYBER))
         btn_preset_ptr.setToolTip("Resolución inversa DNS (PTR) para identificar el hostname real de una dirección IP")
         btn_preset_ptr.clicked.connect(self.run_preset_ptr)
 
         btn_preset_whois = QPushButton("WHOIS")
-        btn_preset_whois.setStyleSheet("background-color: #1e293b; color: #10b981; border: 1px solid #334155; padding: 2px 7px; border-radius: 3px; font-size: 11px;")
+        btn_preset_whois.setStyleSheet(ui_theme.preset_button_style(ui_theme.COLOR_SUCCESS))
         btn_preset_whois.clicked.connect(self.run_preset_whois)
 
         btn_preset_ping = QPushButton("Ping")
-        btn_preset_ping.setStyleSheet("background-color: #1e293b; color: #f59e0b; border: 1px solid #334155; padding: 2px 7px; border-radius: 3px; font-size: 11px;")
+        btn_preset_ping.setStyleSheet(ui_theme.preset_button_style(ui_theme.COLOR_MEDIUM))
         btn_preset_ping.clicked.connect(self.run_preset_ping)
 
         btn_preset_curl = QPushButton("CURL")
-        btn_preset_curl.setStyleSheet("background-color: #1e293b; color: #ec4899; border: 1px solid #334155; padding: 2px 7px; border-radius: 3px; font-size: 11px;")
+        btn_preset_curl.setStyleSheet(ui_theme.preset_button_style(ui_theme.COLOR_PURPLE))
         btn_preset_curl.clicked.connect(self.run_preset_curl)
 
         btn_preset_grep = QPushButton("Grep Casos")
-        btn_preset_grep.setStyleSheet("background-color: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 2px 7px; border-radius: 3px; font-size: 11px;")
+        btn_preset_grep.setStyleSheet(ui_theme.preset_button_style(ui_theme.TEXT_MUTED))
         btn_preset_grep.setToolTip("Busca si este IOC o IP ya apareció antes en tus informes de casos, playbooks o bitácora local de soc-env")
         btn_preset_grep.clicked.connect(self.run_preset_grep)
 
         sep1 = QFrame()
         sep1.setFrameShape(QFrame.VLine)
-        sep1.setStyleSheet("color: #334155; margin: 0 4px;")
+        sep1.setStyleSheet(f"color: {ui_theme.BORDER_MUTED}; margin: 0 4px;")
 
         lbl_cti = QLabel("🛡️ CTI Intel:")
-        lbl_cti.setStyleSheet("color: #94a3b8; font-size: 10px; font-weight: bold; border: none;")
+        lbl_cti.setStyleSheet(f"color: {ui_theme.TEXT_MUTED}; font-size: 10px; font-weight: bold; border: none; font-family: {ui_theme.FONT_MAIN};")
 
         btn_preset_abuse = QPushButton("AbuseIPDB")
-        btn_preset_abuse.setStyleSheet("background-color: #064e3b; color: #34d399; border: 1px solid #059669; padding: 2px 7px; border-radius: 3px; font-size: 11px; font-weight: bold;")
+        btn_preset_abuse.setStyleSheet(ui_theme.preset_button_style(ui_theme.COLOR_SUCCESS))
         btn_preset_abuse.clicked.connect(self.run_preset_abuseipdb)
 
         btn_preset_vt = QPushButton("VirusTotal")
-        btn_preset_vt.setStyleSheet("background-color: #451a03; color: #fb923c; border: 1px solid #d97706; padding: 2px 7px; border-radius: 3px; font-size: 11px; font-weight: bold;")
+        btn_preset_vt.setStyleSheet(ui_theme.preset_button_style(ui_theme.COLOR_HIGH))
         btn_preset_vt.clicked.connect(self.run_preset_virustotal)
 
         btn_preset_urlscan = QPushButton("URLScan")
-        btn_preset_urlscan.setStyleSheet("background-color: #083344; color: #38bdf8; border: 1px solid #0284c7; padding: 2px 7px; border-radius: 3px; font-size: 11px; font-weight: bold;")
+        btn_preset_urlscan.setStyleSheet(ui_theme.preset_button_style(ui_theme.ACCENT_CYBER))
         btn_preset_urlscan.clicked.connect(self.run_preset_urlscan)
 
         btn_preset_cve = QPushButton("NVD CVE")
-        btn_preset_cve.setStyleSheet("background-color: #7f1d1d; color: #fca5a5; border: 1px solid #dc2626; padding: 2px 7px; border-radius: 3px; font-size: 11px; font-weight: bold;")
+        btn_preset_cve.setStyleSheet(ui_theme.preset_button_style(ui_theme.COLOR_CRITICAL))
         btn_preset_cve.clicked.connect(self.run_preset_cve)
 
         btn_preset_so = QPushButton("🧅 SecOnion")
-        btn_preset_so.setStyleSheet("background-color: #581c87; color: #e9d5ff; border: 1px solid #9333ea; padding: 2px 7px; border-radius: 3px; font-size: 11px; font-weight: bold;")
+        btn_preset_so.setStyleSheet(ui_theme.preset_button_style(ui_theme.COLOR_PURPLE))
         btn_preset_so.clicked.connect(self.run_preset_security_onion)
 
         sep2 = QFrame()
         sep2.setFrameShape(QFrame.VLine)
-        sep2.setStyleSheet("color: #334155; margin: 0 4px;")
+        sep2.setStyleSheet(f"color: {ui_theme.BORDER_MUTED}; margin: 0 4px;")
 
         # Botón Menú Desplegable de Sandboxes y Pivotes Web
         btn_pivots = QPushButton("🚀 Sandboxes & Pivotes ▼")
-        btn_pivots.setStyleSheet("""
-            QPushButton {
-                background-color: #312e81;
-                color: #c7d2fe;
-                border: 1px solid #6366f1;
-                padding: 2px 8px;
-                border-radius: 3px;
-                font-size: 11px;
-                font-weight: bold;
-            }
-            QPushButton:hover {
-                background-color: #4338ca;
-            }
-        """)
+        btn_pivots.setStyleSheet(ui_theme.preset_button_style(ui_theme.COLOR_INDIGO))
         menu_pivots = QMenu(btn_pivots)
         menu_pivots.setStyleSheet("""
             QMenu {
@@ -7022,10 +7291,22 @@ class XdrDashboard(QMainWindow):
 
         engine = self.combo_term_engine.currentData()
 
-        # Enrutamiento inteligente a WSL: Si el operador está en PowerShell y tipea 'whois <ip>' o 'dig <host>',
+        # Intercepción de comando WHOIS para motor forense enriquecido (BGP, RDAP y Titularidad Dual)
+        if clean_lower.startswith("whois "):
+            target_arg = clean_cmd[6:].strip()
+            py_exec = os.path.join(SCRIPT_DIR, "venv", "Scripts", "python.exe")
+            if not os.path.exists(py_exec):
+                py_exec = sys.executable if sys.executable else "python"
+            whois_script = os.path.join(SCRIPT_DIR, "whois_recon.py")
+            if engine == "wsl":
+                cmd_str = f"python3 whois_recon.py {target_arg} 2>/dev/null || whois {target_arg}"
+            else:
+                cmd_str = f"& '{py_exec}' '{whois_script}' {target_arg}"
+
+        # Enrutamiento inteligente a WSL: Si el operador está en PowerShell y tipea 'dig <host>' o 'traceroute <ip>',
         # enrutarlo automáticamente a Ubuntu WSL para que funcione inmediatamente en lugar de arrojar CommandNotFoundException.
         run_in_wsl = (engine == "wsl")
-        if engine == "powershell" and (clean_lower.startswith("whois ") or clean_lower.startswith("dig ") or clean_lower.startswith("traceroute ")):
+        if engine == "powershell" and (clean_lower.startswith("dig ") or clean_lower.startswith("traceroute ")):
             run_in_wsl = True
             prompt = "wsl:auto-route$ "
         else:
@@ -7147,11 +7428,63 @@ class XdrDashboard(QMainWindow):
             QMessageBox.warning(self, "Preset DNS", "Ingrese una IP, dominio o hostname en el campo objetivo.")
             return
         clean_target = re.sub(r"^https?://", "", target.strip(), flags=re.IGNORECASE).rstrip("/").split("/")[0].split(":")[0]
+        obs_type = CtiEngine.detect_observable_type(clean_target)
         engine = self.combo_term_engine.currentData()
-        if engine == "wsl":
-            cmd = f"nslookup {clean_target} 8.8.8.8 || dig @8.8.8.8 {clean_target} +short"
+
+        if obs_type == "ip":
+            if engine == "wsl":
+                cmd = (
+                    f"echo '=== CONSULTA DNS REVERSA & DNSBL (IP: {clean_target}) ===' && "
+                    f"ptr=$(dig -x {clean_target} +short @8.8.8.8) && "
+                    f"if [ -n \"$ptr\" ]; then echo \"[+] PTR (Hostname): $ptr\"; else echo \"[-] PTR (Hostname): Sin PTR declarado (NXDOMAIN)\"; fi && "
+                    f"rev_ip=$(echo {clean_target} | awk -F. '{{print $4\".\"$3\".\"$2\".\"$1\".zen.spamhaus.org\"}}') && "
+                    f"sbl=$(dig +short $rev_ip @8.8.8.8) && "
+                    f"if [ -n \"$sbl\" ]; then echo \"[!] SPAMHAUS ZEN DNSBL: LISTADA ($sbl)\"; else echo \"[+] SPAMHAUS ZEN DNSBL: Limpia / No listada\"; fi"
+                )
+            else:
+                cmd = (
+                    f"Write-Host '=== CONSULTA DNS REVERSA & DNSBL (IP: {clean_target}) ===' -ForegroundColor Cyan; "
+                    f"$ptr = (Resolve-DnsName -Name '{clean_target}' -Type PTR -Server 8.8.8.8 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty NameHost); "
+                    f"if ($ptr) {{ Write-Host ('[+] PTR (Hostname): ' + $ptr) -ForegroundColor Green }} else {{ Write-Host '[-] PTR (Hostname): Sin PTR declarado (NXDOMAIN)' -ForegroundColor Yellow }}; "
+                    f"$parts = '{clean_target}'.Split('.'); "
+                    f"if ($parts.Count -eq 4) {{ "
+                    f"$rev = ($parts[3] + '.' + $parts[2] + '.' + $parts[1] + '.' + $parts[0] + '.zen.spamhaus.org'); "
+                    f"$sbl = (Resolve-DnsName -Name $rev -Type A -Server 8.8.8.8 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty IPAddress); "
+                    f"if ($sbl) {{ Write-Host ('[!] SPAMHAUS ZEN DNSBL: LISTADA (' + ($sbl -join ', ') + ')') -ForegroundColor Red }} else {{ Write-Host '[+] SPAMHAUS ZEN DNSBL: Limpia / No listada' -ForegroundColor Green }} }}"
+                )
         else:
-            cmd = f"Resolve-DnsName -Name '{clean_target}' -Server 8.8.8.8 -ErrorAction SilentlyContinue | Select-Object -Property Name, Type, IPAddress, NameHost"
+            if engine == "wsl":
+                cmd = (
+                    f"echo '=== RECONOCIMIENTO DNS FORENSE: {clean_target} ===' && "
+                    f"echo '--- [1] Registros A / AAAA (IPs) ---' && "
+                    f"a_recs=$(dig +short {clean_target} A @8.8.8.8) && "
+                    f"if [ -n \"$a_recs\" ]; then echo \"[+] A: $(echo $a_recs | tr '\\n' ' ')\"; else echo \"[-] Sin registros A (Posible NXDOMAIN)\"; fi && "
+                    f"echo '--- [2] Registros MX (Correo) ---' && "
+                    f"mx_recs=$(dig +short {clean_target} MX @8.8.8.8) && "
+                    f"if [ -n \"$mx_recs\" ]; then echo \"[+] MX: $(echo $mx_recs | tr '\\n' ' ')\"; else echo \"[-] Sin registros MX\"; fi && "
+                    f"echo '--- [3] Registros NS (Servidores Autoritativos) ---' && "
+                    f"ns_recs=$(dig +short {clean_target} NS @8.8.8.8) && "
+                    f"if [ -n \"$ns_recs\" ]; then echo \"[+] NS: $(echo $ns_recs | tr '\\n' ' ')\"; else echo \"[-] Sin registros NS\"; fi && "
+                    f"echo '--- [4] Registros TXT (SPF/DMARC/Verificaciones) ---' && "
+                    f"txt_recs=$(dig +short {clean_target} TXT @8.8.8.8) && "
+                    f"if [ -n \"$txt_recs\" ]; then echo \"[+] TXT: $txt_recs\"; else echo \"[-] Sin registros TXT\"; fi"
+                )
+            else:
+                cmd = (
+                    f"Write-Host '=== RECONOCIMIENTO DNS FORENSE: {clean_target} ===' -ForegroundColor Cyan; "
+                    f"Write-Host '--- [1] Registros A / AAAA (IPs) ---' -ForegroundColor DarkGray; "
+                    f"$a = (Resolve-DnsName -Name '{clean_target}' -Type A -Server 8.8.8.8 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty IPAddress); "
+                    f"if ($a) {{ Write-Host ('[+] A: ' + ($a -join ', ')) -ForegroundColor Green }} else {{ Write-Host '[-] Sin registros A (Posible NXDOMAIN)' -ForegroundColor Yellow }}; "
+                    f"Write-Host '--- [2] Registros MX (Correo) ---' -ForegroundColor DarkGray; "
+                    f"$mx = (Resolve-DnsName -Name '{clean_target}' -Type MX -Server 8.8.8.8 -ErrorAction SilentlyContinue | Select-Object -Property Preference, NameExchange); "
+                    f"if ($mx) {{ $mx | ForEach-Object {{ Write-Host ('[+] MX (Pref ' + $_.Preference + '): ' + $_.NameExchange) -ForegroundColor Green }} }} else {{ Write-Host '[-] Sin registros MX' -ForegroundColor DarkGray }}; "
+                    f"Write-Host '--- [3] Registros NS (Servidores Autoritativos) ---' -ForegroundColor DarkGray; "
+                    f"$ns = (Resolve-DnsName -Name '{clean_target}' -Type NS -Server 8.8.8.8 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty NameHost); "
+                    f"if ($ns) {{ Write-Host ('[+] NS: ' + ($ns -join ', ')) -ForegroundColor Cyan }} else {{ Write-Host '[-] Sin registros NS' -ForegroundColor DarkGray }}; "
+                    f"Write-Host '--- [4] Registros TXT (SPF/DMARC/Verificaciones) ---' -ForegroundColor DarkGray; "
+                    f"$txt = (Resolve-DnsName -Name '{clean_target}' -Type TXT -Server 8.8.8.8 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Strings); "
+                    f"if ($txt) {{ $txt | ForEach-Object {{ Write-Host ('[+] TXT: ' + $_) -ForegroundColor Yellow }} }} else {{ Write-Host '[-] Sin registros TXT' -ForegroundColor DarkGray }}"
+                )
         self.execute_terminal_command(cmd)
 
     def run_preset_ptr(self):
@@ -7214,10 +7547,15 @@ class XdrDashboard(QMainWindow):
             return
         clean_target = re.sub(r"^https?://", "", target.strip(), flags=re.IGNORECASE).rstrip("/").split("/")[0].split(":")[0]
         engine = self.combo_term_engine.currentData()
+        py_exec = os.path.join(SCRIPT_DIR, "venv", "Scripts", "python.exe")
+        if not os.path.exists(py_exec):
+            py_exec = sys.executable if sys.executable else "python"
+        whois_script = os.path.join(SCRIPT_DIR, "whois_recon.py")
+
         if engine == "wsl":
-            cmd = f"whois {clean_target} 2>/dev/null || curl -s 'https://ipinfo.io/{clean_target}/json'"
+            cmd = f"python3 whois_recon.py '{clean_target}' 2>/dev/null || python whois_recon.py '{clean_target}' 2>/dev/null || whois '{clean_target}'"
         else:
-            cmd = f"Invoke-RestMethod -Uri 'https://ipinfo.io/{clean_target}/json' | Format-List"
+            cmd = f"& '{py_exec}' '{whois_script}' '{clean_target}'"
         self.execute_terminal_command(cmd)
 
     def run_preset_ping(self):
@@ -7228,9 +7566,35 @@ class XdrDashboard(QMainWindow):
         clean_target = re.sub(r"^https?://", "", target.strip(), flags=re.IGNORECASE).rstrip("/").split("/")[0].split(":")[0]
         engine = self.combo_term_engine.currentData()
         if engine == "wsl":
-            cmd = f"ping -c 4 {clean_target}"
+            cmd = (
+                f"echo '=== DIAGNÓSTICO DE CONECTIVIDAD & PUERTOS: {clean_target} ===' && "
+                f"echo '[*] [1/2] Probando ICMP Echo (Ping)...' && "
+                f"if ping -c 2 -W 1 {clean_target} >/dev/null 2>&1; then "
+                f"echo '[+] ICMP: ALCANZABLE (Host responde ping)'; else "
+                f"echo '[-] ICMP: INALCANZABLE (ICMP bloqueado o host apagado)'; fi && "
+                f"echo '[*] [2/2] Sondeo rápido de puertos perimetrales (80, 443, 22, 3389, 8080)...' && "
+                f"for p in 80 443 22 3389 8080; do "
+                f"if nc -z -w 1 {clean_target} $p 2>/dev/null; then echo \"  [+] Puerto $p/TCP: ABIERTO\"; else echo \"  [-] Puerto $p/TCP: Cerrado/Filtrado\"; fi; done"
+            )
         else:
-            cmd = f"Test-NetConnection -ComputerName '{clean_target}'"
+            cmd = (
+                f"Write-Host '=== DIAGNÓSTICO DE CONECTIVIDAD & PUERTOS: {clean_target} ===' -ForegroundColor Cyan; "
+                f"Write-Host '[*] [1/2] Probando ICMP Echo (Ping rápido)...' -ForegroundColor Gray; "
+                f"$null = ping.exe -n 2 -w 1000 {clean_target}; "
+                f"if ($LASTEXITCODE -eq 0) {{ Write-Host '[+] ICMP: ALCANZABLE (Host activo y responde a echo)' -ForegroundColor Green }} else {{ Write-Host '[-] ICMP: INALCANZABLE (ICMP bloqueado por firewall o host offline)' -ForegroundColor Yellow }}; "
+                f"Write-Host '[*] [2/2] Sondeo perimetral de puertos TCP comunes (Timeout 600ms):' -ForegroundColor Gray; "
+                f"$ports = @(80, 443, 22, 3389, 8080); "
+                f"foreach ($p in $ports) {{ "
+                f"$tcp = New-Object System.Net.Sockets.TcpClient; "
+                f"$ar = $tcp.BeginConnect('{clean_target}', $p, $null, $null); "
+                f"if ($ar.AsyncWaitHandle.WaitOne(600, $false) -and $tcp.Connected) {{ "
+                f"$tcp.EndConnect($ar); "
+                f"Write-Host ('  [+] Puerto ' + $p + '/TCP: ABIERTO') -ForegroundColor Green "
+                f"}} else {{ "
+                f"Write-Host ('  [-] Puerto ' + $p + '/TCP: Cerrado / Filtrado') -ForegroundColor DarkGray "
+                f"}}; "
+                f"$tcp.Close() }}"
+            )
         self.execute_terminal_command(cmd)
 
     def run_preset_curl(self):
@@ -7238,13 +7602,56 @@ class XdrDashboard(QMainWindow):
         if not target:
             QMessageBox.warning(self, "Preset CURL", "Ingrese una URL o dirección IP en el campo objetivo.")
             return
-        if not target.startswith("http://") and not target.startswith("https://"):
-            target = "https://" + target
+        raw_target = target.strip()
+        has_scheme = raw_target.lower().startswith("http://") or raw_target.lower().startswith("https://")
+        clean_target = re.sub(r"^https?://", "", raw_target).rstrip("/")
         engine = self.combo_term_engine.currentData()
-        if engine == "wsl":
-            cmd = f"curl -I -s -k \"{target}\""
+
+        if has_scheme or ":" in clean_target:
+            url_to_test = raw_target if has_scheme else f"http://{clean_target}"
+            if engine == "wsl":
+                cmd = (
+                    f"echo '=== INSPECCIÓN HTTP/S HEADERS: {url_to_test} ===' && "
+                    f"curl -I -s -k --connect-timeout 3 --max-time 6 \"{url_to_test}\" || "
+                    f"echo '[!] Tiempo de conexión agotado o puerto no responde (Timeout 3s).'"
+                )
+            else:
+                cmd = (
+                    f"Write-Host '=== INSPECCIÓN HTTP/S HEADERS: {url_to_test} ===' -ForegroundColor Cyan; "
+                    f"$res = curl.exe -I -s -k --connect-timeout 3 --max-time 6 \"{url_to_test}\"; "
+                    f"if ($res) {{ $res | Out-String | Write-Host -ForegroundColor Gray }} else {{ "
+                    f"Write-Host '[!] Conexión agotada o puerto no responde (Timeout 3s).' -ForegroundColor Yellow }}"
+                )
         else:
-            cmd = f"curl.exe -I -s -k \"{target}\""
+            if engine == "wsl":
+                cmd = (
+                    f"echo '=== INSPECCIÓN WEB HTTP / HTTPS: {clean_target} ===' && "
+                    f"echo '[*] Probando HTTPS (Puerto 443, Timeout 3s)...' && "
+                    f"https_out=$(curl -I -s -k --connect-timeout 3 --max-time 5 \"https://{clean_target}\") && "
+                    f"if [ -n \"$https_out\" ]; then echo \"[+] Respuesta HTTPS (443):\" && echo \"$https_out\"; else "
+                    f"echo '[-] Sin respuesta HTTPS (443). Probando HTTP plano (Puerto 80)...' && "
+                    f"http_out=$(curl -I -s -k --connect-timeout 3 --max-time 5 \"http://{clean_target}\") && "
+                    f"if [ -n \"$http_out\" ]; then echo \"[+] Respuesta HTTP (80):\" && echo \"$http_out\"; else "
+                    f"echo '[!] Puertos web 80 y 443 cerrados o filtrados (Host no aloja web pública).'; fi; fi"
+                )
+            else:
+                cmd = (
+                    f"Write-Host '=== INSPECCIÓN WEB HTTP / HTTPS: {clean_target} ===' -ForegroundColor Cyan; "
+                    f"Write-Host '[*] Probando HTTPS (Puerto 443, Timeout 3s)...' -ForegroundColor Gray; "
+                    f"$httpsOut = curl.exe -I -s -k --connect-timeout 3 --max-time 5 \"https://{clean_target}\"; "
+                    f"if ($httpsOut) {{ "
+                    f"Write-Host '[+] Respuesta HTTPS (443):' -ForegroundColor Green; "
+                    f"$httpsOut | Out-String | Write-Host -ForegroundColor Gray "
+                    f"}} else {{ "
+                    f"Write-Host '[-] Sin respuesta HTTPS (443). Probando HTTP plano (Puerto 80)...' -ForegroundColor Yellow; "
+                    f"$httpOut = curl.exe -I -s -k --connect-timeout 3 --max-time 5 \"http://{clean_target}\"; "
+                    f"if ($httpOut) {{ "
+                    f"Write-Host '[+] Respuesta HTTP (80):' -ForegroundColor Green; "
+                    f"$httpOut | Out-String | Write-Host -ForegroundColor Gray "
+                    f"}} else {{ "
+                    f"Write-Host '[!] Puertos web 80 y 443 cerrados o filtrados (Host no aloja web pública).' -ForegroundColor Yellow "
+                    f"}} }}"
+                )
         self.execute_terminal_command(cmd)
 
     def run_preset_grep(self):
@@ -7333,10 +7740,49 @@ class XdrDashboard(QMainWindow):
 
         is_sub = (root_domain.lower() != clean_target.lower())
 
+        # Detección de plataformas multi-inquilino / PaaS públicas (GitHub Pages, Vercel, Netlify, etc.)
+        public_paas_domains = {
+            "github.io", "gitlab.io", "netlify.app", "vercel.app", "pages.dev",
+            "firebaseapp.com", "web.app", "azureedge.net", "cloudfront.net",
+            "s3.amazonaws.com", "herokuapp.com", "wixsite.com", "wordpress.com",
+            "blogspot.com", "myshopify.com", "render.com", "fly.dev", "pantheonsite.io"
+        }
+        is_paas = root_domain.lower() in public_paas_domains
+
         engine = self.combo_term_engine.currentData()
 
+        # Regex unificado de CDNs conocidas (Cloudflare, Fastly, GitHub Pages, etc.)
+        cdn_rgx_wsl = r'^(104\.|172\.(6[4-9]|7[0-9]|8[0-9]|9[0-9]|10[0-9]|11[0-9]|12[0-7])\.|162\.15[89]\.|185\.199\.(108|109|110|111)\.|151\.101\.|199\.232\.|198\.41\.|188\.114\.|141\.101\.)'
+        cdn_rgx_ps = r'^(104\.|172\.(6[4-9]|7[0-9]|8[0-9]|9[0-9]|10[0-9]|11[0-9]|12[0-7])\.|162\.15[89]\.|185\.199\.(108|109|110|111)\.|151\.101\.|199\.232\.|198\.41\.|188\.114\.|141\.101\.)'
+
         if engine == "wsl":
-            sub_notice = f"echo 'ℹ️ [SUBDOMINIO DETECTADO]: Auditando subdominio y dominio raíz ({root_domain})'; echo ''; " if is_sub else ""
+            if is_paas:
+                sub_notice = (
+                    f"echo 'ℹ️ [PLATAFORMA PAAS / HOSTING COMPARTIDO]: {clean_target} está alojado en {root_domain}'; "
+                    f"echo '   El dominio raíz pertenece a un proveedor público y no representa servidores privados del atacante.'; echo ''; "
+                )
+            elif is_sub:
+                sub_notice = f"echo 'ℹ️ [SUBDOMINIO DETECTADO]: Auditando subdominio y dominio raíz ({root_domain})'; echo ''; "
+            else:
+                sub_notice = ""
+
+            paas_step4 = (
+                f"echo '  [i] Barrido pasivo de subdominios omitido: {root_domain} es una plataforma SaaS/PaaS pública.'; "
+                f"echo '      Barrer subdominios en {root_domain} descubriría la CDN del proveedor y causaría falsos positivos.'; "
+            ) if is_paas else (
+                f"sub_candidates='mail webmail cpanel direct origin ftp autodiscover smtp vpn admin dev ns1 ns2'; "
+                f"for sub in $sub_candidates; do fqdn=\"$sub.{root_domain}\"; "
+                f"sub_ip=$(dig +short \"$fqdn\" @8.8.8.8 | grep -E '^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+' | head -n 1 || true); "
+                f"if [ -n \"$sub_ip\" ]; then "
+                f"ptr=$(dig -x \"$sub_ip\" +short @8.8.8.8 || true); "
+                f"if [[ \"$sub_ip\" =~ {cdn_rgx_wsl} ]] || [[ \"$ptr\" =~ (cdn|cloudflare|fastly|akamai|cloudfront|github|edgekey) ]]; then "
+                f"echo \"  [-] $fqdn -> $sub_ip (CDN / Proxy Activo)\"; else "
+                f"echo \"  [🚨 ORIGEN ENCONTRADO]: $fqdn -> $sub_ip\"; "
+                f"[ -n \"$ptr\" ] && echo \"     [+] PTR: $ptr\"; "
+                f"isp=$(curl -s \"https://ipinfo.io/$sub_ip/json\" 2>/dev/null | grep -o '\"org\": \"[^\"]*' | cut -d'\"' -f4 || true); "
+                f"[ -n \"$isp\" ] && echo \"     [+] ISP/Hosting: $isp\"; fi; fi; done; "
+            )
+
             cmd = (
                 f"echo '============================================================='; "
                 f"echo '🕵️ [AUDITORÍA DE ORIGEN & BYPASS DE CDN / CLOUDFLARE]'; "
@@ -7347,12 +7793,12 @@ class XdrDashboard(QMainWindow):
                 f"web_ips=$(dig +short {clean_target} @8.8.8.8 | grep -E '^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+' || true); "
                 f"if [ -z \"$web_ips\" ]; then echo '  [!] No se resolvieron IPs A para este objetivo.'; else "
                 f"for wip in $web_ips; do echo \"  -> IP Web: $wip\"; "
-                f"if [[ \"$wip\" =~ ^(104\\.|172\\.(6[4-9]|7[0-9]|8[0-9]|9[0-9]|10[0-9]|11[0-9]|12[0-7])\\.|162\\.15[89]\\.) ]]; then "
-                f"echo '     [!] Pertenece a Cloudflare Anycast CDN (Proxy Activo)'; fi; done; fi; echo ''; "
+                f"if [[ \"$wip\" =~ {cdn_rgx_wsl} ]]; then "
+                f"echo '     [!] Pertenece a Anycast CDN / Proxy Activo (Cloudflare/Fastly/GitHub Pages)'; fi; done; fi; echo ''; "
                 f"echo '[2/4] Buscando Fugas en Registros de Correo (MX / Direct Connect)...'; "
                 f"mx_target='{clean_target}'; "
                 f"mx_records=$(dig +short MX \"$mx_target\" @8.8.8.8 | awk '{{print $2}}' | sed 's/\\.$//' || true); "
-                f"if [ -z \"$mx_records\" ] && [ '{clean_target}' != '{root_domain}' ]; then "
+                f"if [ -z \"$mx_records\" ] && [ '{clean_target}' != '{root_domain}' ] && [ '{str(is_paas)}' != 'True' ]; then "
                 f"echo '  [i] Sin MX en subdominio; comprobando dominio raíz ({root_domain})...'; "
                 f"mx_records=$(dig +short MX {root_domain} @8.8.8.8 | awk '{{print $2}}' | sed 's/\\.$//' || true); fi; "
                 f"if [ -n \"$mx_records\" ]; then for mx in $mx_records; do echo \"  -> Registro MX: $mx\"; "
@@ -7365,7 +7811,7 @@ class XdrDashboard(QMainWindow):
                 f"else echo '  [!] No se detectaron servidores MX en el objetivo ni en el dominio raíz.'; fi; echo ''; "
                 f"echo '[3/4] Analizando Registro SPF (ip4: autorizadas)...'; "
                 f"spf_ips=$(dig +short TXT {clean_target} @8.8.8.8 | grep -i 'v=spf1' | grep -o -E 'ip4:[^ ]+' | sed 's/ip4://' || true); "
-                f"if [ -z \"$spf_ips\" ] && [ '{clean_target}' != '{root_domain}' ]; then "
+                f"if [ -z \"$spf_ips\" ] && [ '{clean_target}' != '{root_domain}' ] && [ '{str(is_paas)}' != 'True' ]; then "
                 f"echo '  [i] Sin SPF en subdominio; comprobando dominio raíz ({root_domain})...'; "
                 f"spf_ips=$(dig +short TXT {root_domain} @8.8.8.8 | grep -i 'v=spf1' | grep -o -E 'ip4:[^ ]+' | sed 's/ip4://' || true); fi; "
                 f"if [ -n \"$spf_ips\" ]; then for sip in $spf_ips; do echo \"  [🚨 RANGO IP DECLARADO EN SPF]: $sip\"; "
@@ -7374,16 +7820,7 @@ class XdrDashboard(QMainWindow):
                 f"[ -n \"$isp\" ] && echo \"     [+] ISP/Hosting: $isp\"; done; "
                 f"else echo '  [!] No se encontraron directivas ip4: en SPF.'; fi; echo ''; "
                 f"echo '[4/4] Barrido Pasivo de Subdominios Comunes en {root_domain} (Nube Gris)...'; "
-                f"sub_candidates='mail webmail cpanel direct origin ftp autodiscover smtp vpn admin dev ns1 ns2'; "
-                f"for sub in $sub_candidates; do fqdn=\"$sub.{root_domain}\"; "
-                f"sub_ip=$(dig +short \"$fqdn\" @8.8.8.8 | grep -E '^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+' | head -n 1 || true); "
-                f"if [ -n \"$sub_ip\" ]; then "
-                f"if [[ \"$sub_ip\" =~ ^(104\\.|172\\.(6[4-9]|7[0-9]|8[0-9]|9[0-9]|10[0-9]|11[0-9]|12[0-7])\\.|162\\.15[89]\\.) ]]; then "
-                f"echo \"  [-] $fqdn -> $sub_ip (Cloudflare Proxy)\"; else "
-                f"echo \"  [🚨 ORIGEN ENCONTRADO]: $fqdn -> $sub_ip\"; "
-                f"ptr=$(dig -x \"$sub_ip\" +short @8.8.8.8 || true); [ -n \"$ptr\" ] && echo \"     [+] PTR: $ptr\"; "
-                f"isp=$(curl -s \"https://ipinfo.io/$sub_ip/json\" 2>/dev/null | grep -o '\"org\": \"[^\"]*' | cut -d'\"' -f4 || true); "
-                f"[ -n \"$isp\" ] && echo \"     [+] ISP/Hosting: $isp\"; fi; fi; done; echo ''; "
+                f"{paas_step4}echo ''; "
                 f"echo '============================================================='; "
                 f"echo '🔗 PIVOTES OSINT HISTÓRICOS 100% GRATUITOS (SIN PAYWALL):'; "
                 f"echo '  ViewDNS (IP History)           : https://viewdns.info/iphistory/?domain={root_domain}'; "
@@ -7395,7 +7832,34 @@ class XdrDashboard(QMainWindow):
                 f"echo '============================================================='"
             )
         else:
-            sub_notice_ps = f"Write-Host 'ℹ️ [SUBDOMINIO DETECTADO]: Auditando subdominio y dominio raíz ({root_domain})' -ForegroundColor DarkCyan; Write-Host ''; " if is_sub else ""
+            if is_paas:
+                sub_notice_ps = (
+                    f"Write-Host 'ℹ️ [PLATAFORMA PAAS / HOSTING COMPARTIDO]: {clean_target} está alojado en {root_domain}' -ForegroundColor DarkCyan; "
+                    f"Write-Host '   El dominio raíz pertenece a un proveedor público y no representa servidores privados del atacante.' -ForegroundColor DarkGray; Write-Host ''; "
+                )
+            elif is_sub:
+                sub_notice_ps = f"Write-Host 'ℹ️ [SUBDOMINIO DETECTADO]: Auditando subdominio y dominio raíz ({root_domain})' -ForegroundColor DarkCyan; Write-Host ''; "
+            else:
+                sub_notice_ps = ""
+
+            paas_step4_ps = (
+                f"Write-Host '  [i] Barrido pasivo de subdominios omitido: {root_domain} es una plataforma SaaS/PaaS pública.' -ForegroundColor DarkCyan; "
+                f"Write-Host '      Barrer subdominios en {root_domain} descubriría la CDN del proveedor y causaría falsos positivos.' -ForegroundColor DarkGray; "
+            ) if is_paas else (
+                f"$sub_candidates = @('mail', 'webmail', 'cpanel', 'direct', 'origin', 'ftp', 'autodiscover', 'smtp', 'vpn', 'admin', 'dev', 'ns1', 'ns2'); "
+                f"foreach ($sub in $sub_candidates) {{ $fqdn = \"$sub.{root_domain}\"; "
+                f"$sub_rec = (Resolve-DnsName -Name $fqdn -Type A -Server 8.8.8.8 -ErrorAction SilentlyContinue | Where-Object {{ $_.IP4Address -or $_.IPAddress }} | Select-Object -First 1); "
+                f"$sub_ip = if ($sub_rec) {{ if ($sub_rec.IP4Address) {{ $sub_rec.IP4Address }} else {{ $sub_rec.IPAddress }} }} else {{ $null }}; "
+                f"if ($sub_ip) {{ "
+                f"$ptr = (Resolve-DnsName -Name $sub_ip -Type PTR -Server 8.8.8.8 -ErrorAction SilentlyContinue | Where-Object {{ $_.NameHost }} | Select-Object -First 1 -ExpandProperty NameHost); "
+                f"if ($sub_ip -match '{cdn_rgx_ps}' -or ($ptr -and $ptr -match '(cdn|cloudflare|fastly|akamai|cloudfront|github|edgekey)')) {{ "
+                f"Write-Host ('  [-] ' + $fqdn + ' -> ' + $sub_ip + ' (CDN / Proxy Activo)') -ForegroundColor DarkGray }} else {{ "
+                f"Write-Host ('  [🚨 ORIGEN ENCONTRADO]: ' + $fqdn + ' -> ' + $sub_ip) -ForegroundColor Red; "
+                f"if ($ptr) {{ Write-Host ('     [+] PTR: ' + $ptr) -ForegroundColor Cyan }}; "
+                f"try {{ $isp = (Invoke-RestMethod -Uri \"https://ipinfo.io/$sub_ip/json\" -TimeoutSec 3 -ErrorAction SilentlyContinue).org; "
+                f"if ($isp) {{ Write-Host ('     [+] ISP/Hosting: ' + $isp) -ForegroundColor Magenta }} }} catch {{}} }} }} }}; "
+            )
+
             cmd = (
                 f"Write-Host '=============================================================' -ForegroundColor Cyan; "
                 f"Write-Host '🕵️ [AUDITORIA DE ORIGEN & BYPASS DE CDN / CLOUDFLARE]' -ForegroundColor Cyan; "
@@ -7407,11 +7871,11 @@ class XdrDashboard(QMainWindow):
                 f"$web_ips = (Resolve-DnsName -Name '{clean_target}' -Type A -Server 8.8.8.8 -ErrorAction SilentlyContinue | Where-Object {{ $_.IP4Address -or $_.IPAddress }} | ForEach-Object {{ if ($_.IP4Address) {{ $_.IP4Address }} else {{ $_.IPAddress }} }}); "
                 f"if (-not $web_ips) {{ Write-Host '  [!] No se resolvieron IPs A para este objetivo.' -ForegroundColor DarkGray }} else {{ "
                 f"foreach ($wip in $web_ips) {{ Write-Host ('  -> IP Web: ' + $wip) -ForegroundColor White; "
-                f"if ($wip -match '^(104\\.|172\\.(6[4-9]|7[0-9]|8[0-9]|9[0-9]|10[0-9]|11[0-9]|12[0-7])\\.|162\\.15[89]\\.)') {{ "
-                f"Write-Host '     [!] Pertenece a Cloudflare Anycast CDN (Proxy Activo)' -ForegroundColor Yellow }} }} }}; "
+                f"if ($wip -match '{cdn_rgx_ps}') {{ "
+                f"Write-Host '     [!] Pertenece a Anycast CDN / Proxy Activo (Cloudflare/Fastly/GitHub Pages)' -ForegroundColor Yellow }} }} }}; "
                 f"Write-Host ''; Write-Host '[2/4] Buscando Fugas en Registros de Correo (MX / Direct Connect)...' -ForegroundColor Gray; "
                 f"$mx_records = (Resolve-DnsName -Name '{clean_target}' -Type MX -Server 8.8.8.8 -ErrorAction SilentlyContinue | Where-Object {{ $_.NameExchange }} | Select-Object -ExpandProperty NameExchange); "
-                f"if (-not $mx_records -and '{clean_target}' -ne '{root_domain}') {{ "
+                f"if (-not $mx_records -and '{clean_target}' -ne '{root_domain}' -and '{str(is_paas)}' -ne 'True') {{ "
                 f"Write-Host '  [i] Sin MX en subdominio; comprobando dominio raíz ({root_domain})...' -ForegroundColor DarkCyan; "
                 f"$mx_records = (Resolve-DnsName -Name '{root_domain}' -Type MX -Server 8.8.8.8 -ErrorAction SilentlyContinue | Where-Object {{ $_.NameExchange }} | Select-Object -ExpandProperty NameExchange) }}; "
                 f"if ($mx_records) {{ foreach ($mx in $mx_records) {{ Write-Host ('  -> Registro MX: ' + $mx) -ForegroundColor White; "
@@ -7426,7 +7890,7 @@ class XdrDashboard(QMainWindow):
                 f"Write-Host '  [!] No se detectaron servidores MX en el objetivo ni en el dominio raíz.' -ForegroundColor DarkGray }}; "
                 f"Write-Host ''; Write-Host '[3/4] Analizando Registro SPF (ip4: autorizadas)...' -ForegroundColor Gray; "
                 f"$spf = (Resolve-DnsName -Name '{clean_target}' -Type TXT -Server 8.8.8.8 -ErrorAction SilentlyContinue | Where-Object {{ $_.Strings -like '*v=spf1*' }} | Select-Object -ExpandProperty Strings); "
-                f"if (-not $spf -and '{clean_target}' -ne '{root_domain}') {{ "
+                f"if (-not $spf -and '{clean_target}' -ne '{root_domain}' -and '{str(is_paas)}' -ne 'True') {{ "
                 f"Write-Host '  [i] Sin SPF en subdominio; comprobando dominio raíz ({root_domain})...' -ForegroundColor DarkCyan; "
                 f"$spf = (Resolve-DnsName -Name '{root_domain}' -Type TXT -Server 8.8.8.8 -ErrorAction SilentlyContinue | Where-Object {{ $_.Strings -like '*v=spf1*' }} | Select-Object -ExpandProperty Strings) }}; "
                 f"$spf_ips = if ($spf) {{ [regex]::Matches($spf, 'ip4:([^\\s]+)') | ForEach-Object {{ $_.Groups[1].Value }} }} else {{ $null }}; "
@@ -7436,17 +7900,7 @@ class XdrDashboard(QMainWindow):
                 f"if ($isp) {{ Write-Host ('     [+] ISP/Hosting: ' + $isp) -ForegroundColor Magenta }} }} catch {{}} }} }} else {{ "
                 f"Write-Host '  [!] No se encontraron directivas ip4: en SPF.' -ForegroundColor DarkGray }}; "
                 f"Write-Host ''; Write-Host '[4/4] Barrido Pasivo de Subdominios Comunes en {root_domain} (Nube Gris)...' -ForegroundColor Gray; "
-                f"$sub_candidates = @('mail', 'webmail', 'cpanel', 'direct', 'origin', 'ftp', 'autodiscover', 'smtp', 'vpn', 'admin', 'dev', 'ns1', 'ns2'); "
-                f"foreach ($sub in $sub_candidates) {{ $fqdn = \"$sub.{root_domain}\"; "
-                f"$sub_rec = (Resolve-DnsName -Name $fqdn -Type A -Server 8.8.8.8 -ErrorAction SilentlyContinue | Where-Object {{ $_.IP4Address -or $_.IPAddress }} | Select-Object -First 1); "
-                f"$sub_ip = if ($sub_rec) {{ if ($sub_rec.IP4Address) {{ $sub_rec.IP4Address }} else {{ $sub_rec.IPAddress }} }} else {{ $null }}; "
-                f"if ($sub_ip) {{ if ($sub_ip -match '^(104\\.|172\\.(6[4-9]|7[0-9]|8[0-9]|9[0-9]|10[0-9]|11[0-9]|12[0-7])\\.|162\\.15[89]\\.)') {{ "
-                f"Write-Host ('  [-] ' + $fqdn + ' -> ' + $sub_ip + ' (Cloudflare Proxy)') -ForegroundColor DarkGray }} else {{ "
-                f"Write-Host ('  [🚨 ORIGEN ENCONTRADO]: ' + $fqdn + ' -> ' + $sub_ip) -ForegroundColor Red; "
-                f"$ptr = (Resolve-DnsName -Name $sub_ip -Type PTR -Server 8.8.8.8 -ErrorAction SilentlyContinue | Where-Object {{ $_.NameHost }} | Select-Object -First 1 -ExpandProperty NameHost); "
-                f"if ($ptr) {{ Write-Host ('     [+] PTR: ' + $ptr) -ForegroundColor Cyan }}; "
-                f"try {{ $isp = (Invoke-RestMethod -Uri \"https://ipinfo.io/$sub_ip/json\" -TimeoutSec 3 -ErrorAction SilentlyContinue).org; "
-                f"if ($isp) {{ Write-Host ('     [+] ISP/Hosting: ' + $isp) -ForegroundColor Magenta }} }} catch {{}} }} }} }}; "
+                f"{paas_step4_ps}"
                 f"Write-Host ''; Write-Host '=============================================================' -ForegroundColor Cyan; "
                 f"Write-Host '🔗 PIVOTES OSINT HISTORICOS 100% GRATUITOS (SIN PAYWALL):' -ForegroundColor Cyan; "
                 f"Write-Host '  ViewDNS (IP History)           : https://viewdns.info/iphistory/?domain={root_domain}' -ForegroundColor Yellow; "
@@ -7562,9 +8016,23 @@ class XdrDashboard(QMainWindow):
 
     def run_preset_cve(self):
         target = self._get_active_target_or_observable()
-        if not target:
-            QMessageBox.warning(self, "Preset NVD CVE", "Ingrese un identificador de vulnerabilidad (ej. CVE-2024-3400) en el campo objetivo.")
-            return
+        is_cve_pattern = bool(target and re.match(r"^(CVE[-_])?\d{4}-\d{4,}$", target.strip(), re.IGNORECASE))
+
+        if not target or not is_cve_pattern:
+            from PySide6.QtWidgets import QInputDialog
+            default_val = target if is_cve_pattern else ""
+            cve_input, ok = QInputDialog.getText(
+                self,
+                "Consulta de Vulnerabilidad (NVD NIST)",
+                f"El objetivo actual ('{target or 'Vacío'}') no es un identificador CVE válido.\n\n"
+                "NVD NIST consulta la base de vulnerabilidades por código CVE.\n"
+                "Ingrese el código CVE a consultar (ej: CVE-2024-3400):",
+                text=default_val
+            )
+            if not ok or not cve_input.strip():
+                return
+            target = cve_input.strip()
+
         self.run_cti_async("cve", target)
 
     def run_preset_security_onion(self):
@@ -8007,12 +8475,12 @@ class XdrDashboard(QMainWindow):
         self.chk_cve_low.setStyleSheet("color: #10b981; font-size: 11px; border: none;")
 
         self.btn_cve_fetch = QPushButton("Iniciar Busqueda NVD")
-        self.btn_cve_fetch.setStyleSheet("background-color: #0284c7; color: #ffffff; font-weight: bold; padding: 4px 14px; border-radius: 4px; font-size: 11px;")
+        self.btn_cve_fetch.setStyleSheet(ui_theme.primary_action_btn_style())
         self.btn_cve_fetch.clicked.connect(self.start_cve_batch_fetch)
 
         self.btn_cve_stop = QPushButton("Detener")
         self.btn_cve_stop.setEnabled(False)
-        self.btn_cve_stop.setStyleSheet("background-color: #1e293b; color: #ef4444; border: 1px solid #334155; padding: 4px 10px; border-radius: 4px; font-size: 11px;")
+        self.btn_cve_stop.setStyleSheet(ui_theme.danger_btn_style())
         self.btn_cve_stop.clicked.connect(self.stop_cve_batch_fetch)
 
         layout_row1.addWidget(lbl_rango)
@@ -8042,16 +8510,16 @@ class XdrDashboard(QMainWindow):
 
         self.btn_cve_export_md = QPushButton("Exportar Markdown (.md)")
         self.btn_cve_export_md.setEnabled(False)
-        self.btn_cve_export_md.setStyleSheet("background-color: #0369a1; color: #ffffff; font-weight: bold; padding: 4px 12px; border-radius: 4px; font-size: 11px;")
+        self.btn_cve_export_md.setStyleSheet(ui_theme.secondary_tool_btn_style())
         self.btn_cve_export_md.clicked.connect(self.export_cve_markdown)
 
         self.btn_cve_export_xlsx = QPushButton("Exportar Excel (.xlsx)")
         self.btn_cve_export_xlsx.setEnabled(False)
-        self.btn_cve_export_xlsx.setStyleSheet("background-color: #059669; color: #ffffff; font-weight: bold; padding: 4px 12px; border-radius: 4px; font-size: 11px;")
+        self.btn_cve_export_xlsx.setStyleSheet(ui_theme.secondary_tool_btn_style())
         self.btn_cve_export_xlsx.clicked.connect(self.export_cve_excel)
 
         self.btn_cve_clear = QPushButton("Limpiar")
-        self.btn_cve_clear.setStyleSheet("background-color: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 4px 10px; border-radius: 4px; font-size: 11px;")
+        self.btn_cve_clear.setStyleSheet(ui_theme.secondary_tool_btn_style())
         self.btn_cve_clear.clicked.connect(self.clear_cve_batch_data)
 
         layout_row2.addWidget(lbl_slack)
@@ -8296,15 +8764,15 @@ class XdrDashboard(QMainWindow):
         layout_card_actions.setSpacing(8)
 
         self.btn_cve_pivot_dfir = QPushButton("Investigar en Consola DFIR")
-        self.btn_cve_pivot_dfir.setStyleSheet("background-color: #0284c7; color: #ffffff; font-weight: bold; padding: 4px 14px; border-radius: 4px; font-size: 11px;")
+        self.btn_cve_pivot_dfir.setStyleSheet(ui_theme.primary_action_btn_style())
         self.btn_cve_pivot_dfir.clicked.connect(self._pivot_selected_cve_to_dfir)
 
         self.btn_cve_open_nvd = QPushButton("Abrir en Portal NVD NIST")
-        self.btn_cve_open_nvd.setStyleSheet("background-color: #1e293b; color: #38bdf8; border: 1px solid #334155; font-weight: bold; padding: 4px 14px; border-radius: 4px; font-size: 11px;")
+        self.btn_cve_open_nvd.setStyleSheet(ui_theme.secondary_tool_btn_style())
         self.btn_cve_open_nvd.clicked.connect(self._open_selected_cve_nvd_url)
 
         self.btn_cve_copy_card = QPushButton("Copiar Ficha Forense")
-        self.btn_cve_copy_card.setStyleSheet("background-color: #1e293b; color: #cbd5e1; border: 1px solid #334155; font-weight: bold; padding: 4px 14px; border-radius: 4px; font-size: 11px;")
+        self.btn_cve_copy_card.setStyleSheet(ui_theme.secondary_tool_btn_style())
         self.btn_cve_copy_card.clicked.connect(self._copy_selected_cve_card)
 
         layout_card_actions.addWidget(self.btn_cve_pivot_dfir)
@@ -9009,22 +9477,7 @@ class XdrDashboard(QMainWindow):
 
         self.btn_so_refresh = QPushButton("🔄 Refrescar Grid")
         self.btn_so_refresh.setToolTip("Verifica el pulso de salud del cluster y nodos de Security Onion")
-        self.btn_so_refresh.setStyleSheet("""
-            QPushButton {
-                background-color: #1e293b;
-                color: #38bdf8;
-                border: 1px solid #334155;
-                border-radius: 4px;
-                padding: 4px 10px;
-                font-family: 'Consolas';
-                font-size: 11px;
-                font-weight: bold;
-            }
-            QPushButton:hover {
-                background-color: #334155;
-                color: #ffffff;
-            }
-        """)
+        self.btn_so_refresh.setStyleSheet(ui_theme.secondary_tool_btn_style())
         self.btn_so_refresh.clicked.connect(self.trigger_so_health_refresh)
         layout_top_row1.addWidget(self.btn_so_refresh)
 
@@ -9152,43 +9605,12 @@ class XdrDashboard(QMainWindow):
         layout_ctrl.addWidget(self.cmb_so_hunt_days)
 
         self.btn_so_hunt_exec = QPushButton("🎯 Cazar en Security Onion")
-        self.btn_so_hunt_exec.setStyleSheet("""
-            QPushButton {
-                background-color: #7c3aed;
-                color: #ffffff;
-                font-weight: bold;
-                border-radius: 4px;
-                padding: 5px 12px;
-                font-family: 'Consolas';
-                font-size: 11px;
-            }
-            QPushButton:hover {
-                background-color: #6d28d9;
-            }
-            QPushButton:disabled {
-                background-color: #1e293b;
-                color: #64748b;
-            }
-        """)
+        self.btn_so_hunt_exec.setStyleSheet(ui_theme.primary_action_btn_style())
         self.btn_so_hunt_exec.clicked.connect(self.trigger_so_hunt)
         layout_ctrl.addWidget(self.btn_so_hunt_exec)
 
         self.btn_so_hunt_clear = QPushButton("🧹 Limpiar")
-        self.btn_so_hunt_clear.setStyleSheet("""
-            QPushButton {
-                background-color: #1e293b;
-                color: #94a3b8;
-                border: 1px solid #334155;
-                border-radius: 4px;
-                padding: 5px 10px;
-                font-family: 'Consolas';
-                font-size: 11px;
-            }
-            QPushButton:hover {
-                background-color: #334155;
-                color: #ffffff;
-            }
-        """)
+        self.btn_so_hunt_clear.setStyleSheet(ui_theme.secondary_tool_btn_style())
         self.btn_so_hunt_clear.clicked.connect(self.clear_so_hunt_data)
         layout_ctrl.addWidget(self.btn_so_hunt_clear)
 
@@ -9278,21 +9700,7 @@ class XdrDashboard(QMainWindow):
         layout_rep_hdr.addStretch()
 
         self.btn_so_copy_evidence = QPushButton("📋 Copiar Ficha al Portapapeles")
-        self.btn_so_copy_evidence.setStyleSheet("""
-            QPushButton {
-                background-color: #0284c7;
-                color: #ffffff;
-                border: none;
-                border-radius: 3px;
-                padding: 3px 8px;
-                font-family: 'Consolas';
-                font-size: 10px;
-                font-weight: bold;
-            }
-            QPushButton:hover {
-                background-color: #0369a1;
-            }
-        """)
+        self.btn_so_copy_evidence.setStyleSheet(ui_theme.secondary_tool_btn_style())
         self.btn_so_copy_evidence.clicked.connect(self.copy_so_hunt_evidence)
         layout_rep_hdr.addWidget(self.btn_so_copy_evidence)
         layout_rep.addLayout(layout_rep_hdr)
@@ -9373,20 +9781,7 @@ class XdrDashboard(QMainWindow):
         layout_ctrl.addWidget(self.cmb_so_telemetry_limit)
 
         self.btn_so_telemetry_fetch = QPushButton("📡 Cargar Telemetría de Sistema")
-        self.btn_so_telemetry_fetch.setStyleSheet("""
-            QPushButton {
-                background-color: #0284c7;
-                color: #ffffff;
-                font-weight: bold;
-                border-radius: 4px;
-                padding: 5px 12px;
-                font-family: 'Consolas';
-                font-size: 11px;
-            }
-            QPushButton:hover {
-                background-color: #0369a1;
-            }
-        """)
+        self.btn_so_telemetry_fetch.setStyleSheet(ui_theme.primary_action_btn_style())
         self.btn_so_telemetry_fetch.clicked.connect(self.trigger_so_telemetry)
         layout_ctrl.addWidget(self.btn_so_telemetry_fetch)
 

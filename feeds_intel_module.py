@@ -442,10 +442,10 @@ class FeedsIntelDialog(QDialog):
         filter_layout.addWidget(lbl_ia)
 
         self.combo_ai_provider = QComboBox()
-        self.combo_ai_provider.setFixedWidth(210)
+        self.combo_ai_provider.setFixedWidth(230)
         self.combo_ai_provider.addItems([
+            "NVIDIA NIM - Llama 3.2 (Activo 🟢)",
             "Google Gemini 2.5 Flash (SOC Nativo)",
-            "NVIDIA NIM - DeepSeek v4.1-flash",
             "OpenAI GPT-4o-mini"
         ])
         filter_layout.addWidget(self.combo_ai_provider)
@@ -1192,12 +1192,16 @@ class FeedsIntelDialog(QDialog):
 
         channels = [
             ("Miguel Ángel Gaspar (Paraguay Ciberseguro)", "https://x.com/miguelgaspar", "Referente local clave en Paraguay. Alertas de fraude, incidentes locales y campañas bancarias."),
+            ("Zone-H Paraguay (Defacements .py)", "https://www.zone-h.org/archive/special=1", "Monitoreo en vivo de desfiguraciones y ataques web a dominios .py, .gov.py y .edu.py."),
+            ("crt.sh Monitoreo SSL (.py)", "https://crt.sh/?q=%25.py", "Transparencia de certificados SSL recién emitidos en Paraguay para cazar sitios de phishing antes de su activación."),
+            ("CSIRT Américas (OEA)", "https://www.csirtamericas.org/", "Red hemisférica de CSIRTs nacionales. Alertas de ciberamenazas y campañas regionales dirigidas."),
+            ("AlienVault OTX (Open Threat Exchange)", "https://otx.alienvault.com/", "La mayor red comunitaria de Threat Hunting con IoCs clasificados según MITRE ATT&CK."),
             ("Nicolas Krassas (@Dinosn)", "https://x.com/Dinosn", "Head de Threat & Vuln Mgmt. Avisos diarios de 0-days, exploits activos y parches."),
             ("VCERTAnalyzer", "https://x.com/vcertanalyzer", "Ciberinteligencia en LATAM, alertas de brechas estatales y fugas gubernamentales."),
             ("Daily Dark Web (Monitor)", "https://dailydarkweb.net", "Rastreador en vivo de víctimas de Ransomware y data leaks."),
             ("Dark Web Informer", "https://darkwebinformer.com", "Inteligencia de Dark Web, foros clandestinos y mercados de accesos iniciales."),
-            ("Abuse.ch - ThreatFox / URLhaus", "https://threatfox.abuse.ch/browse/", "Plataforma comunitaria de IoCs de malware y botnets en tiempo real."),
-            ("AbuseIPDB (Consola de Búsqueda)", "https://www.abuseipdb.com/", "Búsqueda comunitaria de reputación de direcciones IP maliciosas.")
+            ("Abuse.ch - ThreatFox / URLhaus / Feodo", "https://threatfox.abuse.ch/browse/", "Plataforma comunitaria de IoCs de malware, botnets y URLs maliciosas en tiempo real."),
+            ("AbuseIPDB (Consola de Búsqueda)", "https://www.abuseipdb.com/", "Búsqueda comunitaria de reputación de direcciones IP atacantes.")
         ]
 
         table = QTableWidget(len(channels), 3)

@@ -33,13 +33,18 @@ TIER_NEWS = "Noticias / Brechas"
 CTI_TIERS = [TIER_TACTICAL, TIER_RESEARCH, TIER_NEWS]
 
 FEED_TIER_MAPPING: Dict[str, str] = {
-    # 1. CTI Técnico y Avisos Críticos (Actionable / KEV / Telemetry / 0-Days)
+    # 1. CTI Técnico y Avisos Críticos (Actionable / KEV / Telemetry / 0-Days / Live IoCs)
     "cisa_advisories": TIER_TACTICAL,
     "cisa_kev": TIER_TACTICAL,
     "forti_psirt": TIER_TACTICAL,
     "sans_isc": TIER_TACTICAL,
     "0dayfans": TIER_TACTICAL,
     "tweetfeed": TIER_TACTICAL,
+    "threatfox": TIER_TACTICAL,
+    "urlhaus": TIER_TACTICAL,
+    "feodotracker": TIER_TACTICAL,
+    "openphish": TIER_TACTICAL,
+    "malwarebazaar": TIER_TACTICAL,
 
     # 2. Investigación Forense y Análisis de Malware (Threat Research & DFIR)
     "unit42": TIER_RESEARCH,
@@ -64,8 +69,48 @@ FEED_TIER_MAPPING: Dict[str, str] = {
     "darknet_diaries": TIER_NEWS,
 }
 
-# Configuración de los 15 Feeds de CTI
+# Configuración Oficial de Feeds CTI de Technoma SOC
 FEEDS_CONFIG: List[Dict[str, str]] = [
+    {
+        "id": "threatfox",
+        "name": "ThreatFox IoCs (abuse.ch)",
+        "url": "https://threatfox.abuse.ch/export/json/recent/",
+        "category": "Malware & C2 IoCs",
+        "tier": "CTI Técnico / Avisos",
+        "format": "json_threatfox"
+    },
+    {
+        "id": "urlhaus",
+        "name": "URLhaus Malware URLs (abuse.ch)",
+        "url": "https://urlhaus.abuse.ch/downloads/json_recent/",
+        "category": "Malware Distribution URLs",
+        "tier": "CTI Técnico / Avisos",
+        "format": "json_urlhaus"
+    },
+    {
+        "id": "openphish",
+        "name": "OpenPhish Live Phishing URLs",
+        "url": "https://raw.githubusercontent.com/openphish/public_feed/refs/heads/main/feed.txt",
+        "category": "Live Phishing Feeds",
+        "tier": "CTI Técnico / Avisos",
+        "format": "text_openphish"
+    },
+    {
+        "id": "feodotracker",
+        "name": "Feodo Tracker C2 Blocklist (abuse.ch)",
+        "url": "https://feodotracker.abuse.ch/downloads/ipblocklist.json",
+        "category": "Botnet C2 IP Blocklist",
+        "tier": "CTI Técnico / Avisos",
+        "format": "json_feodo"
+    },
+    {
+        "id": "malwarebazaar",
+        "name": "MalwareBazaar Hashes (abuse.ch)",
+        "url": "https://bazaar.abuse.ch/export/csv/recent/",
+        "category": "Malware Hashes (SHA256)",
+        "tier": "CTI Técnico / Avisos",
+        "format": "csv_malwarebazaar"
+    },
     {
         "id": "tweetfeed",
         "name": "TweetFeed (Live Twitter IOCs)",
@@ -559,13 +604,295 @@ class RSSFeedParser:
         response = requests.get(url, headers=headers, timeout=timeout_sec, verify=False)
         response.raise_for_status()
 
-        if feed_config.get("format") == "json_cisa_kev" or "known_exploited_vulnerabilities.json" in url:
+        fmt = feed_config.get("format", "")
+        if fmt == "json_cisa_kev" or "known_exploited_vulnerabilities.json" in url:
             return cls.parse_cisa_kev_json(response.content, feed_config)
-        elif feed_config.get("format") == "json_tweetfeed" or "tweetfeed.live" in url:
+        elif fmt == "json_tweetfeed" or "tweetfeed.live" in url:
             return cls.parse_tweetfeed_json(response.content, feed_config)
+        elif fmt == "json_threatfox" or "threatfox.abuse.ch" in url:
+            return cls.parse_threatfox_json(response.content, feed_config)
+        elif fmt == "json_urlhaus" or "urlhaus.abuse.ch" in url:
+            return cls.parse_urlhaus_json(response.content, feed_config)
+        elif fmt == "json_feodo" or "feodotracker.abuse.ch" in url:
+            return cls.parse_feodo_json(response.content, feed_config)
+        elif fmt == "text_openphish" or "openphish" in url:
+            return cls.parse_openphish_text(response.text, feed_config)
+        elif fmt == "csv_malwarebazaar" or "bazaar.abuse.ch" in url:
+            return cls.parse_malwarebazaar_csv(response.text, feed_config)
 
         xml_bytes = response.content
         return cls.parse_xml_bytes(xml_bytes, feed_config)
+
+    @classmethod
+    def parse_threatfox_json(cls, json_bytes: bytes, feed_config: Dict[str, str]) -> List[FeedItem]:
+        """Parsea los IoCs recientes de ThreatFox (abuse.ch)."""
+        import json
+        feed_id = feed_config["id"]
+        feed_name = feed_config["name"]
+        category = feed_config.get("category", "Malware & C2 IoCs")
+        tier = feed_config.get("tier", TIER_TACTICAL)
+        ingested_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        items: List[FeedItem] = []
+        try:
+            payload = json.loads(json_bytes.decode("utf-8", errors="ignore"))
+            # El JSON tiene claves con IDs de IoC mapeados a arrays o diccionarios
+            entries = []
+            for k, v in payload.items():
+                if isinstance(v, list):
+                    entries.extend(v)
+                elif isinstance(v, dict):
+                    entries.append(v)
+
+            # Tomar los 60 más recientes
+            for entry in entries[:60]:
+                val = str(entry.get("ioc_value", "")).strip()
+                if not val:
+                    continue
+                ioc_type = str(entry.get("ioc_type", "ioc")).strip().upper()
+                threat_type = str(entry.get("threat_type", "c2")).strip().upper()
+                malware = str(entry.get("malware_printable") or entry.get("malware") or "Unknown").strip()
+                confidence = entry.get("confidence_level", 100)
+                date_val = str(entry.get("first_seen_utc", ingested_at)).strip()
+                tags = str(entry.get("tags") or "")
+                
+                title = f"[{malware}] {ioc_type}: {val} ({threat_type})"
+                link = f"https://threatfox.abuse.ch/browse/"
+                summary = (
+                    f"IoC de Alta Fidelidad - ThreatFox (abuse.ch)\n"
+                    f"Malware / Amenaza: {malware}\n"
+                    f"Observable: {val} ({ioc_type})\n"
+                    f"Tipo de Amenaza: {threat_type}\n"
+                    f"Nivel de Confianza: {confidence}%\n"
+                    f"Etiquetas: {tags}\n"
+                    f"Primera Detección: {date_val}"
+                )
+                c_hash = compute_content_hash(feed_id, title, val + "|" + malware)
+                items.append(FeedItem(
+                    feed_id=feed_id,
+                    feed_name=feed_name,
+                    title=title,
+                    link=link,
+                    summary=summary,
+                    content_hash=c_hash,
+                    published_date=date_val,
+                    ingested_at=ingested_at,
+                    category=category,
+                    tier=tier,
+                    status="NUEVO",
+                    severity="ALTA" if confidence >= 80 else "MEDIA"
+                ))
+        except Exception as e:
+            print(f"[RSSFeedParser] Error parseando ThreatFox JSON: {e}")
+        return items
+
+    @classmethod
+    def parse_urlhaus_json(cls, json_bytes: bytes, feed_config: Dict[str, str]) -> List[FeedItem]:
+        """Parsea las URLs de distribución de malware recientes de URLhaus (abuse.ch)."""
+        import json
+        feed_id = feed_config["id"]
+        feed_name = feed_config["name"]
+        category = feed_config.get("category", "Malware Distribution URLs")
+        tier = feed_config.get("tier", TIER_TACTICAL)
+        ingested_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        items: List[FeedItem] = []
+        try:
+            payload = json.loads(json_bytes.decode("utf-8", errors="ignore"))
+            entries = []
+            for k, v in payload.items():
+                if isinstance(v, list):
+                    entries.extend(v)
+                elif isinstance(v, dict):
+                    entries.append(v)
+
+            # Tomar los 60 más recientes
+            for entry in entries[:60]:
+                raw_url = str(entry.get("url", "")).strip()
+                if not raw_url:
+                    continue
+                threat = str(entry.get("threat", "malware")).strip()
+                status = str(entry.get("url_status", "online")).strip().upper()
+                tags = entry.get("tags") or []
+                tags_str = ", ".join(tags) if isinstance(tags, list) else str(tags)
+                link = str(entry.get("urlhaus_link", "https://urlhaus.abuse.ch/"))
+                date_val = str(entry.get("dateadded", ingested_at)).strip()
+
+                title = f"[{threat.upper()}] URL Maliciosa: {raw_url[:65]}..."
+                summary = (
+                    f"Alerta de Distribución de Malware - URLhaus (abuse.ch)\n"
+                    f"URL Maliciosa: {raw_url}\n"
+                    f"Estado de la URL: {status}\n"
+                    f"Tipo de Amenaza: {threat}\n"
+                    f"Tags / Malware: {tags_str}\n"
+                    f"Fecha de Detección: {date_val}\n"
+                    f"Enlace de Análisis: {link}"
+                )
+                c_hash = compute_content_hash(feed_id, title, raw_url)
+                items.append(FeedItem(
+                    feed_id=feed_id,
+                    feed_name=feed_name,
+                    title=title,
+                    link=link,
+                    summary=summary,
+                    content_hash=c_hash,
+                    published_date=date_val,
+                    ingested_at=ingested_at,
+                    category=category,
+                    tier=tier,
+                    status="NUEVO",
+                    severity="CRÍTICA" if status == "ONLINE" else "ALTA"
+                ))
+        except Exception as e:
+            print(f"[RSSFeedParser] Error parseando URLhaus JSON: {e}")
+        return items
+
+    @classmethod
+    def parse_feodo_json(cls, json_bytes: bytes, feed_config: Dict[str, str]) -> List[FeedItem]:
+        """Parsea la lista negra de IPs de Botnets y C2 de Feodo Tracker (abuse.ch)."""
+        import json
+        feed_id = feed_config["id"]
+        feed_name = feed_config["name"]
+        category = feed_config.get("category", "Botnet C2 IP Blocklist")
+        tier = feed_config.get("tier", TIER_TACTICAL)
+        ingested_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        items: List[FeedItem] = []
+        try:
+            payload = json.loads(json_bytes.decode("utf-8", errors="ignore"))
+            entries = payload if isinstance(payload, list) else []
+            for entry in entries[:60]:
+                ip = str(entry.get("ip_address", "")).strip()
+                if not ip:
+                    continue
+                port = entry.get("port", "")
+                malware = str(entry.get("malware", "Botnet C2")).strip()
+                status = str(entry.get("status", "online")).strip().upper()
+                first_seen = str(entry.get("first_seen", ingested_at)).strip()
+                asn = str(entry.get("as_name", "Desconocido"))
+
+                endpoint = f"{ip}:{port}" if port else ip
+                title = f"[{malware}] C2 Botnet IP: {endpoint} ({status})"
+                link = f"https://feodotracker.abuse.ch/browse/"
+                summary = (
+                    f"Servidor de Comando y Control (C2) - Feodo Tracker (abuse.ch)\n"
+                    f"IP / Puerto C2: {endpoint}\n"
+                    f"Familia Malware: {malware}\n"
+                    f"Estado del Servidor: {status}\n"
+                    f"ISP / ASN: {asn}\n"
+                    f"Fecha Primera Vista: {first_seen}"
+                )
+                c_hash = compute_content_hash(feed_id, title, endpoint + "|" + malware)
+                items.append(FeedItem(
+                    feed_id=feed_id,
+                    feed_name=feed_name,
+                    title=title,
+                    link=link,
+                    summary=summary,
+                    content_hash=c_hash,
+                    published_date=first_seen,
+                    ingested_at=ingested_at,
+                    category=category,
+                    tier=tier,
+                    status="NUEVO",
+                    severity="CRÍTICA" if status == "ONLINE" else "ALTA"
+                ))
+        except Exception as e:
+            print(f"[RSSFeedParser] Error parseando Feodo JSON: {e}")
+        return items
+
+    @classmethod
+    def parse_openphish_text(cls, text_content: str, feed_config: Dict[str, str]) -> List[FeedItem]:
+        """Parsea el feed de URLs de Phishing en vivo de OpenPhish."""
+        feed_id = feed_config["id"]
+        feed_name = feed_config["name"]
+        category = feed_config.get("category", "Live Phishing Feeds")
+        tier = feed_config.get("tier", TIER_TACTICAL)
+        ingested_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        items: List[FeedItem] = []
+        lines = [line.strip() for line in text_content.splitlines() if line.strip() and line.startswith("http")]
+        for u in lines[:60]:
+            import urllib.parse
+            parsed = urllib.parse.urlparse(u)
+            dom = parsed.netloc or u
+            title = f"[PHISHING] URL Activa: {dom} ({u[:45]}...)"
+            summary = (
+                f"Campaña de Phishing Activa Detectada - OpenPhish Feed\n"
+                f"URL Trampa: {u}\n"
+                f"Dominio Suplantador: {dom}\n"
+                f"Fecha de Detección: {ingested_at}\n"
+                f"Recomendación: Bloquear dominio en Gateway Web y Firewall."
+            )
+            c_hash = compute_content_hash(feed_id, title, u)
+            items.append(FeedItem(
+                feed_id=feed_id,
+                feed_name=feed_name,
+                title=title,
+                link=u,
+                summary=summary,
+                content_hash=c_hash,
+                published_date=ingested_at,
+                ingested_at=ingested_at,
+                category=category,
+                tier=tier,
+                status="NUEVO",
+                severity="ALTA"
+            ))
+        return items
+
+    @classmethod
+    def parse_malwarebazaar_csv(cls, csv_text: str, feed_config: Dict[str, str]) -> List[FeedItem]:
+        """Parsea las muestras y hashes de malware recientes de MalwareBazaar (abuse.ch)."""
+        import csv
+        import io
+        feed_id = feed_config["id"]
+        feed_name = feed_config["name"]
+        category = feed_config.get("category", "Malware Hashes (SHA256)")
+        tier = feed_config.get("tier", TIER_TACTICAL)
+        ingested_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        items: List[FeedItem] = []
+        try:
+            valid_lines = [l for l in csv_text.splitlines() if not l.startswith("#") and l.strip()]
+            reader = csv.reader(io.StringIO("\n".join(valid_lines)), skipinitialspace=True)
+            for row in list(reader)[:60]:
+                if len(row) < 9:
+                    continue
+                first_seen = row[0].strip()
+                sha256 = row[1].strip()
+                file_name = row[5].strip() or "sample.bin"
+                file_type = row[6].strip().upper()
+                signature = row[8].strip() or "Malware Desconocido"
+                link = f"https://bazaar.abuse.ch/sample/{sha256}/"
+
+                title = f"[{signature}] SHA256: {sha256[:16]}... ({file_name})"
+                summary = (
+                    f"Muestra de Malware Reciente - MalwareBazaar (abuse.ch)\n"
+                    f"Firma / Familia: {signature}\n"
+                    f"Archivo: {file_name} ({file_type})\n"
+                    f"Hash SHA-256: {sha256}\n"
+                    f"Primera Detección: {first_seen}\n"
+                    f"Enlace de Muestra: {link}"
+                )
+                c_hash = compute_content_hash(feed_id, title, sha256)
+                items.append(FeedItem(
+                    feed_id=feed_id,
+                    feed_name=feed_name,
+                    title=title,
+                    link=link,
+                    summary=summary,
+                    content_hash=c_hash,
+                    published_date=first_seen,
+                    ingested_at=ingested_at,
+                    category=category,
+                    tier=tier,
+                    status="NUEVO",
+                    severity="ALTA"
+                ))
+        except Exception as e:
+            print(f"[RSSFeedParser] Error parseando MalwareBazaar CSV: {e}")
+        return items
 
     @classmethod
     def parse_tweetfeed_json(cls, json_bytes: bytes, feed_config: Dict[str, str]) -> List[FeedItem]:

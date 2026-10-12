@@ -24,6 +24,9 @@
 | **013** | `ST-DNS-TUNNEL-02` | 07/10/2026 | Stellar Cyber | `ad.technoma.local` / `ad2` | `Active Directory / Red` | DNS Tunneling Anomaly (Lote 2 - 14 alertas entre DCs) | **Falso Positivo (BTP)** | `PB-2.2: Monitoreo Operativo` | [Ver Ficha ➔](#caso-st-dns-tunnel-02) |
 | **014** | `ST-SMB-CAJAANDE` | 09/10/2026 | Windows Server / Live Response | `VMBASE03` + 5 Clientes | `CAJAANDE` | Falso Borrado y Bloqueo SMB de Ejecutables (MODULO_TESORERIA) | **Falso Positivo (Incidente Operacional SMB)** | `PB-2.2 / Forense SMB` | [Ver Ficha ➔](#caso-st-smb-cajaande) |
 | **015** | `THN-ABUSE-BATCH-01` | 09/10/2026 | Stellar Cyber / FortiGate | DMZ Servers (`190.104.178.146`) | Externo / WAN | Notificación de Abuso a Cloudflare por 5 IPs Atacantes | **True Positive - Blocked (Notificado)** | `Playbook Escaneo y Fuerza Bruta` | [Ver Ficha ➔](#caso-thn-abuse-batch-01) |
+| **016** | `SAC-2026-1007` | 07/10/2026 | Stellar Cyber (SAC) | Servidor DMZ DigitalCert (`190.104.178.146`) | WAN / Atacantes | Regla de Detección Automatizada: THN FW Ataque Recurrente a DMZ | **Regla Automatizada Desplegada** | `Playbook Escaneo y Fuerza Bruta` | [Ver Ficha ➔](#caso-sac-2026-1007) |
+| **017** | `GOV-2026-1013` | 11/10/2026 | Stellar Cyber / FortiGate | Endpoints VLANs 169 y 100 | Red Interna / P2P | Remediación Quirúrgica WUDO Puerto 7680 (5 Dimensiones) | **Punto Ciego Eliminado (100% Visibilidad)** | `PB-2.2: Monitoreo Operativo` | [Ver Ficha ➔](#caso-gov-2026-1013) |
+| **018** | `GOV-2026-1012` | 11/10/2026 | Stellar Cyber / FortiGate | Servidor Zabbix (`192.168.15.31`) | Red Interna / Agentes | Detección de Ruido Zabbix Agent Polling (TCP 10050) & DNS | **En Seguimiento (Pendiente Validación Jefatura)** | `PB-2.2: Monitoreo Operativo` | [Ver Ficha ➔](#caso-gov-2026-1012) |
 
 ---
 
@@ -35,6 +38,8 @@
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
 | **03/10/2026** | Mañana (06:00 - 14:00) | **14.80 GB** / 10.0 GB (148.0%)<br>*(Pico: 17.05 GB — 170.5%)* | **14.77 GB** ⚠️<br>*(Excedido +6.77 GB / 184%)* | 0.03 GB ✅<br>*(0.6% nominal)* | 0.00 GB ✅<br>*(Sin ingesta)* | 🔴 **POZO DESBORDADO** | **Alerta Crítica de Licencia:** Technoma desbordó su cuota asignada e hiperconsumió el pozo dinámico debido a alto volumen de logs perimetrales/Interflow (330 GB acumulados en el mes). Registrado formalmente en reporte oficial de turno. |
 | **04/10/2026** | Mañana (06:00 - 14:00) | **8.69 GB** / 10.0 GB (86.9%)<br>*(Pico: 17.05 GB)* | **8.61 GB** ⚠️<br>*(Leve exceso +0.61 GB / 107%)* | 0.07 GB ✅<br>*(1.4% nominal)* | 0.00 GB ✅<br>*(Sin ingesta)* | 🟢 **Pozo Normal (86.9%)** | **Consumo Nominal:** Pozo global operando dentro del contrato. Technoma con leve exceso habitual (~8.6 GB). Se auditó regla 'Ingestion threshold exceeded' con umbral residual erróneo en 20 MB (0.02 GB). |
+| **10/10/2026** | Guardia Sábado (Home Office) | **14.27 GB** / 10.0 GB (142.7%)<br>*(Prom: 14.23 GB)* | **14.23 GB** ⚠️<br>*(99.53% del Clúster)* | 0.04 GB ✅<br>*(0.47% nominal)* | 0.00 GB ✅<br>*(Sin ingesta)* | 🔴 **POZO DESBORDADO** | **Auditoría Forense de Ingesta:** Se aisló la causa raíz de saturación en Syslog de FortiGate (8.22 GB/d, 2.9M eventos) y bucle DNS de Grafana hacia zbx (2.90 GB/d, 1.75M consultas). Emitidos informes ejecutivos y plan maestro para descender a ~6.5 GB/día. |
+| **11/10/2026** | Guardia Domingo (Home Office) | **8.60 GB** / 10.0 GB (86.0%) | **8.55 GB** ⚠️<br>*(En rango habitual)* | 0.05 GB ✅<br>*(1.0% nominal)* | 0.00 GB ✅<br>*(Sin ingesta)* | 🟢 **Pozo Normal (86.0%)** | **Consumo Controlado & Remediación:** Filtros Dahua (DHCP) y WUDO 7680 corregidos a 5 dimensiones (0% ceguera). Ruido Zabbix 10050 detectado y puesto en seguimiento formal. |
 
 ---
 
@@ -682,6 +687,154 @@ Lote de conexiones perimetrales hacia el servicio HTTPS en DMZ bloqueadas al 100
 * Generación de notificaciones de abuso en formato bilingüe mediante [abuse_report_dialog.py](file:///c:/Users/kevinmoraes/Documents/soc-env/abuse_report_dialog.py).
 * Envío de los 5 correos formales a `abuse@cloudflare.com` con copia oculta a supervisión (`Ivan`) adjuntando los extractos de logs con sellos de tiempo GMT-3.
 * Registro permanente de las 5 IPs en la base histórica [Registro_IPs_Reportadas_Abuso.md](file:///c:/Users/kevinmoraes/Documents/soc-env/Analista%20SOC/Registro_IPs_Reportadas_Abuso.md) y [registro_ips_reportadas.json](file:///c:/Users/kevinmoraes/Documents/soc-env/Analista%20SOC/registro_ips_reportadas.json).
+
+---
+
+### Caso #GOV-2026-1011 - Creación de Log Filter Quirúrgico DHCP Dahua (Saturación de Cuota & Tráfico local-in FortiGate)
+
+* **Fecha/Hora:** `11/10/2026 13:18:00` (GMT-3)
+* **Analista Responsable:** Kevin Moraes
+* **Plataforma:** `Stellar Cyber / Fortinet FortiGate (FG-Technoma)`
+* **Módulo Afectado:** Log Filters & Ingestion Pipeline (Perfil `profile-modular-sensor-technoma`)
+* **Activos:** Cámaras Dahua CCTV (`192.168.16.16`, `192.168.16.3`) ➜ Gateway FortiGate (`192.168.16.1`)
+* **Táctica / Técnica MITRE:** `N/A - Tráfico Operativo Benigno / Higiene de Telemetría (Zero Blind Spots)`
+* **Veredicto Final:** **Regla Quirúrgica de Supresión de Ingesta Creada y Aplicada con Éxito (0% Ceguera)**
+
+#### 1. ¿Por qué se intervino? (Diagnóstico Forense de la Fuga)
+Durante la auditoría forense de ingesta y cuota con el SOAR, se detectó una fuga masiva viva de **4,969 alertas** y cientos de flujos continuos en el Data Lake (`aella-adr-*` y `aella-ser-*`) generados por la cámara Dahua (`192.168.16.16`). El filtro preexistente configurado por Iván Centurión (`filter dahua DNS to AD`) tenía 0 hits y nunca contuvo el tráfico porque filtraba erróneamente consultas DNS hacia Active Directory (`53/UDP` a `10.11.1.1`), mientras que la cámara en realidad estaba inundando el firewall con tráfico DHCP local.
+
+#### 2. Evidencias Clave del Log Extraído
+* **Mensaje Crudo de FortiGate:** `<189>date=2026-10-10 time=20:22:19 devname="FG-Technoma" devid="FG120GTK24022543" logid="0001000014" type="traffic" subtype="local" vd="root" srcip=192.168.16.16 srcport=68 srcintf="VLAN16" dstip=192.168.16.1 dstport=67 action="accept" policyid=0 policytype="local-in-policy" service="DHCP" app="DHCP/DHCP Relay"`
+* **Causa Raíz:** Renovaciones continuas de DHCP client (`srcport: 68`) dirigidas al gateway FortiGate (`dstip: 192.168.16.1`, `dstport: 67`). Al procesarse bajo `policytype="local-in-policy"` (`policyid=0`), FortiGate emitía un syslog completo por cada transacción, saturando la cuota de licencia diaria.
+* **Corrección de Validación de Plataforma:** Stellar Cyber requiere obligatoriamente que el campo `proto` sea numérico IANA (`proto: 17` para UDP). El error inicial devuelto por la UI (*"proto debe ser numérico"*) fue subsanado ingresando el entero `17` en lugar de string.
+
+#### 3. Regla Quirúrgica Aplicada por Kevin Moraes (6 Dimensiones - Cero Ceguera)
+Se configuró y envió exitosamente el Log Filter en la plataforma bajo `dev_type: fw_fortigate`:
+* **srcip:** `192.168.16.16`, `192.168.16.3`
+* **dstip:** `192.168.16.1`
+* **srcport:** `68` (number)
+* **dstport:** `67` (number)
+* **proto:** `17` (number - UDP)
+* **appid_name:** `DHCP/DHCP Relay` (string)
+
+#### 4. Justificación de Seguridad SOC
+> "La regla no genera puntos ciegos: si la cámara Dahua es vulnerada con malware (Mirai/botnet) e intenta escaneo interno (T1046), movimiento lateral (T1021) o balizamiento C2 a Internet (T1071), dicho tráfico utilizará otras IPs y puertos, ingresando al 100% en Stellar Cyber para análisis y correlación. Solo se descarta la renovación local de IP entre la cámara y su router."
+
+---
+
+<a id="caso-gov-2026-1012"></a>
+### Caso #GOV-2026-1012 - Detección y Diagnóstico de Ruido Zabbix Agent Polling (TCP 10050) & Telemetría
+
+* **Fecha/Hora:** `11/10/2026 13:49:00` (GMT-3)
+* **Analista Responsable:** Kevin Moraes
+* **Plataforma:** `Stellar Cyber / Fortinet FortiGate (FG-Technoma)`
+* **Módulo Afectado:** Log Filters & Ingestion Pipeline / Sondeo de Agentes
+* **Activos:** Servidor Zabbix (`192.168.15.31`) ➜ Clientes / Agentes de Monitoreo Internos (`10.0.0.0/8`, `192.168.0.0/16`)
+* **Táctica / Técnica MITRE:** `N/A - Monitoreo Operativo Autorizado / Diagnóstico de Ruido`
+* **Veredicto Final:** **En Seguimiento — Detectado y Diagnosticado (Pendiente de Aprobación de Jefatura, Sin Aplicar en Producción)**
+
+#### 1. Diagnóstico Forense y Detección
+Durante la auditoría del clúster de Stellar Cyber, el analista Kevin Moraes identificó alertas recurrentes del servidor Zabbix (`192.168.15.31`) bajo el evento `fw_policy_id` al consultar hosts de la red interna (ej. `10.40.2.6`) en el puerto de agente TCP 10050 con aplicación `tcp/10050`. Se constató que los filtros previos no contemplaban esta telemetría de forma quirúrgica.
+
+#### 2. Propuesta Técnica Formulada (5 Dimensiones)
+Se diseñó la especificación técnica de mitigación para evaluación con la jefatura:
+* **dev_type:** `fw_fortigate`
+* **srcip:** `192.168.15.31`
+* **dstip:** `10.0.0.0/8`, `192.168.0.0/16`
+* **dstport:** `10050` (number)
+* **proto:** `6` (number - TCP)
+* **appid_name:** `tcp/10050` (string)
+
+#### 3. Estado Operativo y Decisión del Analista
+> **NOTA DE CONTROL SOC:** El analista **NO aplicó modificaciones ni remediaciones en producción** sobre el servidor Zabbix. El caso se mantiene formalmente en estado **EN SEGUIMIENTO** para presentar los hallazgos y la propuesta técnica a la Jefatura del SOC / Ivan Centurión para su validación previa.
+
+---
+
+<a id="caso-gov-2026-1013"></a>
+### Caso #GOV-2026-1013 - Remediación Quirúrgica de Filtro WUDO 7680 (Cero Ceguera SOC)
+
+* **Fecha/Hora:** `11/10/2026 14:10:00` (GMT-3)
+* **Analista Responsable:** Kevin Moraes
+* **Plataforma:** `Stellar Cyber / Fortinet FortiGate (FG-Technoma)`
+* **Nombre del Filtro:** `Drop_FW_Denial_Internal_WUDO_7680` (Filtro #64)
+* **Módulo Afectado:** Log Filters & Ingestion Pipeline
+* **Activos:** VLANs de Endpoints / Usuarios (`192.168.169.0/24`, `192.168.100.0/24`)
+* **Táctica / Técnica MITRE:** `TA0011 - Command and Control` / `T1046 - Network Service Discovery` / `T1021 - Remote Services`
+* **Veredicto Final:** **Filtro Reconfigurado con 5 Dimensiones Estrictas (Punto Ciego Eliminado al 100%)**
+
+#### 1. Diagnóstico Forense del Riesgo Previo (Filtro #64 Genérico)
+El filtro original contenía únicamente `action: deny`, `dstport: 7680` y `srcip: 192.168.0.0/16` sin especificar dispositivo, protocolo ni destino (`dstip`). Esto generaba un punto ciego crítico: cualquier intento de comunicación de malware hacia servidores C2 en Internet sobre el puerto 7680 denegado por el firewall, o escaneos laterales hacia Controladores de Dominio y servidores de producción, era silenciado en la ingesta del SIEM.
+
+#### 2. Regla Quirúrgica Aplicada por Kevin Moraes (5 Dimensiones)
+Se reconfiguró en la plataforma Stellar Cyber bajo `dev_type: fw_fortigate`:
+* **action:** `deny` (string `==`)
+* **dstport:** `7680` (number `==`)
+* **proto:** `6` (number `==` TCP)
+* **srcip:** `192.168.169.0/24`, `192.168.100.0/24` (subredes reales de puestos de trabajo)
+* **dstip:** `192.168.169.0/24`, `192.168.100.0/24` (estrictamente destinos peer-to-peer autorizados)
+
+#### 3. Justificación de Seguridad SOC
+> "La regla elimina la ceguera por completo: solo se descartan las denegaciones inter-VLAN de tráfico P2P legítimo de Windows Update entre notebooks de usuario. Si una máquina intenta conectarse por el puerto 7680 a cualquier IP pública en Internet (C2) o a servidores corporativos/DCs, el evento ingresa intacto al Data Lake de Stellar Cyber para correlación y alertas."
+
+---
+
+<a id="caso-sac-2026-1007"></a>
+### Caso #SAC-2026-1007 - Despliegue de Regla de Alerta Automatizada en SAC (THN FW Ataque Recurrente a DMZ)
+
+* **Fecha/Hora:** `07/10/2026 13:30:00` (Hora Local GMT-3)
+* **Analista Responsable:** Kevin Moraes
+* **Plataforma:** `Stellar Cyber / System Action Center (SAC)`
+* **Nombre de la Regla:** `THN FW Ataque Recurrente a DMZ`
+* **Tipo de Regla:** `Query` (Índice: `Traffic`)
+* **Activo Protegido:** Servidor DMZ DigitalCert (`190.104.178.146` / `digitalcert.technoma.com.py`)
+* **Táctica / Técnica MITRE:** `TA0011 - Command and Control` / `T1190 - Exploit Public-Facing Application` / `T1110 - Brute Force`
+* **Playbook Aplicado:** `Playbook Escaneo y Fuerza Bruta` / `PB-2.2: Monitoreo Operativo`
+* **Veredicto Final:** **Regla Automatizada Creada, Testeada y Activa en Producción**
+
+#### 1. Diagnóstico y Objetivo Operativo
+Ante los continuos escaneos y ráfagas de fuerza bruta observados desde Internet contra la infraestructura expuesta en DMZ (`190.104.178.146`), se requería un mecanismo de respuesta rápida y correlación en tiempo real que notificara al equipo SOC de ráfagas masivas antes de que deriven en denegación de servicio o explotación exitosa, permitiendo el bloqueo expedito en FortiGate.
+
+#### 2. Configuración Técnica en System Action Center (SAC)
+* **Frecuencia de Evaluación:** Intervalo cada **5 minutos** sobre todos los tenants seleccionados.
+* **Índice Auditado:** `Traffic`.
+* **Criterios de Búsqueda (Query: FortiGate - Deny DigitalCert DMZ):**
+  * `msg_class`: `firewall`
+  * `action`: `deny`
+  * `dstip_host`: `190.104.178.146`
+* **Condición de Disparo (`Umbral_50_Hits`):**
+  * Tipo: Compare Value (Total Hits).
+  * Operador: `is greater than or equal to 50` (>= 50 intentos denegados en 5 min).
+* **Acciones Automatizadas:**
+  * **Email:** Notificación de alta prioridad (`High`) con Interflow incluido.
+    * Asunto: `[SOC ALERTA] Posible ataque de escaneo o fuerza bruta a DMZ`
+    * Cuerpo: `ALERTA AUTOMÁTICA DEL SOC: Se ha detectado una ráfaga superior a 50 intentos de conexión denegados en 5 minutos contra el servicio digitalcert.technoma.com.py.`
+  * **Create Alert:** Generación de alerta en la consola de Stellar Cyber para triaje de IP de origen y bloqueo perimetral.
+  * **Mute Override:** Silenciamiento temporal habilitado por **1 hora** tras disparo para prevenir saturación de notificaciones.
+
+#### 3. Justificación de Seguridad y Valor Operativo
+> "Esta regla automatizada reduce el tiempo medio de detección (MTTD) ante ataques de escaneo perimetral y fuerza bruta contra servicios DMZ de Technoma. Al correlacionar ráfagas >= 50 hits denegados en 5 minutos, el SOC recibe la alerta temprana con el listado de IPs atacantes e Interflow para proceder al baneo perimetral inmediato y envío de reportes de abuso."
+
+---
+
+## 📋 Registros Oficiales de Cierre de Turno / Guardia (18 Columnas TSV)
+
+### 1. Guardia Domingo (11/10/2026) — Remediación WUDO/Dahua & Zabbix [EN SEGUIMIENTO]
+* **Fila TSV Oficial:**
+```tsv
+11/10/2026 14:25:00	Kevin Moraes	Caja Ande, Technoma	N/A	Cierre de Turno	N/A	Informativo	Cierre de Turno Guardia Domingo	Guardia Domingo - Remediación Filtros WUDO/Dahua y Zabbix (En Seguimiento)	Infraestructura Technoma y CAJA ANDE	"Monitoreo de guardia Technoma y CAJA ANDE sin incidentes activos. Se corrigió en producción el filtro de cámaras Dahua (DHCP) y el filtro WUDO (puerto 7680) eliminando puntos ciegos. Se detectó ruido por sondeo del servidor Zabbix (puerto 10050), el cual queda en seguimiento sin aplicar en producción para validar con jefatura."	"Consolas en verde sin alertas abiertas. Filtros de Dahua y WUDO 7680 actualizados y verificados en clúster. Caso Zabbix en seguimiento para reunión con jefatura."	Revisar propuesta de filtro Zabbix con jefatura	En Seguimiento	N/A	NO	N/A	PB-2.2: Monitoreo Operativo
+```
+
+### 2. Guardia Sábado (10/10/2026) — Auditoría de Ingesta & Puntos Ciegos
+* **Fila TSV Oficial:**
+```tsv
+10/10/2026 14:00:00	Kevin Moraes	Caja Ande, Technoma	N/A	Cierre de Turno	N/A	Informativo	Cierre de Turno Guardia Sábado	Guardia Sábado - Auditoría de Ingesta Stellar y Análisis de Puntos Ciegos	Infraestructura Technoma y CAJA ANDE	"Monitoreo de guardia Technoma y CAJA ANDE sin incidentes activos. Se auditó la ingesta del clúster de Stellar Cyber (~16 GB/día) aislando el consumo en logs de FortiGate y bucle DNS de Grafana. Se auditaron los 65 filtros de la plataforma detectando reglas con riesgo de ceguera."	"Consolas en verde sin alertas abiertas. Informes técnicos de causa raíz y plan maestro de reducción de cuota emitidos."	N/A	Cerrado	N/A	NO	N/A	PB-2.2: Monitoreo Operativo
+```
+
+### 3. Turno Mañana (07/10/2026) — Regla Especial SAC DMZ & Triaje
+* **Fila TSV Oficial:**
+```tsv
+07/10/2026 14:00:00	Kevin Moraes	Caja Ande, Technoma	N/A	Cierre de Turno	N/A	Informativo	Cierre de Turno Mañana	Reporte de Cierre de Turno Mañana - Technoma y Caja Ande (Regla SAC Ataque Recurrente DMZ)	Infraestructura general Technoma / Endpoints y Servidores CAJA ANDE / DMZ DigitalCert (190.104.178.146)	"REPORTE SOC - TURNO MAÑANA [06:00 a 14:00]. Monitoreo continuo de consolas sobre Tenants Technoma y CAJA ANDE. Descarte de falsos positivos de rutina. Sin anomalías ni incidentes activos durante el periodo. Triaje de casos Cortex XDR #148379, #148359, #148460 y Stellar Cyber ST-DNS-TUNNEL cerrados como BTP. Despliegue de regla automatizada 'THN FW Ataque Recurrente a DMZ' en System Action Center (Umbral 50 hits/5 min)."	"Stellar Cyber / Cortex XDR / Sophos Central: Consolas en estado VERDE sin alertas abiertas para Technoma y CAJA ANDE. Regla 'THN FW Ataque Recurrente a DMZ' guardada, habilitada y testeada en SAC. Monitoreo de telemetría normal."	N/A	Cerrado	N/A	NO	N/A	PB-2.2: Monitoreo Operativo
+```
 
 ---
 

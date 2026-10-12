@@ -249,7 +249,7 @@ class CtiEngine:
             if r.status_code == 200:
                 results = r.json().get("results", [])
                 if not results:
-                    return {"source": "URLScan.io", "status": "not_found", "verdict": "SIN ESCANEOS PREVIOS", "color": "#94a3b8", "results_count": 0}
+                    return {"source": "URLScan.io", "status": "not_found", "target": target, "verdict": "SIN ESCANEOS PREVIOS", "color": "#94a3b8", "results_count": 0}
 
                 first = results[0]
                 page = first.get("page", {}) or {}
@@ -639,6 +639,23 @@ class CtiEngine:
 
     @classmethod
     def format_urlscan_detailed_html(cls, us: Dict[str, Any]) -> str:
+        if us.get("status") == "not_found":
+            target = us.get("target", "")
+            return f"""
+        <div style="background-color: #0b1120; border: 1px solid #1e293b; border-left: 4px solid #38bdf8; border-radius: 6px; padding: 10px; margin: 8px 0; font-family: 'Consolas', monospace; font-size: 11px; color: #e2e8f0;">
+            <div style="font-size: 13px; font-weight: bold; color: #38bdf8; margin-bottom: 6px;">
+                🌐 URLSCAN.IO v1 — HISTORIAL PÚBLICO: <span style="color: #f8fafc;">{target}</span>
+            </div>
+            <div style="color: #cbd5e1; margin-bottom: 6px;">
+                ℹ️ No existen análisis web públicos registrados previamente en URLScan.io para este objetivo.
+            </div>
+            <div style="font-size: 10px; color: #64748b; margin-top: 4px;">
+                💡 <b>Nota SOC:</b> Es habitual que IPs atacantes, bots de escaneo o servidores sin interfaces web abiertas no tengan historial en URLScan.
+                &nbsp;|&nbsp; <a href="https://urlscan.io/search/#{target}" style="color: #38bdf8; text-decoration: underline;">Buscar o enviar a escanear en URLScan.io ↗</a>
+            </div>
+        </div>
+        """
+
         if us.get("status") != "success":
             err = us.get("error", "Sin datos")
             return f"<span style='color: #ef4444;'><br>[🌐 URLScan.io Error]: {err}<br></span>"
@@ -859,6 +876,16 @@ class CtiEngine:
         if not cve_clean.startswith("CVE-"):
             cve_clean = f"CVE-{cve_clean}"
 
+        if not re.match(r"^CVE-\d{4}-\d{4,}$", cve_clean):
+            return {
+                "source": "NVD NIST",
+                "status": "not_found",
+                "cve_id": cve_clean,
+                "verdict": "FORMATO INVÁLIDO",
+                "color": "#94a3b8",
+                "note": f"'{cve_id}' no corresponde a una sintaxis CVE válida (ej: CVE-2024-3400)."
+            }
+
         url = f"https://services.nvd.nist.gov/rest/json/cves/2.0?cveId={cve_clean}"
         headers = {
             "User-Agent": "StellarCyber-OpenXDR-Cockpit",
@@ -937,6 +964,14 @@ class CtiEngine:
                     "references": refs,
                     "nvd_url": f"https://nvd.nist.gov/vuln/detail/{cve_clean}"
                 }
+            elif r.status_code == 404:
+                return {
+                    "source": "NVD NIST",
+                    "status": "not_found",
+                    "cve_id": cve_clean,
+                    "verdict": "NO ENCONTRADO EN NVD",
+                    "color": "#94a3b8"
+                }
             elif r.status_code == 403 or r.status_code == 401:
                 return {"source": "NVD NIST", "status": "auth_error", "error": "API Key de NVD inválida o rechazada (HTTP 403)."}
             elif r.status_code == 429:
@@ -1005,7 +1040,20 @@ class CtiEngine:
     def format_cve_detailed_html(cls, res: Dict[str, Any]) -> str:
         """Genera una ficha visual completa de la vulnerabilidad CVE para la consola DFIR."""
         if res.get("status") == "not_found":
-            return f"<span style='color: #94a3b8;'><br>[🛡️ NVD NIST]: La vulnerabilidad <b>{res.get('cve_id')}</b> no se encuentra registrada en NVD.<br></span>"
+            cve_id = res.get("cve_id", "N/A")
+            note = res.get("note")
+            extra_msg = f"<div style='color: #cbd5e1; margin-bottom: 6px;'>{note}</div>" if note else "<div style='color: #cbd5e1; margin-bottom: 6px;'>El código de vulnerabilidad consultado no existe o no ha sido publicado aún en el catálogo oficial de NVD NIST.</div>"
+            return f"""
+        <div style="background-color: #0b1120; border: 1px solid #1e293b; border-left: 4px solid #94a3b8; border-radius: 6px; padding: 10px; margin: 8px 0; font-family: 'Consolas', monospace; font-size: 11px; color: #e2e8f0;">
+            <div style="font-size: 13px; font-weight: bold; color: #94a3b8; margin-bottom: 4px;">
+                🛡️ NVD NIST: IDENTIFICADOR NO ENCONTRADO (<span style="color: #f8fafc;">{cve_id}</span>)
+            </div>
+            {extra_msg}
+            <div style="font-size: 10px; color: #64748b; margin-top: 4px;">
+                💡 <b>Nota SOC:</b> NVD indexa vulnerabilidades por código CVE (ej: <code>CVE-2024-3400</code>). Para investigar reputación de IPs o dominios use AbuseIPDB, VirusTotal o Tri-Scan CTI.
+            </div>
+        </div>
+        """
         if res.get("status") != "success":
             return f"<span style='color: #ef4444;'><br>[🛡️ NVD NIST Error]: {res.get('error', 'Error en consulta')}<br></span>"
 

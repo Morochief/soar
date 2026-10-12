@@ -1,0 +1,1684 @@
+[
+  {
+    "num": 1,
+    "id": "691caf0998520e1b91eb3860",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "192.168.15.27"
+        ]
+      }
+    }
+  },
+  {
+    "num": 2,
+    "id": "691cb065fd93619a950d1787",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "dstip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "192.168.15.27"
+        ]
+      }
+    }
+  },
+  {
+    "num": 3,
+    "id": "691cbd5398520e1b91eb3865",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "192.168.20.15"
+        ]
+      },
+      "dstport": {
+        "type": "number",
+        "op": "==",
+        "value": [
+          3000
+        ]
+      }
+    }
+  },
+  {
+    "num": 4,
+    "id": "691cbfc54ae91719cb3e49c0",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "SYSLOG"
+        ]
+      }
+    }
+  },
+  {
+    "num": 5,
+    "id": "691cc89b4ae91719cb3e49c4",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "dstport": {
+        "type": "number",
+        "op": "==",
+        "value": [
+          5247
+        ]
+      }
+    }
+  },
+  {
+    "num": 6,
+    "id": "691ccf38fd93619a950d179c",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "dstport": {
+        "type": "number",
+        "op": "==",
+        "value": [
+          7002,
+          8000,
+          38881
+        ]
+      }
+    }
+  },
+  {
+    "num": 7,
+    "id": "691ccfab4ae91719cb3e49cb",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "tcp/7001",
+          "udp/5060",
+          "SNMP_GetRequest",
+          "tcp/7860",
+          "Google.Services",
+          "NTP",
+          "icmp6/131/0",
+          "tcp/631",
+          "TCP_20443",
+          "STUN"
+        ]
+      }
+    }
+  },
+  {
+    "num": 8,
+    "id": "691ce1b5fd93619a950d17af",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "dstport": {
+        "type": "number",
+        "op": "==",
+        "value": [
+          5246
+        ]
+      }
+    }
+  },
+  {
+    "num": 9,
+    "id": "691ce47bfd93619a950d17b4",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "fortinet.msg": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "BGP: %BGP-3-NOTIFICATION: sending to 10.163.100.6 2/2 (OPEN Message Error/Bad Peer AS.) 4 data-bytes [ff e6 00 00]",
+          "progress IPsec phase 1",
+          "negotiate IPsec phase 1",
+          "IPsec tunnel statistics"
+        ]
+      }
+    }
+  },
+  {
+    "num": 10,
+    "id": "691dab7a4ae91719cb3e49e2",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "fortinet.logdesc": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "IPsec phase 1 SA deleted"
+        ]
+      }
+    }
+  },
+  {
+    "num": 11,
+    "id": "691dad0998520e1b91eb3883",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "SNMP"
+        ]
+      }
+    }
+  },
+  {
+    "num": 12,
+    "id": "691daea14ae91719cb3e49e5",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "fortinet.logdesc": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "IPsec phase 1 error"
+        ]
+      },
+      "fortinet.subtype": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "vpn"
+        ]
+      }
+    }
+  },
+  {
+    "num": 13,
+    "id": "691db022fd93619a950d17d3",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "fortinet.msg": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "BGP: 10.163.100.6-Outgoing [DECODE] Open: Bad Remote-AS (65510), expected 65556"
+        ]
+      }
+    }
+  },
+  {
+    "num": 14,
+    "id": "691dba52fd93619a950d17dc",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "dstip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "192.168.10.254"
+        ]
+      },
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "icmp/8/0"
+        ]
+      }
+    }
+  },
+  {
+    "num": 15,
+    "id": "691df8f8fd93619a950d1807",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "10.149.200.254"
+        ]
+      },
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "icmp/8/0"
+        ]
+      }
+    }
+  },
+  {
+    "num": 16,
+    "id": "691df94ffd93619a950d1809",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "15.229.74.29"
+        ]
+      },
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "icmp/8/0"
+        ]
+      }
+    }
+  },
+  {
+    "num": 17,
+    "id": "691df99ffd93619a950d180b",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "172.24.74.126"
+        ]
+      },
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "icmp/8/0"
+        ]
+      }
+    }
+  },
+  {
+    "num": 18,
+    "id": "691dfc77fd93619a950d1813",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "BGP"
+        ]
+      }
+    }
+  },
+  {
+    "num": 19,
+    "id": "691dfcfe98520e1b91eb38a5",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "192.168.15.17"
+        ]
+      },
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "tcp/40003"
+        ]
+      }
+    }
+  },
+  {
+    "num": 20,
+    "id": "691dfec498520e1b91eb38a7",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "fortinet.locport": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "500"
+        ]
+      }
+    }
+  },
+  {
+    "num": 21,
+    "id": "691e019398520e1b91eb38ad",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "dstip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "ff02::16"
+        ]
+      }
+    }
+  },
+  {
+    "num": 22,
+    "id": "691e035cfd93619a950d1822",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "192.168.15.98"
+        ]
+      },
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "icmp/8/0"
+        ]
+      }
+    }
+  },
+  {
+    "num": 23,
+    "id": "691e08314ae91719cb3e4a08",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "fortinet.applist": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "VISITAS"
+        ]
+      }
+    }
+  },
+  {
+    "num": 24,
+    "id": "691e0987fd93619a950d1826",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "dstip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "142.251.128.67",
+          "142.251.129.74"
+        ]
+      }
+    }
+  },
+  {
+    "num": 25,
+    "id": "691e0af5fd93619a950d1829",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "192.168.16.4"
+        ]
+      },
+      "dstip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "192.168.1.111"
+        ]
+      },
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "udp/5080"
+        ]
+      }
+    }
+  },
+  {
+    "num": 26,
+    "id": "691e0c544ae91719cb3e4a0d",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "dstip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "10.60.35.50"
+        ]
+      },
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "tcp/40003"
+        ]
+      }
+    }
+  },
+  {
+    "num": 27,
+    "id": "691e0de14ae91719cb3e4a0f",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "192.168.15.34"
+        ]
+      },
+      "dstip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "10.190.70.5"
+        ]
+      },
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "HTTPS"
+        ]
+      }
+    }
+  },
+  {
+    "num": 28,
+    "id": "691e0f4afd93619a950d182b",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "dstip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "142.251.128.65"
+        ]
+      },
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "HTTPS"
+        ]
+      }
+    }
+  },
+  {
+    "num": 29,
+    "id": "691e11d0fd93619a950d182d",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "192.168.16.3"
+        ]
+      },
+      "dstip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "47.90.158.167"
+        ]
+      },
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "tcp/15301"
+        ]
+      }
+    }
+  },
+  {
+    "num": 30,
+    "id": "691e221a98520e1b91eb38b7",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "dstip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "142.251.134.74",
+          "142.251.128.42",
+          "142.251.133.234",
+          "142.251.129.106",
+          "142.251.128.74",
+          "142.251.129.74",
+          "142.251.129.42",
+          "142.251.133.234",
+          "142.251.128.42",
+          "142.251.134.202",
+          "142.251.129.170",
+          "142.251.129.42",
+          "172.217.28.10",
+          "142.251.129.42",
+          "142.251.128.138",
+          "172.217.28.234",
+          "142.251.128.42",
+          "142.251.128.106",
+          "142.251.129.74",
+          "142.251.128.42",
+          "142.251.129.42",
+          "172.217.28.234",
+          "216.239.36.181",
+          "216.239.38.181",
+          "216.239.34.181",
+          "216.239.32.181",
+          "150.171.22.12",
+          "34.107.243.93",
+          "172.217.28.3",
+          "150.171.27.10",
+          "150.171.28.10",
+          "142.251.128.227",
+          "142.251.128.234",
+          "150.171.28.11",
+          "150.171.27.11",
+          "142.251.128.67",
+          "142.251.128.225",
+          "142.251.128.129",
+          "52.108.9.12",
+          "52.108.8.12",
+          "52.123.129.14",
+          "52.123.128.14",
+          "142.251.128.129",
+          "142.251.129.163",
+          "142.251.128.99",
+          "142.251.129.99",
+          "142.251.128.131",
+          "142.251.128.35",
+          "142.251.129.67",
+          "142.251.129.35",
+          "142.251.129.10",
+          "142.251.129.138",
+          "157.240.12.13",
+          "142.251.128.142",
+          "142.251.128.78"
+        ]
+      },
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "HTTPS",
+          "SSL",
+          "QUIC",
+          "HTTP",
+          "HTTP.BROWSER"
+        ]
+      },
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "192.168.169.0/24"
+        ]
+      }
+    }
+  },
+  {
+    "num": 31,
+    "id": "691e42924ae91719cb3e4a21",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "dstip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "172.224.174.195",
+          "172.224.174.196",
+          "172.224.174.198",
+          "172.224.174.197"
+        ]
+      }
+    }
+  },
+  {
+    "num": 32,
+    "id": "691e62c1fd93619a950d184f",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "dstip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "91.189.91.96",
+          "185.125.190.96",
+          "185.125.190.98",
+          "91.189.91.48",
+          "91.189.91.97",
+          "185.125.190.48",
+          "91.189.91.49",
+          "185.125.190.18",
+          "185.125.190.49",
+          "185.125.190.17",
+          "185.125.190.97"
+        ]
+      }
+    }
+  },
+  {
+    "num": 33,
+    "id": "691e65a498520e1b91eb38c1",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "10.11.4.2"
+        ]
+      },
+      "dstip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "10.11.5.2"
+        ]
+      },
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "tcp/6162"
+        ]
+      }
+    }
+  },
+  {
+    "num": 34,
+    "id": "691e68d698520e1b91eb38c3",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "Cisco-Webex"
+        ]
+      }
+    }
+  },
+  {
+    "num": 35,
+    "id": "691e6ca098520e1b91eb38c7",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "192.168.15.46"
+        ]
+      },
+      "dstip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "40.119.63.30",
+          "135.233.210.61",
+          "40.124.109.153"
+        ]
+      }
+    }
+  },
+  {
+    "num": 36,
+    "id": "691e6fef4ae91719cb3e4a29",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "192.168.15.23"
+        ]
+      },
+      "dstip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "10.20.3.23"
+        ]
+      },
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "HTTP.BROWSER"
+        ]
+      }
+    }
+  },
+  {
+    "num": 37,
+    "id": "691f50ebfd93619a950d1898",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "10.11.1.1",
+          "10.11.1.2"
+        ]
+      },
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "DNS"
+        ]
+      }
+    }
+  },
+  {
+    "num": 38,
+    "id": "692057f298520e1b91eb3908",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "192.168.169.115",
+          "192.168.20.7",
+          "192.168.169.71",
+          "192.168.169.22",
+          "192.168.169.89",
+          "192.168.169.15",
+          "192.168.169.41",
+          "192.168.169.125",
+          "192.168.169.110",
+          "192.168.15.14",
+          "192.168.169.19",
+          "192.168.169.170",
+          "192.168.15.82",
+          "192.168.169.63",
+          "192.168.169.5",
+          "192.168.169.120",
+          "192.168.169.124",
+          "192.168.169.11",
+          "192.168.169.141",
+          "192.168.169.34",
+          "192.168.169.101",
+          "192.168.169.82",
+          "192.168.169.114",
+          "192.168.169.35",
+          "192.168.169.10",
+          "192.168.169.53",
+          "192.168.169.152",
+          "192.168.169.9",
+          "192.168.169.66",
+          "192.168.169.20",
+          "192.168.169.55",
+          "192.168.169.148",
+          "192.168.169.169",
+          "192.168.169.169",
+          "192.168.169.48"
+        ]
+      },
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "SSL"
+        ]
+      },
+      "dstip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "44.207.208.72"
+        ]
+      }
+    }
+  },
+  {
+    "num": 39,
+    "id": "69205a9afd93619a950d18f2",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "dstip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "13.107.213.33"
+        ]
+      },
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "HTTPS"
+        ]
+      }
+    }
+  },
+  {
+    "num": 40,
+    "id": "6926687ba496888ec606390d",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "190.128.196.186"
+        ]
+      },
+      "dstip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "190.104.178.146"
+        ]
+      },
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "tcp/6180"
+        ]
+      }
+    }
+  },
+  {
+    "num": 41,
+    "id": "6926f6f1a77d64c0b0abb549",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "192.168.15.31"
+        ]
+      },
+      "dstip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "10.180.20.146",
+          "192.168.10.254",
+          "172.24.74.125",
+          "10.70.2.201"
+        ]
+      },
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "PING"
+        ]
+      }
+    }
+  },
+  {
+    "num": 42,
+    "id": "6966a763a77d64c0b0abb5bc",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet - FortiGate (CEF)",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "192.168.15.37"
+        ]
+      },
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "SIP"
+        ]
+      }
+    }
+  },
+  {
+    "num": 43,
+    "id": "6967bbd3330fa1aa1ab4b11b",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet - FortiGate (CEF)",
+    "rules": {
+      "dstip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "57.144.0.0/14",
+          "142.251.0.0/16"
+        ]
+      },
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "QUIC"
+        ]
+      }
+    }
+  },
+  {
+    "num": 44,
+    "id": "696a446a8b15127bd8aa3417",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet - FortiGate (CEF)",
+    "rules": {
+      "fw_policy_id": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "FG-Technoma_168"
+        ]
+      }
+    }
+  },
+  {
+    "num": 45,
+    "id": "696e2705bdf8d2b79dd882ce",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet - FortiGate (CEF)",
+    "rules": {
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "BitTorrent"
+        ]
+      }
+    }
+  },
+  {
+    "num": 46,
+    "id": "6970d66abdf8d2b79dd882d2",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet - FortiGate (CEF)",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "192.168.15.31"
+        ]
+      },
+      "dstip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "10.177.177.19",
+          "10.177.177.5"
+        ]
+      },
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "tcp/10050"
+        ]
+      },
+      "action": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "close"
+        ]
+      }
+    }
+  },
+  {
+    "num": 47,
+    "id": "69811d6ebdf8d2b79dd8832b",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet - FortiGate (CEF)",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "192.168.15.31"
+        ]
+      },
+      "dstport": {
+        "type": "number",
+        "op": "==",
+        "value": [
+          10050
+        ]
+      }
+    }
+  },
+  {
+    "num": 48,
+    "id": "69811ec9113b034729269991",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "192.168.15.0/24",
+          "192.168.10.0/24"
+        ]
+      },
+      "proto": {
+        "type": "number",
+        "op": "==",
+        "value": [
+          1
+        ]
+      }
+    }
+  },
+  {
+    "num": 49,
+    "id": "698386b1bdf8d2b79dd88334",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "10.2.1.4",
+          "10.2.1.3"
+        ]
+      },
+      "dstip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "10.2.1.3",
+          "10.2.1.4"
+        ]
+      },
+      "dstport": {
+        "type": "number",
+        "op": "==",
+        "value": [
+          8443
+        ]
+      },
+      "proto": {
+        "type": "number",
+        "op": "==",
+        "value": [
+          6
+        ]
+      }
+    }
+  },
+  {
+    "num": 50,
+    "id": "69848fd48b15127bd8aa3460",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "10.2.1.20",
+          "10.2.1.1"
+        ]
+      },
+      "proto": {
+        "type": "number",
+        "op": "==",
+        "value": [
+          17
+        ]
+      }
+    }
+  },
+  {
+    "num": 51,
+    "id": "698f659c113b0347292699af",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "192.168.16.16",
+          "192.168.16.3"
+        ]
+      },
+      "dstip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "192.168.16.1"
+        ]
+      },
+      "dstport": {
+        "type": "number",
+        "op": "==",
+        "value": [
+          67
+        ]
+      },
+      "srcport": {
+        "type": "number",
+        "op": "==",
+        "value": [
+          68
+        ]
+      },
+      "proto": {
+        "type": "number",
+        "op": "==",
+        "value": [
+          17
+        ]
+      },
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "DHCP/DHCP Relay"
+        ]
+      }
+    }
+  },
+  {
+    "num": 52,
+    "id": "69ba96e97ce7a80ccca17cc4",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "192.168.15.70"
+        ]
+      },
+      "dstip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "165.1.125.196"
+        ]
+      }
+    }
+  },
+  {
+    "num": 53,
+    "id": "69bda3da65e9b18c3281ae56",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "QUIC"
+        ]
+      }
+    }
+  },
+  {
+    "num": 54,
+    "id": "69f9f198841f8c7d70606fdd",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet - FortiGate (CEF)",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "10.99.99.1"
+        ]
+      },
+      "dstip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "192.168.15.70"
+        ]
+      },
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "syslog"
+        ]
+      }
+    }
+  },
+  {
+    "num": 55,
+    "id": "6a4f8db956ff9d98dbb05ef5",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "192.168.169.44"
+        ]
+      },
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "PING"
+        ]
+      },
+      "dstip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "10.49.70.0/24",
+          "10.49.71.0/24"
+        ]
+      }
+    }
+  },
+  {
+    "num": 56,
+    "id": "6a4fb280665bdc8340600ec6",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "192.168.15.31",
+          "192.168.15.46"
+        ]
+      },
+      "dstip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "10.40.2.240"
+        ]
+      },
+      "dstport": {
+        "type": "number",
+        "op": "==",
+        "value": [
+          5432
+        ]
+      },
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "tcp/5432"
+        ]
+      },
+      "action": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "close"
+        ]
+      }
+    }
+  },
+  {
+    "num": 57,
+    "id": "6a5139be27ba4bd1fd69924c",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "172.17.10.25",
+          "172.17.10.71"
+        ]
+      }
+    }
+  },
+  {
+    "num": 58,
+    "id": "6a513c36345662579f0d9d4b",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet - FortiGate (CEF)",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "172.17.10.249",
+          "172.17.10.250"
+        ]
+      },
+      "dstport": {
+        "type": "number",
+        "op": "==",
+        "value": [
+          31041
+        ]
+      }
+    }
+  },
+  {
+    "num": 59,
+    "id": "6a51481127326e7742c519f6",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "dstip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "172.17.10.25",
+          "172.17.10.71"
+        ]
+      }
+    }
+  },
+  {
+    "num": 60,
+    "id": "6a514eca27326e7742c51a03",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "192.168.15.31",
+          "10.2.1.4",
+          "172.17.10.251"
+        ]
+      },
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "https",
+          "HTTPS"
+        ]
+      }
+    }
+  },
+  {
+    "num": 61,
+    "id": "6a772602540a66cb62d8d680",
+    "dev_type": "",
+    "dev_type_label": "",
+    "rules": {
+      "computer_name": {
+        "type": "string",
+        "op": "contains",
+        "value": [
+          "Healthmailbox"
+        ]
+      }
+    }
+  },
+  {
+    "num": 62,
+    "id": "6abcff4cd7345ab3b6fe3b6f",
+    "dev_type": "",
+    "dev_type_label": "",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "192.168.15.23"
+        ]
+      },
+      "domain_list": {
+        "type": "string",
+        "op": "contains",
+        "value": [
+          "dev-grafana"
+        ]
+      },
+      "dstport": {
+        "type": "number",
+        "op": "==",
+        "value": [
+          53
+        ]
+      }
+    }
+  },
+  {
+    "num": 63,
+    "id": "6abe7d941b7191d76a1b08ab",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "action": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "deny"
+        ]
+      },
+      "dstport": {
+        "type": "number",
+        "op": "==",
+        "value": [
+          53
+        ]
+      },
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "10.212.134.0/24"
+        ]
+      },
+      "dstip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "10.11.1.0/24"
+        ]
+      }
+    }
+  },
+  {
+    "num": 64,
+    "id": "6ac785e01b7191d76a1b1d02",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "action": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "deny"
+        ]
+      },
+      "dstport": {
+        "type": "number",
+        "op": "==",
+        "value": [
+          7680
+        ]
+      },
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "192.168.169.0/24",
+          "192.168.100.0/24"
+        ]
+      },
+      "dstip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "192.168.169.0/24",
+          "192.168.100.0/24"
+        ]
+      },
+      "proto": {
+        "type": "number",
+        "op": "==",
+        "value": [
+          6
+        ]
+      }
+    }
+  },
+  {
+    "num": 65,
+    "id": "6aca44101b7191d76a1b2322",
+    "dev_type": "",
+    "dev_type_label": "",
+    "rules": {
+      "fw_policy_id": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "FG-Technoma_214"
+        ]
+      },
+      "action": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "deny"
+        ]
+      },
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "Fortinet-FortiGuard"
+        ]
+      }
+    }
+  },
+  {
+    "num": 66,
+    "id": "6acbbc32d7345ab3b6fe650f",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "192.168.15.31"
+        ]
+      },
+      "dstip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "10.0.0.0/8",
+          "192.168.0.0/16"
+        ]
+      },
+      "proto": {
+        "type": "number",
+        "op": "==",
+        "value": [
+          1
+        ]
+      },
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "PING"
+        ]
+      }
+    }
+  },
+  {
+    "num": 67,
+    "id": "6acbbd89aa734118df02c6b6",
+    "dev_type": "fw_fortigate",
+    "dev_type_label": "Fortinet FortiGate",
+    "rules": {
+      "srcip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "192.168.15.31"
+        ]
+      },
+      "dstport": {
+        "type": "number",
+        "op": "==",
+        "value": [
+          10050
+        ]
+      },
+      "proto": {
+        "type": "number",
+        "op": "==",
+        "value": [
+          6
+        ]
+      },
+      "appid_name": {
+        "type": "string",
+        "op": "==",
+        "value": [
+          "tcp/10050"
+        ]
+      },
+      "dstip": {
+        "type": "ip",
+        "op": "matches",
+        "value": [
+          "10.0.0.0/8",
+          "192.168.0.0/16"
+        ]
+      }
+    }
+  }
+]
