@@ -7455,6 +7455,11 @@ class XdrDashboard(QMainWindow):
         else:
             if engine == "wsl":
                 cmd = (
+                    f"if ! command -v dig >/dev/null 2>&1; then "
+                    f"echo '[!] ERROR: El comando \"dig\" (dnsutils) no está instalado en tu WSL (Ubuntu).' && "
+                    f"echo '    -> Solución 1 (Inmediata): Cambia el selector de Terminal a \"PowerShell (Windows)\" (100% nativo y funcional).' && "
+                    f"echo '    -> Solución 2: En WSL ejecuta: sudo apt update && sudo apt install -y dnsutils' && "
+                    f"exit 1; fi && "
                     f"echo '=== RECONOCIMIENTO DNS FORENSE: {clean_target} ===' && "
                     f"echo '--- [1] Registros A / AAAA (IPs) ---' && "
                     f"a_recs=$(dig +short {clean_target} A @8.8.8.8) && "
@@ -7516,6 +7521,11 @@ class XdrDashboard(QMainWindow):
         else:
             if engine == "wsl":
                 cmd = (
+                    f"if ! command -v dig >/dev/null 2>&1; then "
+                    f"echo '[!] ERROR: El comando \"dig\" (dnsutils) no está instalado en tu WSL (Ubuntu).' && "
+                    f"echo '    -> Solución 1 (Inmediata): Cambia el selector de Terminal a \"PowerShell (Windows)\" (100% nativo y funcional).' && "
+                    f"echo '    -> Solución 2: En WSL ejecuta: sudo apt update && sudo apt install -y dnsutils' && "
+                    f"exit 1; fi && "
                     f"echo '=== RESOLUCIÓN INVERSA DNS (PTR) DE DOMINIO ===' && "
                     f"echo '[*] Objetivo es un Dominio ({clean_target}). Resolviendo registros A...' && "
                     f"ips=$(dig +short {clean_target} @8.8.8.8 | grep -E '^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+') && "
@@ -7685,6 +7695,11 @@ class XdrDashboard(QMainWindow):
         engine = self.combo_term_engine.currentData()
         if engine == "wsl":
             cmd = (
+                f"if ! command -v dig >/dev/null 2>&1; then "
+                f"echo '[!] ERROR: El comando \"dig\" (dnsutils) no está instalado en tu WSL (Ubuntu).' && "
+                f"echo '    -> Solución 1 (Inmediata): Cambia el selector de Terminal a \"PowerShell (Windows)\" (100% nativo y funcional).' && "
+                f"echo '    -> Solución 2: En WSL ejecuta: sudo apt update && sudo apt install -y dnsutils' && "
+                f"exit 1; fi && "
                 f"echo '=== [1/3] REGISTRO SPF (DNS TXT) ===' && "
                 f"(dig +short TXT {clean_target} @8.8.8.8 | grep -i 'v=spf1' || echo '[!] Sin registro SPF declarado') && "
                 f"echo '' && echo '=== [2/3] POLÍTICA DMARC (_dmarc.{clean_target}) ===' && "
@@ -7784,6 +7799,11 @@ class XdrDashboard(QMainWindow):
             )
 
             cmd = (
+                f"if ! command -v dig >/dev/null 2>&1; then "
+                f"echo '[!] ERROR: El comando \"dig\" (dnsutils) no está instalado en tu WSL (Ubuntu).' && "
+                f"echo '    -> Solución 1 (Inmediata): Cambia el selector de Terminal a \"PowerShell (Windows)\" (100% nativo y funcional).' && "
+                f"echo '    -> Solución 2: En WSL ejecuta: sudo apt update && sudo apt install -y dnsutils' && "
+                f"exit 1; fi; "
                 f"echo '============================================================='; "
                 f"echo '🕵️ [AUDITORÍA DE ORIGEN & BYPASS DE CDN / CLOUDFLARE]'; "
                 f"echo 'Objetivo analizado: {clean_target}'; "
