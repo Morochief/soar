@@ -4,10 +4,10 @@
 
 # 1. ENTORNO VIRTUAL LOCAL (VENV)
 # (NO subir binarios de Python específicos de la máquina Windows)
-Scripts/
-Lib/
-Include/
-share/
+/Scripts/
+/Lib/
+/Include/
+/share/
 pyvenv.cfg
 .venv/
 venv/
