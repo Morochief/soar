@@ -6857,6 +6857,11 @@ class XdrDashboard(QMainWindow):
         btn_preset_unmask.setToolTip("Audita el dominio en busca de la IP real de origen eludiendo el proxy de Cloudflare/CDN (Fugas MX _dc-mx, SPF y subdominios sin proxy)")
         btn_preset_unmask.clicked.connect(self.run_preset_unmask_origin)
 
+        btn_preset_dnstwist = QPushButton("🔀 DNS Twist")
+        btn_preset_dnstwist.setStyleSheet(ui_theme.preset_button_style(ui_theme.COLOR_HIGH))
+        btn_preset_dnstwist.setToolTip("Caza activa de dominios similares, suplantaciones (typosquatting), combo-squatting y phishing")
+        btn_preset_dnstwist.clicked.connect(self.run_preset_dnstwist)
+
         btn_preset_phishing = QPushButton("📬 MxToolbox")
         btn_preset_phishing.setStyleSheet(ui_theme.preset_button_style(ui_theme.ACCENT_CYBER))
         btn_preset_phishing.clicked.connect(self.run_preset_mxtoolbox)
@@ -6867,6 +6872,7 @@ class XdrDashboard(QMainWindow):
         row1_layout.addWidget(btn_preset_triscan)
         row1_layout.addWidget(btn_preset_anti_spoofing)
         row1_layout.addWidget(btn_preset_unmask)
+        row1_layout.addWidget(btn_preset_dnstwist)
         row1_layout.addWidget(btn_preset_phishing)
 
         # Fila 2: Herramientas Agrupadas por Dominio Forense
@@ -7001,6 +7007,9 @@ class XdrDashboard(QMainWindow):
         act_unmask = menu_pivots.addAction("🕵️ Desemmascarar Origen (Bypass Cloudflare/CDN)")
         act_unmask.triggered.connect(self.run_preset_unmask_origin)
 
+        act_twist = menu_pivots.addAction("🔀 Caza de Typosquatting (DNS Twist)")
+        act_twist.triggered.connect(self.run_preset_dnstwist)
+
         act_sectrails = menu_pivots.addAction("🛡️ SecurityTrails (Histórico DNS)")
         act_sectrails.triggered.connect(lambda: self.pivot_to_external_service("securitytrails"))
 
@@ -7062,6 +7071,7 @@ class XdrDashboard(QMainWindow):
             f"[*] Directorio de Trabajo: {os.path.abspath('.')}\n"
             "[*] Anti-Sleep: Activo en segundo plano (Windows SetThreadExecutionState)\n"
             "[*] Presets: DNS, WHOIS, Ping, Grep | CTI: AbuseIPDB, VirusTotal, URLScan, Tri-Scan, MxToolbox, NVD CVE\n"
+            "[*] DNS Twist: 'twist <domain>' | Caza de dominios falsos, typosquatting y phishing lookalikes\n"
             "[*] CLI CTI: 'vt <ioc>', 'abuse <ip>', 'urlscan <url>', 'cti <ioc>', 'cve <cve-id>', 'phishing <domain>'\n"
             "[*] DNS/Mail: 'spf <domain>', 'dmarc <domain>', 'mx <domain>'\n"
             "[*] Control de Sistema: 'antisleep [on|off|status]'\n"
@@ -7227,6 +7237,19 @@ class XdrDashboard(QMainWindow):
                 return
         if clean_lower in ["unmask", "origin", "desenmascarar"]:
             self.run_preset_unmask_origin()
+            return
+
+        # Intercepción de Caza de Typosquatting / DNS Twist
+        twist_prefixes = ["twist ", "dnstwist ", "typosquat ", "lookalike "]
+        for tpfx in twist_prefixes:
+            if clean_lower.startswith(tpfx):
+                domain_arg = clean_cmd[len(tpfx):].strip()
+                if domain_arg:
+                    self.input_term_target.setText(domain_arg)
+                self.run_preset_dnstwist()
+                return
+        if clean_lower in ["twist", "dnstwist", "typosquat", "lookalikes", "lookalike"]:
+            self.run_preset_dnstwist()
             return
 
         # Atajo CLI para abrir el Analizador de Cabeceras
@@ -7931,6 +7954,42 @@ class XdrDashboard(QMainWindow):
                 f"Write-Host '  Wayback Machine (Historial Web): https://web.archive.org/web/*/{clean_target}' -ForegroundColor Yellow; "
                 f"Write-Host '=============================================================' -ForegroundColor Cyan;"
             )
+        self.execute_terminal_command(cmd)
+
+    def run_preset_dnstwist(self):
+        """Ejecuta el cazador nativo multihilo de DNS Twist / Typosquatting / Phishing Lookalikes."""
+        target = self._get_active_target_or_observable()
+        if not target:
+            QMessageBox.warning(self, "DNS Twist", "Ingrese un nombre de dominio o URL en el campo objetivo (ej. betonline.ag).")
+            return
+        if hasattr(self, "tabs") and hasattr(self, "tab5"):
+            self.tabs.setCurrentWidget(self.tab5)
+        clean_target = re.sub(r"^https?://", "", target.strip(), flags=re.IGNORECASE).rstrip("/").split("/")[0].split(":")[0]
+        obs_type = CtiEngine.detect_observable_type(clean_target)
+
+        if obs_type == "ip":
+            QMessageBox.information(
+                self,
+                "DNS Twist",
+                f"El objetivo '{clean_target}' es una dirección IP.\n\n"
+                f"DNS Twist requiere un nombre de dominio o marca (ej. betonline.ag) para generar variaciones tipográficas y lookalikes.\n\n"
+                f"Para esta IP se ejecutará la resolución inversa (PTR)..."
+            )
+            self.run_preset_ptr()
+            return
+
+        engine = self.combo_term_engine.currentData()
+        script_path = os.path.join(os.path.abspath("."), "dnstwist_recon.py")
+        venv_py = os.path.join(os.path.abspath("."), "venv", "Scripts", "python.exe")
+
+        if engine == "wsl":
+            cmd = f"python3 -u dnstwist_recon.py {clean_target} || python -u dnstwist_recon.py {clean_target}"
+        else:
+            if os.path.exists(venv_py):
+                cmd = f"& '{venv_py}' -u '{script_path}' {clean_target}"
+            else:
+                cmd = f"python -u '{script_path}' {clean_target}"
+
         self.execute_terminal_command(cmd)
 
     def open_email_header_analyzer(self):
