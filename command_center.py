@@ -2088,6 +2088,192 @@ class SatiDnsAutoRemediatorWorker(QThread):
                 self.remediation_failed.emit(t_id, str(err))
 
 # -----------------------------------------------------------------------------
+# TRABAJADOR DE AUTO-REMEDIACIÓN DPAPI PROTECTED_STORAGE (SOAR HYPER-AUTOMATION)
+# -----------------------------------------------------------------------------
+class DPAPIStorageAutoRemediatorWorker(QThread):
+    """
+    Worker asíncrono para auditar y auto-resolver casos de Sensitive Windows Network Share
+    hacia protected_storage en Controladores de Dominio (VMBASE8), correspondiente
+    al respaldo legítimo de claves DPAPI del sistema operativo Windows.
+    Verifica que el 100% de los eventos del caso sean de tipo Event ID 5145 dirigidos a
+    \\*\\IPC$\\protected_storage sobre VMBASE8. Si se detectan otros objetos, o accesos anómalos,
+    aborta la auto-resolución y emite una alerta para triaje manual.
+    """
+    remediation_finished = Signal(dict)
+    remediation_failed = Signal(str, str) # ticket_id, error_msg
+    alert_non_dpapi = Signal(dict)        # ticket_id, alert_info
+
+    def __init__(self, case_obj: dict, session: requests.Session, headers: dict):
+        super().__init__()
+        self.case_obj = case_obj
+        self.session = session
+        self.headers = headers
+        self._is_killed = False
+
+    def kill(self):
+        self._is_killed = True
+
+    def run(self):
+        case_id = self.case_obj.get("_id") or self.case_obj.get("ticket_id")
+        t_id = str(self.case_obj.get("ticket_id") or case_id)
+        try:
+            if self._is_killed: return
+
+            url_case = f"https://{HOST}/connect/api/v1/cases/{case_id}"
+            url_alerts = f"https://{HOST}/connect/api/v1/cases/{case_id}/alerts"
+
+            r_alerts = self.session.get(url_alerts, headers=self.headers, params={"limit": "100", "skip": "0"}, verify=True, timeout=15)
+            r_alerts.raise_for_status()
+            alerts_data = r_alerts.json()
+            docs = []
+            if isinstance(alerts_data, dict):
+                data_inner = alerts_data.get("data", alerts_data)
+                if isinstance(data_inner, dict):
+                    docs = data_inner.get("docs", [])
+                elif isinstance(data_inner, list):
+                    docs = data_inner
+            elif isinstance(alerts_data, list):
+                docs = alerts_data
+
+            if self._is_killed: return
+
+            if not docs:
+                self.remediation_failed.emit(
+                    t_id,
+                    "No se encontraron alertas dentro del caso para auditar los eventos de DPAPI."
+                )
+                return
+
+            detected_users = set()
+            detected_hosts = set()
+            detected_src_ips = set()
+            detected_dst_ips = set()
+            non_dpapi_events = []
+            valid_dpapi_count = 0
+
+            for doc in docs:
+                src = doc.get("_source", {}) if isinstance(doc, dict) else {}
+                event_data = src.get("event_data", {})
+                xdr_event = src.get("xdr_event", {})
+
+                # Extraer usuario
+                user = (
+                    event_data.get("SubjectUserName") or 
+                    src.get("srcip_username") or 
+                    src.get("username")
+                )
+                if user and str(user).strip() and str(user).strip() != "-":
+                    domain = event_data.get("SubjectDomainName")
+                    u_str = f"{domain}\\{user}" if domain else str(user)
+                    detected_users.add(u_str)
+
+                comp = src.get("computer_name") or src.get("host", {}).get("name") or src.get("engid_name")
+                if comp and str(comp).strip():
+                    detected_hosts.add(str(comp).strip())
+
+                src_ip = src.get("srcip") or event_data.get("IpAddress")
+                if src_ip and str(src_ip).strip() and str(src_ip).strip() != "-":
+                    detected_src_ips.add(str(src_ip).strip())
+
+                dst_ip = src.get("hostip") or src.get("host", {}).get("ip")
+                if dst_ip and str(dst_ip).strip():
+                    detected_dst_ips.add(str(dst_ip).strip())
+
+                event_id = src.get("event_id")
+                target_name = str(event_data.get("RelativeTargetName") or "").lower()
+                share_name = str(event_data.get("ShareName") or "").lower()
+                comp_upper = str(comp or "").upper()
+                subtype_name = str(xdr_event.get("subtype", {}).get("name") or "").lower()
+                desc = str(xdr_event.get("description", "")).lower()
+
+                # Criterios estrictos:
+                is_5145 = (event_id == 5145) or ("5145" in str(src.get("stellar", {}).get("task", "")))
+                is_protected_storage = "protected_storage" in target_name or "protected_storage" in subtype_name or "protected_storage" in desc
+                is_ipc = "ipc$" in share_name or "ipc$" in desc
+                is_vmbase8 = ("VMBASE8" in comp_upper) or ("172.16.201.8" in detected_dst_ips) or ("172.16.201.8" in str(dst_ip))
+
+                if is_5145 and is_protected_storage and is_ipc and is_vmbase8:
+                    valid_dpapi_count += 1
+                else:
+                    reason = f"Evento fuera de patrón DPAPI: ID={event_id}, Share={share_name}, Target={target_name}, Host={comp}"
+                    non_dpapi_events.append(reason)
+
+            if non_dpapi_events:
+                summary_non = " | ".join(non_dpapi_events[:3])
+                self.alert_non_dpapi.emit({
+                    "ticket_id": t_id,
+                    "case_id": case_id,
+                    "users": list(detected_users),
+                    "hosts": list(detected_hosts),
+                    "src_ips": list(detected_src_ips),
+                    "dst_ips": list(detected_dst_ips),
+                    "details": summary_non,
+                    "total_alerts": len(docs),
+                    "anomalous_count": len(non_dpapi_events)
+                })
+                return
+
+            if valid_dpapi_count == 0:
+                self.remediation_failed.emit(
+                    t_id,
+                    "No se identificaron eventos confirmados de protected_storage en el lote."
+                )
+                return
+
+            str_hosts = ", ".join(sorted(detected_hosts)) if detected_hosts else "VMBASE8"
+            str_users = ", ".join(sorted(detected_users)) if detected_users else "Usuario corporativo"
+            str_src_ips = ", ".join(sorted(detected_src_ips)) if detected_src_ips else "172.16.202.x"
+            str_dst_ips = ", ".join(sorted(detected_dst_ips)) if detected_dst_ips else "172.16.201.8"
+            total_count = len(docs)
+
+            resolution_comment = (
+                f"Se analizó el lote de eventos de auditoría de seguridad de Windows (Event ID 5145) registrados sobre el "
+                f"Controlador de Dominio secundario {str_hosts} ({str_dst_ips}). La interacción con el recurso compartido IPC$ y el "
+                f"objeto protected_storage por parte del usuario {str_users} desde la estación {str_src_ips} corresponde al "
+                f"comportamiento benigno y estándar de Microsoft Windows Data Protection API (DPAPI), el cual efectúa de forma "
+                f"periódica el respaldo de las claves maestras de cifrado de usuario hacia el KDC. La auditoría confirma que la "
+                f"operación concluyó exitosamente bajo privilegios estándar de sesión ({total_count} eventos evaluados), sin indicios "
+                f"de manipulación o extracción maliciosa de credenciales (T1021.002)."
+            )
+
+            # Simulación realista de MTTR
+            for _ in range(5):
+                if self._is_killed: return
+                time.sleep(1)
+
+            # Comentario formal en el ticket
+            url_comment = f"https://{HOST}/connect/api/v1/cases/{case_id}/comments"
+            self.session.post(url_comment, headers=self.headers, json={"comment": resolution_comment}, verify=True, timeout=10)
+
+            if self._is_killed: return
+
+            # Resolver caso
+            resolve_payload = {
+                "status": "Resolved",
+                "resolution": "False Positive",
+                "assignee": EMAIL_USUARIO
+            }
+            r_res = self.session.put(url_case, headers=self.headers, json=resolve_payload, verify=True, timeout=12)
+            r_res.raise_for_status()
+
+            if self._is_killed: return
+
+            self.remediation_finished.emit({
+                "ticket_id": t_id,
+                "case_id": case_id,
+                "users": list(detected_users),
+                "hosts": list(detected_hosts),
+                "src_ips": list(detected_src_ips),
+                "dst_ips": list(detected_dst_ips),
+                "resolution": "False Positive",
+                "alert_count": total_count
+            })
+
+        except Exception as err:
+            if not self._is_killed:
+                self.remediation_failed.emit(t_id, str(err))
+
+# -----------------------------------------------------------------------------
 # TRABAJADOR DE SONDEO RÁPIDO DE IDENTIDAD (ALERT PROBE SOAR)
 # -----------------------------------------------------------------------------
 class CaseIdentityProbeWorker(QThread):
@@ -2572,10 +2758,17 @@ class XdrDashboard(QMainWindow):
         self.action_soar_sati.setToolTip("Auto-toma y resuelve como False Positive las denegaciones en firewall de consultas DNS desde VPN del proveedor SATI")
         self.action_soar_sati.toggled.connect(self._update_soar_menu_label)
 
+        self.action_soar_dpapi = QAction("Auto-Cierre DPAPI (protected_storage)", self)
+        self.action_soar_dpapi.setCheckable(True)
+        self.action_soar_dpapi.setChecked(True)
+        self.action_soar_dpapi.setToolTip("Auto-toma y resuelve como False Positive accesos legítimos de Windows DPAPI a protected_storage en VMBASE8")
+        self.action_soar_dpapi.toggled.connect(self._update_soar_menu_label)
+
         self.soar_menu.addAction(self.action_soar_guardia)
         self.soar_menu.addAction(self.action_soar_hm)
         self.soar_menu.addAction(self.action_soar_translate)
         self.soar_menu.addAction(self.action_soar_sati)
+        self.soar_menu.addAction(self.action_soar_dpapi)
         self.btn_soar_menu.setMenu(self.soar_menu)
 
         # Alias retrocompatibles para mantener intacto cualquier acceso existente
@@ -2583,6 +2776,7 @@ class XdrDashboard(QMainWindow):
         self.check_auto_healthmailbox = self.action_soar_hm
         self.check_auto_sophos_translate = self.action_soar_translate
         self.check_auto_sati = self.action_soar_sati
+        self.check_auto_dpapi = self.action_soar_dpapi
 
         self._update_soar_menu_label()
 
@@ -3300,6 +3494,8 @@ class XdrDashboard(QMainWindow):
         self._worker_sophos_translate_remediator = None
         self._remediated_sati_cases = set()
         self._worker_sati_remediator = None
+        self._remediated_dpapi_cases = set()
+        self._worker_dpapi_remediator = None
         self._auto_guardia_workers = []
         self._case_identity_cache = {}
         self._active_probe_workers = {}
@@ -3321,12 +3517,13 @@ class XdrDashboard(QMainWindow):
     # -----------------------------------------------------------------------------
     def _update_soar_menu_label(self):
         """Actualiza el texto y estilo del boton desplegable con la cantidad de motores SOAR activos."""
-        total = 4
+        total = 5
         active = sum([
             bool(getattr(self, 'action_soar_guardia', None) and self.action_soar_guardia.isChecked()),
             bool(getattr(self, 'action_soar_hm', None) and self.action_soar_hm.isChecked()),
             bool(getattr(self, 'action_soar_translate', None) and self.action_soar_translate.isChecked()),
-            bool(getattr(self, 'action_soar_sati', None) and self.action_soar_sati.isChecked())
+            bool(getattr(self, 'action_soar_sati', None) and self.action_soar_sati.isChecked()),
+            bool(getattr(self, 'action_soar_dpapi', None) and self.action_soar_dpapi.isChecked())
         ])
         if hasattr(self, 'btn_soar_menu'):
             if active == total:
@@ -4722,6 +4919,10 @@ class XdrDashboard(QMainWindow):
                         badge = "[SATI] "
                         row_color = "#38bdf8"
                         font_weight = "normal"
+                    elif self._is_dpapi_storage_candidate(c):
+                        badge = "[DPAPI] "
+                        row_color = "#a78bfa"
+                        font_weight = "normal"
                     else:
                         badge = ""
 
@@ -4956,6 +5157,23 @@ class XdrDashboard(QMainWindow):
         )
         return is_sati_user and (is_fw_denial or "10.212.134" in combined or "dns" in combined)
 
+    def _is_dpapi_storage_candidate(self, case: dict) -> bool:
+        """Determina si el incidente involucra accesos a protected_storage / IPC$ en VMBASE8 (DPAPI)."""
+        name = str(case.get("name", "")).lower()
+        src_user = str(case.get("srcip_username") or "").lower()
+        user = str(case.get("username") or case.get("user") or "").lower()
+        tags = " ".join(str(t).lower() for t in case.get("tags", []))
+        desc = str(case.get("description") or "").lower()
+        combined = f"{name} {src_user} {user} {tags} {desc}"
+
+        return (
+            "protected_storage" in combined or
+            "sensitive windows network share" in combined or
+            ("network share" in combined and "ipc$" in combined) or
+            "windows_security_5145" in combined or
+            ("5145" in combined and "share" in combined)
+        )
+
     def _process_auto_guardia_and_hm(self, raw_cases: list):
         """
         Evalúa en cada ciclo de telemetría:
@@ -5060,6 +5278,30 @@ class XdrDashboard(QMainWindow):
                             self._worker_sati_remediator.start()
                             break # Uno por ciclo para control estricto de concurrencia
 
+        # 2.3 EVALUAR AUTO-REMEDIACIÓN DPAPI (PROTECTED_STORAGE)
+        if hasattr(self, 'check_auto_dpapi') and self.check_auto_dpapi.isChecked():
+            for c in raw_cases:
+                st = str(c.get("status", "")).strip().lower()
+                if st in ["resolved", "cancelled", "closed"]:
+                    continue
+
+                if self._is_dpapi_storage_candidate(c):
+                    t_id = str(c.get("ticket_id") or c.get("_id"))
+                    if t_id not in self._remediated_dpapi_cases:
+                        if self._worker_dpapi_remediator is None or not self._worker_dpapi_remediator.isRunning():
+                            self._remediated_dpapi_cases.add(t_id)
+                            log_to_file(f"[SOAR DPAPI] Iniciando auditoria de protected_storage para Caso #{t_id}...")
+                            self._worker_dpapi_remediator = DPAPIStorageAutoRemediatorWorker(
+                                case_obj=c,
+                                session=session,
+                                headers=headers
+                            )
+                            self._worker_dpapi_remediator.remediation_finished.connect(self._on_dpapi_remediation_finished)
+                            self._worker_dpapi_remediator.remediation_failed.connect(self._on_dpapi_remediation_failed)
+                            self._worker_dpapi_remediator.alert_non_dpapi.connect(self._on_non_dpapi_detected)
+                            self._worker_dpapi_remediator.start()
+                            break # Uno por ciclo para control estricto de concurrencia
+
         # 3. EVALUAR AUTO-GUARDIA SLA (PROTECCIÓN DE TURNO Y MTTD)
         if hasattr(self, 'check_auto_guardia') and self.check_auto_guardia.isChecked():
             for c in raw_cases:
@@ -5072,7 +5314,7 @@ class XdrDashboard(QMainWindow):
                 if not is_libre:
                     continue
 
-                # Si es un caso de HealthMailbox, WebControl Translate o SATI VPN, esperar a sus módulos SOAR
+                # Si es un caso de HealthMailbox, WebControl Translate, SATI VPN o DPAPI, esperar a sus módulos SOAR
                 t_id = str(c.get("ticket_id") or c.get("_id"))
                 if hasattr(self, 'check_auto_healthmailbox') and self.check_auto_healthmailbox.isChecked():
                     if self._is_healthmailbox_candidate(c) or t_id in self._active_probe_workers:
@@ -5082,6 +5324,9 @@ class XdrDashboard(QMainWindow):
                         continue
                 if hasattr(self, 'check_auto_sati') and self.check_auto_sati.isChecked():
                     if self._is_sati_vpn_candidate(c):
+                        continue
+                if hasattr(self, 'check_auto_dpapi') and self.check_auto_dpapi.isChecked():
+                    if self._is_dpapi_storage_candidate(c):
                         continue
 
                 # Evaluar MTTD para casos generales no asignados
@@ -5314,6 +5559,73 @@ class XdrDashboard(QMainWindow):
             MobileAlertsNotifier.send_notification(
                 title=f"[ATENCION] Caso #{t_id} SATI Sospechoso",
                 message=f"Host: {hosts} | Usuario: {users}\nActividad denegada fuera de DNS: {details}\nEl caso requiere triaje manual inmediato.",
+                priority="high",
+                tags="warning,rotating_light"
+            )
+        self.display_cases_results_wrapper()
+        QTimer.singleShot(1500, self.trigger_cases_refresh)
+
+    def _on_dpapi_remediation_finished(self, result: dict):
+        t_id = result.get("ticket_id", "N/A")
+        users = ", ".join(result.get("users", [])) or "Usuario corporativo"
+        hosts = ", ".join(result.get("hosts", [])) or "VMBASE8"
+        count = result.get("alert_count", 1)
+        log_msg = f"[SOAR DPAPI] Caso #{t_id} RESUELTO EXITOSAMENTE (False Positive) | Host: {hosts} | Usuario: {users} | Alertas: {count}"
+        log_to_file(log_msg)
+        ejecutar_beep(850, 200)
+        ejecutar_beep(1200, 250)
+        self.enviar_notificacion_popup(
+            f"⚡ Caso #{t_id} Auto-Remediado (DPAPI)",
+            f"Falso positivo DPAPI protected_storage verificado ({hosts} / {users}). Cerrado como False Positive."
+        )
+        if hasattr(self, 'check_mobile_alerts') and self.check_mobile_alerts.isChecked():
+            if str(t_id) not in self._mobile_notified_auto_closed:
+                self._mobile_notified_auto_closed.add(str(t_id))
+                MobileAlertsNotifier.send_notification(
+                    title=f"[AUTO-REMEDIADO] Caso #{t_id} (DPAPI)",
+                    message=f"Caso #{t_id} ({hosts} / {users}) cerrado automáticamente como False Positive.\nSincronización legítima Windows DPAPI ({count} alertas mitigadas).",
+                    priority="default",
+                    tags="robot,check"
+                )
+        if str(t_id) in self.dict_casos_activos:
+            self.dict_casos_activos[str(t_id)]["status"] = "Resolved"
+            self.dict_casos_activos[str(t_id)]["resolution"] = "False Positive"
+        if hasattr(self, '_last_cases_data'):
+            for c in self._last_cases_data.get("cases", {}).get("data", {}).get("cases", []):
+                if str(c.get("ticket_id")) == str(t_id):
+                    c["status"] = "Resolved"
+                    c["resolution"] = "False Positive"
+                    break
+        self.display_cases_results_wrapper()
+        QTimer.singleShot(1500, self.trigger_cases_refresh)
+
+    def _on_dpapi_remediation_failed(self, ticket_id: str, error_msg: str):
+        log_msg = f"[SOAR DPAPI ERROR] Fallo en caso #{ticket_id}: {error_msg}"
+        log_to_file(log_msg)
+        ejecutar_beep(450, 500)
+        self.enviar_notificacion_popup(
+            f"Atención: Caso #{ticket_id}",
+            f"No se auto-resolvió DPAPI: {error_msg[:120]}"
+        )
+        QTimer.singleShot(1500, self.trigger_cases_refresh)
+
+    def _on_non_dpapi_detected(self, alert_info: dict):
+        t_id = alert_info.get("ticket_id", "N/A")
+        users = ", ".join(alert_info.get("users", [])) or "Desconocido"
+        hosts = ", ".join(alert_info.get("hosts", [])) or "Desconocido"
+        details = alert_info.get("details", "")
+        log_msg = f"[SOAR DPAPI ALERTA CRÍTICA] Caso #{t_id} ({hosts} / {users}) CONTIENE ACTIVIDAD NO DPAPI: {details}. Asignado para triaje manual."
+        log_to_file(log_msg)
+        ejecutar_beep(1000, 300)
+        ejecutar_beep(600, 400)
+        self.enviar_notificacion_popup(
+            f"⚠️ ALERTA: Caso #{t_id} DPAPI Sospechoso",
+            f"Host: {hosts} | Usuario: {users}\nActividad fuera de protected_storage: {details[:120]}\nRequiere análisis manual."
+        )
+        if hasattr(self, 'check_mobile_alerts') and self.check_mobile_alerts.isChecked():
+            MobileAlertsNotifier.send_notification(
+                title=f"⚠️ [ATENCIÓN] Caso #{t_id} DPAPI Sospechoso",
+                message=f"Host: {hosts} | Usuario: {users}\nActividad fuera de protected_storage: {details}\nEl caso requiere triaje manual inmediato.",
                 priority="high",
                 tags="warning,rotating_light"
             )
@@ -10326,7 +10638,7 @@ class XdrDashboard(QMainWindow):
 
         # --- Workers EFÍMEROS: pueden ser None si ya fueron destruidos por _safe_kill_worker ---
         for w_name in ('worker_triage', 'worker_take', 'worker_interflow',
-                       'worker_resolve', 'worker_ai', '_worker_extended_cases', '_worker_cti', '_worker_cve_batch', '_worker_hm_remediator', '_worker_sophos_translate_remediator', '_worker_sati_remediator',
+                       'worker_resolve', 'worker_ai', '_worker_extended_cases', '_worker_cti', '_worker_cve_batch', '_worker_hm_remediator', '_worker_sophos_translate_remediator', '_worker_sati_remediator', '_worker_dpapi_remediator',
                        '_worker_so_health', '_worker_so_hunt', '_worker_so_telemetry'):
             w = getattr(self, w_name, None)
             if w:

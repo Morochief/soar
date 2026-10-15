@@ -1,0 +1,4163 @@
+{
+  "total": 67,
+  "extracted_at": "2026-10-14T07:33:43.157080",
+  "filters": [
+    {
+      "id": "691caf0998520e1b91eb3860",
+      "name": "Filter NOC server OUT",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "192.168.15.27"
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['192.168.15.27']",
+      "tenant": "all-tenants",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "Joliva@stellarcyber.ai",
+      "created_at_epoch": 1763487497,
+      "created_at": "2025-11-18 14:38:17",
+      "modified_by": "Joliva@stellarcyber.ai",
+      "modified_at_epoch": 1763487813,
+      "modified_at": "2025-11-18 14:43:33",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "192.168.15.27"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691cb065fd93619a950d1787",
+      "name": "Filter NOC Server IN",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "dstip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "192.168.15.27"
+          ]
+        }
+      },
+      "rules_summary": "dstip matches ['192.168.15.27']",
+      "tenant": "all-tenants",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "Joliva@stellarcyber.ai",
+      "created_at_epoch": 1763487845,
+      "created_at": "2025-11-18 14:44:05",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "dstip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "192.168.15.27"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691cbd5398520e1b91eb3865",
+      "name": "Filter NOC Monitoreo",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "192.168.20.15"
+          ]
+        },
+        "dstport": {
+          "type": "number",
+          "op": "==",
+          "value": [
+            3000
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['192.168.20.15'] AND dstport == [3000]",
+      "tenant": "all-tenants",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ilsongonzalez@technoma.com.py",
+      "created_at_epoch": 1763491155,
+      "created_at": "2025-11-18 15:39:15",
+      "modified_by": "ilsongonzalez@technoma.com.py",
+      "modified_at_epoch": 1763491409,
+      "modified_at": "2025-11-18 15:43:29",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "192.168.20.15"
+            ]
+          },
+          "dstport": {
+            "type": "number",
+            "op": "==",
+            "value": [
+              3000
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691cbfc54ae91719cb3e49c0",
+      "name": "Filter NOC Monitoreo syslog",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "SYSLOG"
+          ]
+        }
+      },
+      "rules_summary": "appid_name == ['SYSLOG']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ilsongonzalez@technoma.com.py",
+      "created_at_epoch": 1763491781,
+      "created_at": "2025-11-18 15:49:41",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "SYSLOG"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691cc89b4ae91719cb3e49c4",
+      "name": "Filter Technoma AP Aprovisioning",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "dstport": {
+          "type": "number",
+          "op": "==",
+          "value": [
+            5247
+          ]
+        }
+      },
+      "rules_summary": "dstport == [5247]",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763494043,
+      "created_at": "2025-11-18 16:27:23",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "dstport": {
+            "type": "number",
+            "op": "==",
+            "value": [
+              5247
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691ccf38fd93619a950d179c",
+      "name": "Filter NOC deny TCP 7002 8000",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "dstport": {
+          "type": "number",
+          "op": "==",
+          "value": [
+            7002,
+            8000,
+            38881
+          ]
+        }
+      },
+      "rules_summary": "dstport == [7002, 8000, 38881]",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763495736,
+      "created_at": "2025-11-18 16:55:36",
+      "modified_by": "ivancenturion@technoma.com.py",
+      "modified_at_epoch": 1763730890,
+      "modified_at": "2025-11-21 10:14:50",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "dstport": {
+            "type": "number",
+            "op": "==",
+            "value": [
+              7002,
+              8000,
+              38881
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691ccfab4ae91719cb3e49cb",
+      "name": "Filter NOC deny TCP 7001",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "tcp/7001",
+            "udp/5060",
+            "SNMP_GetRequest",
+            "tcp/7860",
+            "Google.Services",
+            "NTP",
+            "icmp6/131/0",
+            "tcp/631",
+            "TCP_20443",
+            "STUN"
+          ]
+        }
+      },
+      "rules_summary": "appid_name == ['tcp/7001', 'udp/5060', 'SNMP_GetRequest', 'tcp/7860', 'Google.Services', 'NTP', 'icmp6/131/0', 'tcp/631', 'TCP_20443', 'STUN']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763495851,
+      "created_at": "2025-11-18 16:57:31",
+      "modified_by": "ivancenturion@technoma.com.py",
+      "modified_at_epoch": 1763674422,
+      "modified_at": "2025-11-20 18:33:42",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "tcp/7001",
+              "udp/5060",
+              "SNMP_GetRequest",
+              "tcp/7860",
+              "Google.Services",
+              "NTP",
+              "icmp6/131/0",
+              "tcp/631",
+              "TCP_20443",
+              "STUN"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691ce1b5fd93619a950d17af",
+      "name": "Filter Technoma AP Aprovisioning udp5246",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "dstport": {
+          "type": "number",
+          "op": "==",
+          "value": [
+            5246
+          ]
+        }
+      },
+      "rules_summary": "dstport == [5246]",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763500469,
+      "created_at": "2025-11-18 18:14:29",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "dstport": {
+            "type": "number",
+            "op": "==",
+            "value": [
+              5246
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691ce47bfd93619a950d17b4",
+      "name": "Filter Technoma SOC IPsec",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "fortinet.msg": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "BGP: %BGP-3-NOTIFICATION: sending to 10.163.100.6 2/2 (OPEN Message Error/Bad Peer AS.) 4 data-bytes [ff e6 00 00]",
+            "progress IPsec phase 1",
+            "negotiate IPsec phase 1",
+            "IPsec tunnel statistics"
+          ]
+        }
+      },
+      "rules_summary": "fortinet.msg == ['BGP: %BGP-3-NOTIFICATION: sending to 10.163.100.6 2/2 (OPEN Message Error/Bad Peer AS.) 4 data-bytes [ff e6 00 00]', 'progress IPsec phase 1', 'negotiate IPsec phase 1', 'IPsec tunnel statistics']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763501179,
+      "created_at": "2025-11-18 18:26:19",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "fortinet.msg": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "BGP: %BGP-3-NOTIFICATION: sending to 10.163.100.6 2/2 (OPEN Message Error/Bad Peer AS.) 4 data-bytes [ff e6 00 00]",
+              "progress IPsec phase 1",
+              "negotiate IPsec phase 1",
+              "IPsec tunnel statistics"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691dab7a4ae91719cb3e49e2",
+      "name": "filter technoma noc ipsec 2",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "fortinet.logdesc": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "IPsec phase 1 SA deleted"
+          ]
+        }
+      },
+      "rules_summary": "fortinet.logdesc == ['IPsec phase 1 SA deleted']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763552122,
+      "created_at": "2025-11-19 08:35:22",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "fortinet.logdesc": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "IPsec phase 1 SA deleted"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691dad0998520e1b91eb3883",
+      "name": "filter technoma noc snmp 3",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "SNMP"
+          ]
+        }
+      },
+      "rules_summary": "appid_name == ['SNMP']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763552521,
+      "created_at": "2025-11-19 08:42:01",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "SNMP"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691daea14ae91719cb3e49e5",
+      "name": "filter technoma noc filter ipsec 3",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "fortinet.logdesc": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "IPsec phase 1 error"
+          ]
+        },
+        "fortinet.subtype": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "vpn"
+          ]
+        }
+      },
+      "rules_summary": "fortinet.logdesc == ['IPsec phase 1 error'] AND fortinet.subtype == ['vpn']",
+      "tenant": "all-tenants",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763552929,
+      "created_at": "2025-11-19 08:48:49",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "fortinet.logdesc": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "IPsec phase 1 error"
+            ]
+          },
+          "fortinet.subtype": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "vpn"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691db022fd93619a950d17d3",
+      "name": "filter technoma noc routing error",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "fortinet.msg": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "BGP: 10.163.100.6-Outgoing [DECODE] Open: Bad Remote-AS (65510), expected 65556"
+          ]
+        }
+      },
+      "rules_summary": "fortinet.msg == ['BGP: 10.163.100.6-Outgoing [DECODE] Open: Bad Remote-AS (65510), expected 65556']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763553314,
+      "created_at": "2025-11-19 08:55:14",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "fortinet.msg": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "BGP: 10.163.100.6-Outgoing [DECODE] Open: Bad Remote-AS (65510), expected 65556"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691dba52fd93619a950d17dc",
+      "name": "filter technoma noc icmp 2",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "dstip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "192.168.10.254"
+          ]
+        },
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "icmp/8/0"
+          ]
+        }
+      },
+      "rules_summary": "dstip matches ['192.168.10.254'] AND appid_name == ['icmp/8/0']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763555922,
+      "created_at": "2025-11-19 09:38:42",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "dstip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "192.168.10.254"
+            ]
+          },
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "icmp/8/0"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691df8f8fd93619a950d1807",
+      "name": "filter technoma noc icmp",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "10.149.200.254"
+          ]
+        },
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "icmp/8/0"
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['10.149.200.254'] AND appid_name == ['icmp/8/0']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763571960,
+      "created_at": "2025-11-19 14:06:00",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "10.149.200.254"
+            ]
+          },
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "icmp/8/0"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691df94ffd93619a950d1809",
+      "name": "Filter Technoma NOC",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "15.229.74.29"
+          ]
+        },
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "icmp/8/0"
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['15.229.74.29'] AND appid_name == ['icmp/8/0']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763572047,
+      "created_at": "2025-11-19 14:07:27",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "15.229.74.29"
+            ]
+          },
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "icmp/8/0"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691df99ffd93619a950d180b",
+      "name": "filter technoma noc icmp 5",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "172.24.74.126"
+          ]
+        },
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "icmp/8/0"
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['172.24.74.126'] AND appid_name == ['icmp/8/0']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763572127,
+      "created_at": "2025-11-19 14:08:47",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "172.24.74.126"
+            ]
+          },
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "icmp/8/0"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691dfc77fd93619a950d1813",
+      "name": "technoma NOC deny BGP",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "BGP"
+          ]
+        }
+      },
+      "rules_summary": "appid_name == ['BGP']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763572855,
+      "created_at": "2025-11-19 14:20:55",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "BGP"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691dfcfe98520e1b91eb38a5",
+      "name": "filter technoma zabbix 40003",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "192.168.15.17"
+          ]
+        },
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "tcp/40003"
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['192.168.15.17'] AND appid_name == ['tcp/40003']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763572990,
+      "created_at": "2025-11-19 14:23:10",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "192.168.15.17"
+            ]
+          },
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "tcp/40003"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691dfec498520e1b91eb38a7",
+      "name": "filter technoma filter ipsec 4",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "fortinet.locport": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "500"
+          ]
+        }
+      },
+      "rules_summary": "fortinet.locport == ['500']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763573444,
+      "created_at": "2025-11-19 14:30:44",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "fortinet.locport": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "500"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691e019398520e1b91eb38ad",
+      "name": "filter noc icmpv6",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "dstip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "ff02::16"
+          ]
+        }
+      },
+      "rules_summary": "dstip matches ['ff02::16']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763574163,
+      "created_at": "2025-11-19 14:42:43",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "dstip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "ff02::16"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691e035cfd93619a950d1822",
+      "name": "filter noc icmp v6",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "192.168.15.98"
+          ]
+        },
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "icmp/8/0"
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['192.168.15.98'] AND appid_name == ['icmp/8/0']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763574620,
+      "created_at": "2025-11-19 14:50:20",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "192.168.15.98"
+            ]
+          },
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "icmp/8/0"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691e08314ae91719cb3e4a08",
+      "name": "filter technoma ssl vlan visitas",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "fortinet.applist": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "VISITAS"
+          ]
+        }
+      },
+      "rules_summary": "fortinet.applist == ['VISITAS']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763575857,
+      "created_at": "2025-11-19 15:10:57",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "fortinet.applist": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "VISITAS"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691e0987fd93619a950d1826",
+      "name": "technomafilterQUIC beaconshandoffgcpgvt2.com",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "dstip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "142.251.128.67",
+            "142.251.129.74"
+          ]
+        }
+      },
+      "rules_summary": "dstip matches ['142.251.128.67', '142.251.129.74']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763576199,
+      "created_at": "2025-11-19 15:16:39",
+      "modified_by": "ivancenturion@technoma.com.py",
+      "modified_at_epoch": 1763586402,
+      "modified_at": "2025-11-19 18:06:42",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "dstip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "142.251.128.67",
+              "142.251.129.74"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691e0af5fd93619a950d1829",
+      "name": "filter NOC technoma port 5060 udp",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "192.168.16.4"
+          ]
+        },
+        "dstip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "192.168.1.111"
+          ]
+        },
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "udp/5080"
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['192.168.16.4'] AND dstip matches ['192.168.1.111'] AND appid_name == ['udp/5080']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763576565,
+      "created_at": "2025-11-19 15:22:45",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "192.168.16.4"
+            ]
+          },
+          "dstip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "192.168.1.111"
+            ]
+          },
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "udp/5080"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691e0c544ae91719cb3e4a0d",
+      "name": "technoma NOC filter dst 3550 40003",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "dstip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "10.60.35.50"
+          ]
+        },
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "tcp/40003"
+          ]
+        }
+      },
+      "rules_summary": "dstip matches ['10.60.35.50'] AND appid_name == ['tcp/40003']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763576916,
+      "created_at": "2025-11-19 15:28:36",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "dstip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "10.60.35.50"
+            ]
+          },
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "tcp/40003"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691e0de14ae91719cb3e4a0f",
+      "name": "filter noc pantallas",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "192.168.15.34"
+          ]
+        },
+        "dstip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "10.190.70.5"
+          ]
+        },
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "HTTPS"
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['192.168.15.34'] AND dstip matches ['10.190.70.5'] AND appid_name == ['HTTPS']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763577313,
+      "created_at": "2025-11-19 15:35:13",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "192.168.15.34"
+            ]
+          },
+          "dstip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "10.190.70.5"
+            ]
+          },
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "HTTPS"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691e0f4afd93619a950d182b",
+      "name": "filter technoma web ygght",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "dstip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "142.251.128.65"
+          ]
+        },
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "HTTPS"
+          ]
+        }
+      },
+      "rules_summary": "dstip matches ['142.251.128.65'] AND appid_name == ['HTTPS']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763577674,
+      "created_at": "2025-11-19 15:41:14",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "dstip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "142.251.128.65"
+            ]
+          },
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "HTTPS"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691e11d0fd93619a950d182d",
+      "name": "filter technoma NOC appid 15031",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "192.168.16.3"
+          ]
+        },
+        "dstip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "47.90.158.167"
+          ]
+        },
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "tcp/15301"
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['192.168.16.3'] AND dstip matches ['47.90.158.167'] AND appid_name == ['tcp/15301']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763578320,
+      "created_at": "2025-11-19 15:52:00",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "192.168.16.3"
+            ]
+          },
+          "dstip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "47.90.158.167"
+            ]
+          },
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "tcp/15301"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691e221a98520e1b91eb38b7",
+      "name": "technoma block QUIC HTTPS enterprise",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "dstip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "142.251.134.74",
+            "142.251.128.42",
+            "142.251.133.234",
+            "142.251.129.106",
+            "142.251.128.74",
+            "142.251.129.74",
+            "142.251.129.42",
+            "142.251.133.234",
+            "142.251.128.42",
+            "142.251.134.202",
+            "142.251.129.170",
+            "142.251.129.42",
+            "172.217.28.10",
+            "142.251.129.42",
+            "142.251.128.138",
+            "172.217.28.234",
+            "142.251.128.42",
+            "142.251.128.106",
+            "142.251.129.74",
+            "142.251.128.42",
+            "142.251.129.42",
+            "172.217.28.234",
+            "216.239.36.181",
+            "216.239.38.181",
+            "216.239.34.181",
+            "216.239.32.181",
+            "150.171.22.12",
+            "34.107.243.93",
+            "172.217.28.3",
+            "150.171.27.10",
+            "150.171.28.10",
+            "142.251.128.227",
+            "142.251.128.234",
+            "150.171.28.11",
+            "150.171.27.11",
+            "142.251.128.67",
+            "142.251.128.225",
+            "142.251.128.129",
+            "52.108.9.12",
+            "52.108.8.12",
+            "52.123.129.14",
+            "52.123.128.14",
+            "142.251.128.129",
+            "142.251.129.163",
+            "142.251.128.99",
+            "142.251.129.99",
+            "142.251.128.131",
+            "142.251.128.35",
+            "142.251.129.67",
+            "142.251.129.35",
+            "142.251.129.10",
+            "142.251.129.138",
+            "157.240.12.13",
+            "142.251.128.142",
+            "142.251.128.78"
+          ]
+        },
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "HTTPS",
+            "SSL",
+            "QUIC",
+            "HTTP",
+            "HTTP.BROWSER"
+          ]
+        },
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "192.168.169.0/24"
+          ]
+        }
+      },
+      "rules_summary": "dstip matches ['142.251.134.74', '142.251.128.42', '142.251.133.234', '142.251.129.106', '142.251.128.74', '142.251.129.74', '142.251.129.42', '142.251.133.234', '142.251.128.42', '142.251.134.202', '142.251.129.170', '142.251.129.42', '172.217.28.10', '142.251.129.42', '142.251.128.138', '172.217.28.234', '142.251.128.42', '142.251.128.106', '142.251.129.74', '142.251.128.42', '142.251.129.42', '172.217.28.234', '216.239.36.181', '216.239.38.181', '216.239.34.181', '216.239.32.181', '150.171.22.12', '34.107.243.93', '172.217.28.3', '150.171.27.10', '150.171.28.10', '142.251.128.227', '142.251.128.234', '150.171.28.11', '150.171.27.11', '142.251.128.67', '142.251.128.225', '142.251.128.129', '52.108.9.12', '52.108.8.12', '52.123.129.14', '52.123.128.14', '142.251.128.129', '142.251.129.163', '142.251.128.99', '142.251.129.99', '142.251.128.131', '142.251.128.35', '142.251.129.67', '142.251.129.35', '142.251.129.10', '142.251.129.138', '157.240.12.13', '142.251.128.142', '142.251.128.78'] AND appid_name == ['HTTPS', 'SSL', 'QUIC', 'HTTP', 'HTTP.BROWSER'] AND srcip matches ['192.168.169.0/24']",
+      "tenant": "all-tenants",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763582490,
+      "created_at": "2025-11-19 17:01:30",
+      "modified_by": "ivancenturion@technoma.com.py",
+      "modified_at_epoch": 1763730012,
+      "modified_at": "2025-11-21 10:00:12",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "dstip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "142.251.134.74",
+              "142.251.128.42",
+              "142.251.133.234",
+              "142.251.129.106",
+              "142.251.128.74",
+              "142.251.129.74",
+              "142.251.129.42",
+              "142.251.133.234",
+              "142.251.128.42",
+              "142.251.134.202",
+              "142.251.129.170",
+              "142.251.129.42",
+              "172.217.28.10",
+              "142.251.129.42",
+              "142.251.128.138",
+              "172.217.28.234",
+              "142.251.128.42",
+              "142.251.128.106",
+              "142.251.129.74",
+              "142.251.128.42",
+              "142.251.129.42",
+              "172.217.28.234",
+              "216.239.36.181",
+              "216.239.38.181",
+              "216.239.34.181",
+              "216.239.32.181",
+              "150.171.22.12",
+              "34.107.243.93",
+              "172.217.28.3",
+              "150.171.27.10",
+              "150.171.28.10",
+              "142.251.128.227",
+              "142.251.128.234",
+              "150.171.28.11",
+              "150.171.27.11",
+              "142.251.128.67",
+              "142.251.128.225",
+              "142.251.128.129",
+              "52.108.9.12",
+              "52.108.8.12",
+              "52.123.129.14",
+              "52.123.128.14",
+              "142.251.128.129",
+              "142.251.129.163",
+              "142.251.128.99",
+              "142.251.129.99",
+              "142.251.128.131",
+              "142.251.128.35",
+              "142.251.129.67",
+              "142.251.129.35",
+              "142.251.129.10",
+              "142.251.129.138",
+              "157.240.12.13",
+              "142.251.128.142",
+              "142.251.128.78"
+            ]
+          },
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "HTTPS",
+              "SSL",
+              "QUIC",
+              "HTTP",
+              "HTTP.BROWSER"
+            ]
+          },
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "192.168.169.0/24"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691e42924ae91719cb3e4a21",
+      "name": "Filter Technoma Apple background",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "dstip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "172.224.174.195",
+            "172.224.174.196",
+            "172.224.174.198",
+            "172.224.174.197"
+          ]
+        }
+      },
+      "rules_summary": "dstip matches ['172.224.174.195', '172.224.174.196', '172.224.174.198', '172.224.174.197']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763590802,
+      "created_at": "2025-11-19 19:20:02",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "dstip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "172.224.174.195",
+              "172.224.174.196",
+              "172.224.174.198",
+              "172.224.174.197"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691e62c1fd93619a950d184f",
+      "name": "Filter Technoma Linux Check host alive",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "dstip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "91.189.91.96",
+            "185.125.190.96",
+            "185.125.190.98",
+            "91.189.91.48",
+            "91.189.91.97",
+            "185.125.190.48",
+            "91.189.91.49",
+            "185.125.190.18",
+            "185.125.190.49",
+            "185.125.190.17",
+            "185.125.190.97"
+          ]
+        }
+      },
+      "rules_summary": "dstip matches ['91.189.91.96', '185.125.190.96', '185.125.190.98', '91.189.91.48', '91.189.91.97', '185.125.190.48', '91.189.91.49', '185.125.190.18', '185.125.190.49', '185.125.190.17', '185.125.190.97']",
+      "tenant": "all-tenants",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763599041,
+      "created_at": "2025-11-19 21:37:21",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "dstip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "91.189.91.96",
+              "185.125.190.96",
+              "185.125.190.98",
+              "91.189.91.48",
+              "91.189.91.97",
+              "185.125.190.48",
+              "91.189.91.49",
+              "185.125.190.18",
+              "185.125.190.49",
+              "185.125.190.17",
+              "185.125.190.97"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691e65a498520e1b91eb38c1",
+      "name": "Filter Technoma NOC VEEAM Backup traffic v1",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "10.11.4.2"
+          ]
+        },
+        "dstip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "10.11.5.2"
+          ]
+        },
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "tcp/6162"
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['10.11.4.2'] AND dstip matches ['10.11.5.2'] AND appid_name == ['tcp/6162']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763599780,
+      "created_at": "2025-11-19 21:49:40",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "10.11.4.2"
+            ]
+          },
+          "dstip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "10.11.5.2"
+            ]
+          },
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "tcp/6162"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691e68d698520e1b91eb38c3",
+      "name": "Filter Technoma Webex",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "Cisco-Webex"
+          ]
+        }
+      },
+      "rules_summary": "appid_name == ['Cisco-Webex']",
+      "tenant": "all-tenants",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763600598,
+      "created_at": "2025-11-19 22:03:18",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "Cisco-Webex"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691e6ca098520e1b91eb38c7",
+      "name": "Filter Block Technoma NOC v10",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "192.168.15.46"
+          ]
+        },
+        "dstip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "40.119.63.30",
+            "135.233.210.61",
+            "40.124.109.153"
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['192.168.15.46'] AND dstip matches ['40.119.63.30', '135.233.210.61', '40.124.109.153']",
+      "tenant": "all-tenants",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763601568,
+      "created_at": "2025-11-19 22:19:28",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "192.168.15.46"
+            ]
+          },
+          "dstip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "40.119.63.30",
+              "135.233.210.61",
+              "40.124.109.153"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691e6fef4ae91719cb3e4a29",
+      "name": "Filter NOC Technoma v11 pantalla grafana",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "192.168.15.23"
+          ]
+        },
+        "dstip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "10.20.3.23"
+          ]
+        },
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "HTTP.BROWSER"
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['192.168.15.23'] AND dstip matches ['10.20.3.23'] AND appid_name == ['HTTP.BROWSER']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763602415,
+      "created_at": "2025-11-19 22:33:35",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "192.168.15.23"
+            ]
+          },
+          "dstip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "10.20.3.23"
+            ]
+          },
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "HTTP.BROWSER"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "691f50ebfd93619a950d1898",
+      "name": "Filter AD DNS out",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "10.11.1.1",
+            "10.11.1.2"
+          ]
+        },
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "DNS"
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['10.11.1.1', '10.11.1.2'] AND appid_name == ['DNS']",
+      "tenant": "all-tenants",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "Joliva@stellarcyber.ai",
+      "created_at_epoch": 1763660011,
+      "created_at": "2025-11-20 14:33:31",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "10.11.1.1",
+              "10.11.1.2"
+            ]
+          },
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "DNS"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "692057f298520e1b91eb3908",
+      "name": "Block Technoma Trellix telemetry",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "192.168.169.115",
+            "192.168.20.7",
+            "192.168.169.71",
+            "192.168.169.22",
+            "192.168.169.89",
+            "192.168.169.15",
+            "192.168.169.41",
+            "192.168.169.125",
+            "192.168.169.110",
+            "192.168.15.14",
+            "192.168.169.19",
+            "192.168.169.170",
+            "192.168.15.82",
+            "192.168.169.63",
+            "192.168.169.5",
+            "192.168.169.120",
+            "192.168.169.124",
+            "192.168.169.11",
+            "192.168.169.141",
+            "192.168.169.34",
+            "192.168.169.101",
+            "192.168.169.82",
+            "192.168.169.114",
+            "192.168.169.35",
+            "192.168.169.10",
+            "192.168.169.53",
+            "192.168.169.152",
+            "192.168.169.9",
+            "192.168.169.66",
+            "192.168.169.20",
+            "192.168.169.55",
+            "192.168.169.148",
+            "192.168.169.169",
+            "192.168.169.169",
+            "192.168.169.48"
+          ]
+        },
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "SSL"
+          ]
+        },
+        "dstip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "44.207.208.72"
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['192.168.169.115', '192.168.20.7', '192.168.169.71', '192.168.169.22', '192.168.169.89', '192.168.169.15', '192.168.169.41', '192.168.169.125', '192.168.169.110', '192.168.15.14', '192.168.169.19', '192.168.169.170', '192.168.15.82', '192.168.169.63', '192.168.169.5', '192.168.169.120', '192.168.169.124', '192.168.169.11', '192.168.169.141', '192.168.169.34', '192.168.169.101', '192.168.169.82', '192.168.169.114', '192.168.169.35', '192.168.169.10', '192.168.169.53', '192.168.169.152', '192.168.169.9', '192.168.169.66', '192.168.169.20', '192.168.169.55', '192.168.169.148', '192.168.169.169', '192.168.169.169', '192.168.169.48'] AND appid_name == ['SSL'] AND dstip matches ['44.207.208.72']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763727346,
+      "created_at": "2025-11-21 09:15:46",
+      "modified_by": "ivancenturion@technoma.com.py",
+      "modified_at_epoch": 1763727718,
+      "modified_at": "2025-11-21 09:21:58",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "192.168.169.115",
+              "192.168.20.7",
+              "192.168.169.71",
+              "192.168.169.22",
+              "192.168.169.89",
+              "192.168.169.15",
+              "192.168.169.41",
+              "192.168.169.125",
+              "192.168.169.110",
+              "192.168.15.14",
+              "192.168.169.19",
+              "192.168.169.170",
+              "192.168.15.82",
+              "192.168.169.63",
+              "192.168.169.5",
+              "192.168.169.120",
+              "192.168.169.124",
+              "192.168.169.11",
+              "192.168.169.141",
+              "192.168.169.34",
+              "192.168.169.101",
+              "192.168.169.82",
+              "192.168.169.114",
+              "192.168.169.35",
+              "192.168.169.10",
+              "192.168.169.53",
+              "192.168.169.152",
+              "192.168.169.9",
+              "192.168.169.66",
+              "192.168.169.20",
+              "192.168.169.55",
+              "192.168.169.148",
+              "192.168.169.169",
+              "192.168.169.169",
+              "192.168.169.48"
+            ]
+          },
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "SSL"
+            ]
+          },
+          "dstip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "44.207.208.72"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "69205a9afd93619a950d18f2",
+      "name": "Block microsoft edge telemetry OUT",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "dstip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "13.107.213.33"
+          ]
+        },
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "HTTPS"
+          ]
+        }
+      },
+      "rules_summary": "dstip matches ['13.107.213.33'] AND appid_name == ['HTTPS']",
+      "tenant": "all-tenants",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1763728026,
+      "created_at": "2025-11-21 09:27:06",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "dstip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "13.107.213.33"
+            ]
+          },
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "HTTPS"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "6926687ba496888ec606390d",
+      "name": "Filter OUT traffic veeam Technoma",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "190.128.196.186"
+          ]
+        },
+        "dstip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "190.104.178.146"
+          ]
+        },
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "tcp/6180"
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['190.128.196.186'] AND dstip matches ['190.104.178.146'] AND appid_name == ['tcp/6180']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1764124795,
+      "created_at": "2025-11-25 23:39:55",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "190.128.196.186"
+            ]
+          },
+          "dstip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "190.104.178.146"
+            ]
+          },
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "tcp/6180"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "6926f6f1a77d64c0b0abb549",
+      "name": "Filter PING from Zabbix to Clients",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "192.168.15.31"
+          ]
+        },
+        "dstip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "10.180.20.146",
+            "192.168.10.254",
+            "172.24.74.125",
+            "10.70.2.201"
+          ]
+        },
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "PING"
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['192.168.15.31'] AND dstip matches ['10.180.20.146', '192.168.10.254', '172.24.74.125', '10.70.2.201'] AND appid_name == ['PING']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1764161265,
+      "created_at": "2025-11-26 09:47:45",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "192.168.15.31"
+            ]
+          },
+          "dstip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "10.180.20.146",
+              "192.168.10.254",
+              "172.24.74.125",
+              "10.70.2.201"
+            ]
+          },
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "PING"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "6966a763a77d64c0b0abb5bc",
+      "name": "Filter Technoma SIP Deny",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet - FortiGate (CEF)",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "192.168.15.37"
+          ]
+        },
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "SIP"
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['192.168.15.37'] AND appid_name == ['SIP']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "victorcarvallo@technoma.com.py",
+      "created_at_epoch": 1768335203,
+      "created_at": "2026-01-13 17:13:23",
+      "modified_by": "victorcarvallo@technoma.com.py",
+      "modified_at_epoch": 1768392122,
+      "modified_at": "2026-01-14 09:02:02",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet - FortiGate (CEF)",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "192.168.15.37"
+            ]
+          },
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "SIP"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "6967bbd3330fa1aa1ab4b11b",
+      "name": "Filter Technoma QUIC Deny",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet - FortiGate (CEF)",
+      "rules": {
+        "dstip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "57.144.0.0/14",
+            "142.251.0.0/16"
+          ]
+        },
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "QUIC"
+          ]
+        }
+      },
+      "rules_summary": "dstip matches ['57.144.0.0/14', '142.251.0.0/16'] AND appid_name == ['QUIC']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "victorcarvallo@technoma.com.py",
+      "created_at_epoch": 1768405971,
+      "created_at": "2026-01-14 12:52:51",
+      "modified_by": "claraortega@technoma.com.py",
+      "modified_at_epoch": 1768412496,
+      "modified_at": "2026-01-14 14:41:36",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet - FortiGate (CEF)",
+        "rules": {
+          "dstip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "57.144.0.0/14",
+              "142.251.0.0/16"
+            ]
+          },
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "QUIC"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "696a446a8b15127bd8aa3417",
+      "name": "Filter Technoma VDOLIVE Deny",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet - FortiGate (CEF)",
+      "rules": {
+        "fw_policy_id": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "FG-Technoma_168"
+          ]
+        }
+      },
+      "rules_summary": "fw_policy_id == ['FG-Technoma_168']",
+      "tenant": "all-tenants",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "claraortega@technoma.com.py",
+      "created_at_epoch": 1768572010,
+      "created_at": "2026-01-16 11:00:10",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet - FortiGate (CEF)",
+        "rules": {
+          "fw_policy_id": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "FG-Technoma_168"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "696e2705bdf8d2b79dd882ce",
+      "name": "Filter Technoma BitTorrent Deny",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet - FortiGate (CEF)",
+      "rules": {
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "BitTorrent"
+          ]
+        }
+      },
+      "rules_summary": "appid_name == ['BitTorrent']",
+      "tenant": "all-tenants",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "claraortega@technoma.com.py",
+      "created_at_epoch": 1768826629,
+      "created_at": "2026-01-19 09:43:49",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet - FortiGate (CEF)",
+        "rules": {
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "BitTorrent"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "6970d66abdf8d2b79dd882d2",
+      "name": "Filter traffic OUT NOC to Client VeeamBackup",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet - FortiGate (CEF)",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "192.168.15.31"
+          ]
+        },
+        "dstip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "10.177.177.19",
+            "10.177.177.5"
+          ]
+        },
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "tcp/10050"
+          ]
+        },
+        "action": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "close"
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['192.168.15.31'] AND dstip matches ['10.177.177.19', '10.177.177.5'] AND appid_name == ['tcp/10050'] AND action == ['close']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ilsongonzalez@technoma.com.py",
+      "created_at_epoch": 1769002602,
+      "created_at": "2026-01-21 10:36:42",
+      "modified_by": "ilsongonzalez@technoma.com.py",
+      "modified_at_epoch": 1769112340,
+      "modified_at": "2026-01-22 17:05:40",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet - FortiGate (CEF)",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "192.168.15.31"
+            ]
+          },
+          "dstip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "10.177.177.19",
+              "10.177.177.5"
+            ]
+          },
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "tcp/10050"
+            ]
+          },
+          "action": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "close"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "69811d6ebdf8d2b79dd8832b",
+      "name": "filtrar zbx",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet - FortiGate (CEF)",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "192.168.15.31"
+          ]
+        },
+        "dstport": {
+          "type": "number",
+          "op": "==",
+          "value": [
+            10050
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['192.168.15.31'] AND dstport == [10050]",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1770069358,
+      "created_at": "2026-02-02 18:55:58",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet - FortiGate (CEF)",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "192.168.15.31"
+            ]
+          },
+          "dstport": {
+            "type": "number",
+            "op": "==",
+            "value": [
+              10050
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "69811ec9113b034729269991",
+      "name": "filter ping new",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "192.168.15.0/24",
+            "192.168.10.0/24"
+          ]
+        },
+        "proto": {
+          "type": "number",
+          "op": "==",
+          "value": [
+            1
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['192.168.15.0/24', '192.168.10.0/24'] AND proto == [1]",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1770069705,
+      "created_at": "2026-02-02 19:01:45",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "192.168.15.0/24",
+              "192.168.10.0/24"
+            ]
+          },
+          "proto": {
+            "type": "number",
+            "op": "==",
+            "value": [
+              1
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "698386b1bdf8d2b79dd88334",
+      "name": "informix block",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "10.2.1.4",
+            "10.2.1.3"
+          ]
+        },
+        "dstip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "10.2.1.3",
+            "10.2.1.4"
+          ]
+        },
+        "dstport": {
+          "type": "number",
+          "op": "==",
+          "value": [
+            8443
+          ]
+        },
+        "proto": {
+          "type": "number",
+          "op": "==",
+          "value": [
+            6
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['10.2.1.4', '10.2.1.3'] AND dstip matches ['10.2.1.3', '10.2.1.4'] AND dstport == [8443] AND proto == [6]",
+      "tenant": "all-tenants",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1770227377,
+      "created_at": "2026-02-04 14:49:37",
+      "modified_by": "kevinmoraes@technoma.com.py",
+      "modified_at_epoch": 1791736538,
+      "modified_at": "2026-10-11 13:35:38",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "10.2.1.4",
+              "10.2.1.3"
+            ]
+          },
+          "dstip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "10.2.1.3",
+              "10.2.1.4"
+            ]
+          },
+          "dstport": {
+            "type": "number",
+            "op": "==",
+            "value": [
+              8443
+            ]
+          },
+          "proto": {
+            "type": "number",
+            "op": "==",
+            "value": [
+              6
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "69848fd48b15127bd8aa3460",
+      "name": "filter traffic sip",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "10.2.1.20",
+            "10.2.1.1"
+          ]
+        },
+        "proto": {
+          "type": "number",
+          "op": "==",
+          "value": [
+            17
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['10.2.1.20', '10.2.1.1'] AND proto == [17]",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1770295252,
+      "created_at": "2026-02-05 09:40:52",
+      "modified_by": "ivancenturion@technoma.com.py",
+      "modified_at_epoch": 1770296068,
+      "modified_at": "2026-02-05 09:54:28",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "10.2.1.20",
+              "10.2.1.1"
+            ]
+          },
+          "proto": {
+            "type": "number",
+            "op": "==",
+            "value": [
+              17
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "698f659c113b0347292699af",
+      "name": "filter dahua DNS to AD",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "192.168.16.16",
+            "192.168.16.3"
+          ]
+        },
+        "dstip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "192.168.16.1"
+          ]
+        },
+        "dstport": {
+          "type": "number",
+          "op": "==",
+          "value": [
+            67
+          ]
+        },
+        "srcport": {
+          "type": "number",
+          "op": "==",
+          "value": [
+            68
+          ]
+        },
+        "proto": {
+          "type": "number",
+          "op": "==",
+          "value": [
+            17
+          ]
+        },
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "DHCP/DHCP Relay"
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['192.168.16.16', '192.168.16.3'] AND dstip matches ['192.168.16.1'] AND dstport == [67] AND srcport == [68] AND proto == [17] AND appid_name == ['DHCP/DHCP Relay']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1771005340,
+      "created_at": "2026-02-13 14:55:40",
+      "modified_by": "kevinmoraes@technoma.com.py",
+      "modified_at_epoch": 1791735475,
+      "modified_at": "2026-10-11 13:17:55",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "192.168.16.16",
+              "192.168.16.3"
+            ]
+          },
+          "dstip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "192.168.16.1"
+            ]
+          },
+          "dstport": {
+            "type": "number",
+            "op": "==",
+            "value": [
+              67
+            ]
+          },
+          "srcport": {
+            "type": "number",
+            "op": "==",
+            "value": [
+              68
+            ]
+          },
+          "proto": {
+            "type": "number",
+            "op": "==",
+            "value": [
+              17
+            ]
+          },
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "DHCP/DHCP Relay"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "69ba96e97ce7a80ccca17cc4",
+      "name": "filter - 165.1.125.196",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "192.168.15.70"
+          ]
+        },
+        "dstip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "165.1.125.196"
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['192.168.15.70'] AND dstip matches ['165.1.125.196']",
+      "tenant": "all-tenants",
+      "in_use": {
+        "sensor_profile": [
+          "Profile-CajaAnde",
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1773836009,
+      "created_at": "2026-03-18 09:13:29",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "192.168.15.70"
+            ]
+          },
+          "dstip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "165.1.125.196"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "69bda3da65e9b18c3281ae56",
+      "name": "filter QUIC",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "QUIC"
+          ]
+        }
+      },
+      "rules_summary": "appid_name == ['QUIC']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1774035930,
+      "created_at": "2026-03-20 16:45:30",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "QUIC"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "69f9f198841f8c7d70606fdd",
+      "name": "Filtro_Syslog_Ruidoso_10.99.99.1",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet - FortiGate (CEF)",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "10.99.99.1"
+          ]
+        },
+        "dstip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "192.168.15.70"
+          ]
+        },
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "syslog"
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['10.99.99.1'] AND dstip matches ['192.168.15.70'] AND appid_name == ['syslog']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "victorcarvallo@technoma.com.py",
+      "created_at_epoch": 1777987992,
+      "created_at": "2026-05-05 10:33:12",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet - FortiGate (CEF)",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "10.99.99.1"
+            ]
+          },
+          "dstip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "192.168.15.70"
+            ]
+          },
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "syslog"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "6a4f8db956ff9d98dbb05ef5",
+      "name": "Ruido_servidor_helpdesk",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "192.168.169.44"
+          ]
+        },
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "PING"
+          ]
+        },
+        "dstip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "10.49.70.0/24",
+            "10.49.71.0/24"
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['192.168.169.44'] AND appid_name == ['PING'] AND dstip matches ['10.49.70.0/24', '10.49.71.0/24']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "kevinmoraes@technoma.com.py",
+      "created_at_epoch": 1783598521,
+      "created_at": "2026-07-09 09:02:01",
+      "modified_by": "kevinmoraes@technoma.com.py",
+      "modified_at_epoch": 1783679090,
+      "modified_at": "2026-07-10 07:24:50",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "192.168.169.44"
+            ]
+          },
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "PING"
+            ]
+          },
+          "dstip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "10.49.70.0/24",
+              "10.49.71.0/24"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "6a4fb280665bdc8340600ec6",
+      "name": "Filter NOC Monitoreo - Odoo bd",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "192.168.15.31",
+            "192.168.15.46"
+          ]
+        },
+        "dstip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "10.40.2.240"
+          ]
+        },
+        "dstport": {
+          "type": "number",
+          "op": "==",
+          "value": [
+            5432
+          ]
+        },
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "tcp/5432"
+          ]
+        },
+        "action": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "close"
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['192.168.15.31', '192.168.15.46'] AND dstip matches ['10.40.2.240'] AND dstport == [5432] AND appid_name == ['tcp/5432'] AND action == ['close']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ilsongonzalez@technoma.com.py",
+      "created_at_epoch": 1783607936,
+      "created_at": "2026-07-09 11:38:56",
+      "modified_by": "ilsongonzalez@technoma.com.py",
+      "modified_at_epoch": 1783694940,
+      "modified_at": "2026-07-10 11:49:00",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "192.168.15.31",
+              "192.168.15.46"
+            ]
+          },
+          "dstip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "10.40.2.240"
+            ]
+          },
+          "dstport": {
+            "type": "number",
+            "op": "==",
+            "value": [
+              5432
+            ]
+          },
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "tcp/5432"
+            ]
+          },
+          "action": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "close"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "6a5139be27ba4bd1fd69924c",
+      "name": "Filter-SecurityOnion",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "172.17.10.25",
+            "172.17.10.71"
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['172.17.10.25', '172.17.10.71']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1783708094,
+      "created_at": "2026-07-10 15:28:14",
+      "modified_by": "ivancenturion@technoma.com.py",
+      "modified_at_epoch": 1783709858,
+      "modified_at": "2026-07-10 15:57:38",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "172.17.10.25",
+              "172.17.10.71"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "6a513c36345662579f0d9d4b",
+      "name": "Filter-LabServer-tcp31041",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet - FortiGate (CEF)",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "172.17.10.249",
+            "172.17.10.250"
+          ]
+        },
+        "dstport": {
+          "type": "number",
+          "op": "==",
+          "value": [
+            31041
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['172.17.10.249', '172.17.10.250'] AND dstport == [31041]",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ilsongonzalez@technoma.com.py",
+      "created_at_epoch": 1783708726,
+      "created_at": "2026-07-10 15:38:46",
+      "modified_by": "ilsongonzalez@technoma.com.py",
+      "modified_at_epoch": 1783712947,
+      "modified_at": "2026-07-10 16:49:07",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet - FortiGate (CEF)",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "172.17.10.249",
+              "172.17.10.250"
+            ]
+          },
+          "dstport": {
+            "type": "number",
+            "op": "==",
+            "value": [
+              31041
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "6a51481127326e7742c519f6",
+      "name": "block-security-onion",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "dstip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "172.17.10.25",
+            "172.17.10.71"
+          ]
+        }
+      },
+      "rules_summary": "dstip matches ['172.17.10.25', '172.17.10.71']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1783711761,
+      "created_at": "2026-07-10 16:29:21",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "dstip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "172.17.10.25",
+              "172.17.10.71"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "6a514eca27326e7742c51a03",
+      "name": "filtrar conexiones del zabbix",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "192.168.15.31",
+            "10.2.1.4",
+            "172.17.10.251"
+          ]
+        },
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "https",
+            "HTTPS"
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['192.168.15.31', '10.2.1.4', '172.17.10.251'] AND appid_name == ['https', 'HTTPS']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "ivancenturion@technoma.com.py",
+      "created_at_epoch": 1783713482,
+      "created_at": "2026-07-10 16:58:02",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "192.168.15.31",
+              "10.2.1.4",
+              "172.17.10.251"
+            ]
+          },
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "https",
+              "HTTPS"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "6a772602540a66cb62d8d680",
+      "name": "Healthmailbox",
+      "dev_type": "",
+      "dev_type_label": "",
+      "rules": {
+        "computer_name": {
+          "type": "string",
+          "op": "contains",
+          "value": [
+            "Healthmailbox"
+          ]
+        }
+      },
+      "rules_summary": "computer_name contains ['Healthmailbox']",
+      "tenant": "all-tenants",
+      "in_use": {
+        "sensor_profile": [
+          "Default",
+          "Profile-windows",
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "kevinmoraes@technoma.com.py",
+      "created_at_epoch": 1786193410,
+      "created_at": "2026-08-08 09:50:10",
+      "modified_by": "kevinmoraes@technoma.com.py",
+      "modified_at_epoch": 1787311597,
+      "modified_at": "2026-08-21 08:26:37",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "",
+        "dev_type_label": "",
+        "rules": {
+          "computer_name": {
+            "type": "string",
+            "op": "contains",
+            "value": [
+              "Healthmailbox"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "6abcff4cd7345ab3b6fe3b6f",
+      "name": "Filtrar peticiones DNS Grafana THN",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "192.168.15.23"
+          ]
+        },
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "DNS"
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['192.168.15.23'] AND appid_name == ['DNS']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "hermessanchez@technoma.com.py",
+      "created_at_epoch": 1790771020,
+      "created_at": "2026-09-30 09:23:40",
+      "modified_by": "hermessanchez@technoma.com.py",
+      "modified_at_epoch": 1791896890,
+      "modified_at": "2026-10-13 10:08:10",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "192.168.15.23"
+            ]
+          },
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "DNS"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "6abe7d941b7191d76a1b08ab",
+      "name": "Drop_FW_Denial_SATI_VPN_DNS_DCs",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "action": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "deny"
+          ]
+        },
+        "dstport": {
+          "type": "number",
+          "op": "==",
+          "value": [
+            53
+          ]
+        },
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "10.212.134.0/24"
+          ]
+        },
+        "dstip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "10.11.1.0/24"
+          ]
+        }
+      },
+      "rules_summary": "action == ['deny'] AND dstport == [53] AND srcip matches ['10.212.134.0/24'] AND dstip matches ['10.11.1.0/24']",
+      "tenant": "all-tenants",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "kevinmoraes@technoma.com.py",
+      "created_at_epoch": 1790868884,
+      "created_at": "2026-10-01 12:34:44",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "action": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "deny"
+            ]
+          },
+          "dstport": {
+            "type": "number",
+            "op": "==",
+            "value": [
+              53
+            ]
+          },
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "10.212.134.0/24"
+            ]
+          },
+          "dstip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "10.11.1.0/24"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "6ac785e01b7191d76a1b1d02",
+      "name": "Drop_FW_Denial_Internal_WUDO_7680",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "action": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "deny"
+          ]
+        },
+        "dstport": {
+          "type": "number",
+          "op": "==",
+          "value": [
+            7680
+          ]
+        },
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "192.168.169.0/24",
+            "192.168.100.0/24"
+          ]
+        },
+        "dstip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "192.168.169.0/24",
+            "192.168.100.0/24"
+          ]
+        },
+        "proto": {
+          "type": "number",
+          "op": "==",
+          "value": [
+            6
+          ]
+        }
+      },
+      "rules_summary": "action == ['deny'] AND dstport == [7680] AND srcip matches ['192.168.169.0/24', '192.168.100.0/24'] AND dstip matches ['192.168.169.0/24', '192.168.100.0/24'] AND proto == [6]",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "kevinmoraes@technoma.com.py",
+      "created_at_epoch": 1791460832,
+      "created_at": "2026-10-08 09:00:32",
+      "modified_by": "kevinmoraes@technoma.com.py",
+      "modified_at_epoch": 1791738552,
+      "modified_at": "2026-10-11 14:09:12",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "action": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "deny"
+            ]
+          },
+          "dstport": {
+            "type": "number",
+            "op": "==",
+            "value": [
+              7680
+            ]
+          },
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "192.168.169.0/24",
+              "192.168.100.0/24"
+            ]
+          },
+          "dstip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "192.168.169.0/24",
+              "192.168.100.0/24"
+            ]
+          },
+          "proto": {
+            "type": "number",
+            "op": "==",
+            "value": [
+              6
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "6aca44101b7191d76a1b2322",
+      "name": "Drop_FW_Denial_WiFiCorp_FortiGuard_214",
+      "dev_type": "",
+      "dev_type_label": "",
+      "rules": {
+        "fw_policy_id": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "FG-Technoma_214"
+          ]
+        },
+        "action": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "deny"
+          ]
+        },
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "Fortinet-FortiGuard"
+          ]
+        }
+      },
+      "rules_summary": "fw_policy_id == ['FG-Technoma_214'] AND action == ['deny'] AND appid_name == ['Fortinet-FortiGuard']",
+      "tenant": "e511c3fc54cd4d668bb67612c2ef4b04",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "kevinmoraes@technoma.com.py",
+      "created_at_epoch": 1791640592,
+      "created_at": "2026-10-10 10:56:32",
+      "modified_by": null,
+      "modified_at_epoch": null,
+      "modified_at": "",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "",
+        "dev_type_label": "",
+        "rules": {
+          "fw_policy_id": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "FG-Technoma_214"
+            ]
+          },
+          "action": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "deny"
+            ]
+          },
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "Fortinet-FortiGuard"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "6acbbc32d7345ab3b6fe650f",
+      "name": "Filter PING from Zabbix to Clients v2",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "192.168.15.31"
+          ]
+        },
+        "dstip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "10.0.0.0/8",
+            "192.168.0.0/16"
+          ]
+        },
+        "proto": {
+          "type": "number",
+          "op": "==",
+          "value": [
+            1
+          ]
+        },
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "PING"
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['192.168.15.31'] AND dstip matches ['10.0.0.0/8', '192.168.0.0/16'] AND proto == [1] AND appid_name == ['PING']",
+      "tenant": "all-tenants",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "kevinmoraes@technoma.com.py",
+      "created_at_epoch": 1791736882,
+      "created_at": "2026-10-11 13:41:22",
+      "modified_by": "kevinmoraes@technoma.com.py",
+      "modified_at_epoch": 1791737065,
+      "modified_at": "2026-10-11 13:44:25",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "192.168.15.31"
+            ]
+          },
+          "dstip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "10.0.0.0/8",
+              "192.168.0.0/16"
+            ]
+          },
+          "proto": {
+            "type": "number",
+            "op": "==",
+            "value": [
+              1
+            ]
+          },
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "PING"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "6acbbd89aa734118df02c6b6",
+      "name": "filter_zabbix_agent_polling_tcp_10050",
+      "dev_type": "fw_fortigate",
+      "dev_type_label": "Fortinet FortiGate",
+      "rules": {
+        "srcip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "192.168.15.31"
+          ]
+        },
+        "dstport": {
+          "type": "number",
+          "op": "==",
+          "value": [
+            10050
+          ]
+        },
+        "proto": {
+          "type": "number",
+          "op": "==",
+          "value": [
+            6
+          ]
+        },
+        "appid_name": {
+          "type": "string",
+          "op": "==",
+          "value": [
+            "tcp/10050"
+          ]
+        },
+        "dstip": {
+          "type": "ip",
+          "op": "matches",
+          "value": [
+            "10.0.0.0/8",
+            "192.168.0.0/16"
+          ]
+        }
+      },
+      "rules_summary": "srcip matches ['192.168.15.31'] AND dstport == [10050] AND proto == [6] AND appid_name == ['tcp/10050'] AND dstip matches ['10.0.0.0/8', '192.168.0.0/16']",
+      "tenant": "all-tenants",
+      "in_use": {
+        "sensor_profile": [
+          "profile-modular-sensor-technoma"
+        ]
+      },
+      "created_by": "kevinmoraes@technoma.com.py",
+      "created_at_epoch": 1791737225,
+      "created_at": "2026-10-11 13:47:05",
+      "modified_by": "kevinmoraes@technoma.com.py",
+      "modified_at_epoch": 1791737366,
+      "modified_at": "2026-10-11 13:49:26",
+      "org_id": "cf73a415c8794884a0c35b458b7c73ae",
+      "raw_content": {
+        "dev_type": "fw_fortigate",
+        "dev_type_label": "Fortinet FortiGate",
+        "rules": {
+          "srcip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "192.168.15.31"
+            ]
+          },
+          "dstport": {
+            "type": "number",
+            "op": "==",
+            "value": [
+              10050
+            ]
+          },
+          "proto": {
+            "type": "number",
+            "op": "==",
+            "value": [
+              6
+            ]
+          },
+          "appid_name": {
+            "type": "string",
+            "op": "==",
+            "value": [
+              "tcp/10050"
+            ]
+          },
+          "dstip": {
+            "type": "ip",
+            "op": "matches",
+            "value": [
+              "10.0.0.0/8",
+              "192.168.0.0/16"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

@@ -24,9 +24,20 @@
 | **013** | `ST-DNS-TUNNEL-02` | 07/10/2026 | Stellar Cyber | `ad.technoma.local` / `ad2` | `Active Directory / Red` | DNS Tunneling Anomaly (Lote 2 - 14 alertas entre DCs) | **Falso Positivo (BTP)** | `PB-2.2: Monitoreo Operativo` | [Ver Ficha ➔](#caso-st-dns-tunnel-02) |
 | **014** | `ST-SMB-CAJAANDE` | 09/10/2026 | Windows Server / Live Response | `VMBASE03` + 5 Clientes | `CAJAANDE` | Falso Borrado y Bloqueo SMB de Ejecutables (MODULO_TESORERIA) | **Falso Positivo (Incidente Operacional SMB)** | `PB-2.2 / Forense SMB` | [Ver Ficha ➔](#caso-st-smb-cajaande) |
 | **015** | `THN-ABUSE-BATCH-01` | 09/10/2026 | Stellar Cyber / FortiGate | DMZ Servers (`190.104.178.146`) | Externo / WAN | Notificación de Abuso a Cloudflare por 5 IPs Atacantes | **True Positive - Blocked (Notificado)** | `Playbook Escaneo y Fuerza Bruta` | [Ver Ficha ➔](#caso-thn-abuse-batch-01) |
-| **016** | `SAC-2026-1007` | 07/10/2026 | Stellar Cyber (SAC) | Servidor DMZ DigitalCert (`190.104.178.146`) | WAN / Atacantes | Regla de Detección Automatizada: THN FW Ataque Recurrente a DMZ | **Regla Automatizada Desplegada** | `Playbook Escaneo y Fuerza Bruta` | [Ver Ficha ➔](#caso-sac-2026-1007) |
-| **017** | `GOV-2026-1013` | 11/10/2026 | Stellar Cyber / FortiGate | Endpoints VLANs 169 y 100 | Red Interna / P2P | Remediación Quirúrgica WUDO Puerto 7680 (5 Dimensiones) | **Punto Ciego Eliminado (100% Visibilidad)** | `PB-2.2: Monitoreo Operativo` | [Ver Ficha ➔](#caso-gov-2026-1013) |
-| **018** | `GOV-2026-1012` | 11/10/2026 | Stellar Cyber / FortiGate | Servidor Zabbix (`192.168.15.31`) | Red Interna / Agentes | Detección de Ruido Zabbix Agent Polling (TCP 10050) & DNS | **En Seguimiento (Pendiente Validación Jefatura)** | `PB-2.2: Monitoreo Operativo` | [Ver Ficha ➔](#caso-gov-2026-1012) |
+| **016-A** | `SAC-2026-1007` | 07/10/2026 | Stellar Cyber (SAC) | Servidor DMZ DigitalCert (`190.104.178.146`) | WAN / Atacantes | Regla de Detección Automatizada: THN FW Ataque Recurrente a DMZ | **Regla Automatizada Desplegada** | `Playbook Escaneo y Fuerza Bruta` | [Ver Ficha ➔](#caso-sac-2026-1007) |
+| **016-B** | `GOV-2026-1011` | 11/10/2026 | Stellar Cyber / FortiGate | Cámaras Dahua CCTV (`192.168.16.16`) | Red Interna / CCTV | Creación de Log Filter Quirúrgico DHCP Dahua (Saturación de Cuota) | **Regla Quirúrgica Creada (0% Ceguera)** | `Playbook 6.3 - Log Filtering` | [Ver Ficha ➔](#caso-gov-2026-1011) |
+| **016-C** | `GOV-2026-1012` | 11/10/2026 | Stellar Cyber / FortiGate | Servidor Zabbix (`192.168.15.31`) | Red Interna / Agentes | Detección de Ruido Zabbix Agent Polling (TCP 10050) & DNS | **En Seguimiento (Pendiente Validación Jefatura)** | `PB-2.2: Monitoreo Operativo` | [Ver Ficha ➔](#caso-gov-2026-1012) |
+| **016-D** | `GOV-2026-1013` | 11/10/2026 | Stellar Cyber / FortiGate | Endpoints VLANs 169 y 100 | Red Interna / P2P | Remediación Quirúrgica WUDO Puerto 7680 (5 Dimensiones) | **Punto Ciego Eliminado (100% Visibilidad)** | `PB-2.2: Monitoreo Operativo` | [Ver Ficha ➔](#caso-gov-2026-1013) |
+| **016** | `THN-AUDIT-FILTERS-01` | 14/10/2026 | Stellar Cyber / OpenXDR | `technoma-sensor` / `10.11.1.2` | `Red Interna / WUDO / CCTV` | Auditoría Técnica de Log Filters: Corrección de Reglas Inoperativas (WUDO 7680 & Dahua CCTV) | **Tuning Quirúrgico L7 / Mitigación** | `Playbook 6.3 - Log Filtering` | [Ver Ficha ➔](#caso-016---auditoría-de-log-filters-reglas-inoperativas-wudo-7680-y-dahua-cctv) |
+| **017** | `THN-INGEST-GRAFANA-01` | 14/10/2026 | Stellar Cyber / NDR | `technoma-sensor` / `192.168.15.23` | `NOC / Grafana` | Contención Definitiva de Cuota: Pre-DPI BPF Saneado contra Flood DNS de Grafana | **Resolución Técnica / Rescate de Cuota** | `Playbook 6.3 - Ingestion Control` | [Ver Ficha ➔](#caso-017---contención-de-cuota-stellar-pre-dpi-bpf-contra-flood-dns-de-grafana) |
+| **018** | `32592` | 15/10/2026 | Stellar Cyber / Windows Agent | `VMBASE8` (`172.16.201.8`) | `Ktroche` | Sensitive Windows Network Share (protected_storage DPAPI) | **Falso Positivo (BTP)** | `PB-5.2 / PB-1.1` | [Ver Ficha ➔](#caso-018---acceso-legítimo-a-protected_storage-en-vmbase8-windows-dpapi) |
+| **019** | `CORTEX-FMORA-01` | 15/10/2026 | Cortex XDR / Magnifier | `NB-FMORA` | `fabiomora` | Carga masiva de 10.2 GB a Proton Drive (Shadow IT / Riesgo DLP) | **Uso No Autorizado / Sin Fuga** | `PB-2.2 / DLP` | [Ver Ficha ➔](#caso-019---investigación-forense-cortex-xdr-carga-a-proton-drive-nb-fmora) |
+| **020** | `THN-LOGFILT-WIFI` | 15/10/2026 | Stellar Cyber / FortiGate | Subred WiFi (`192.168.169.x`) | Red WiFi | Log Filters Quirúrgicos contra Denegaciones Masivas WiFi (Casos #16302 y #12661) | **Tuning de Cuota / Mitigación** | `Playbook 6.3 - Log Filtering` | [Ver Ficha ➔](#caso-020---optimización-de-cuota-stellar-cyber-log-filter-quirúrgico-fortigate-wifi) |
+| **021** | `THN-SOC-102` | 15/10/2026 | Stellar Cyber / AD | `192.168.15.27` (`Zabbix`) | `Mario Flores (Baja)` | Cierre Incidente: Autenticación LDAP Texto Claro 389 y Automatización FL-THN-POS-01 | **Incidente Resuelto / Remediado** | `FL-THN-POS-01 / RFA NOC` | [Ver Ficha ➔](#caso-021---cierre-de-incidente-thn-soc-102-zabbix-ldap-mario-flores-y-estandarización-fl-thn-pos-01) |
+| **022** | `ST-BATCH-OCT15` | 15/10/2026 | Stellar Cyber / Interflow | `10.11.1.1`, `NB-ICENTURION`, `192.168.169.78` | `ivancenturion` / Red | Lote 10 Alertas IDS INFO (GitHub, AnyDesk, NTLM, Telegram) y Falsa Correlación C&C LDAP | **Falso Positivo (BTP)** | `PB-3.1 / PB-2.2` | [Ver Ficha ➔](#caso-022---falso-positivo-lote-interflow-firmas-ids-info-y-falsa-correlación-cc-ldap) |
+| **023** | `ST-GSUITE-MARIN` | 15/10/2026 | Google Workspace / Stellar | Google Drive | `josemarin` | Falsa Alarma UBA Exfiltración Google Drive: Sincronización AppSheet y AppScript | **Falso Positivo (BTP)** | `PB-6.1 / UBA Cloud` | [Ver Ficha ➔](#caso-023---falso-positivo-uba-cloud-sincronización-google-appsheet--appscript-josé-marín) |
+| **024** | `ST-INGEST-PASSTHROUGH` | 15/10/2026 | Stellar Cyber / Modular Sensor | `profile-modular-sensor-technoma` | Red Interna / WAN | Optimización Quirúrgica de Ingesta: Filtro de Descarte Passthrough Benigno FortiGate | **Tuning Quirúrgico / DROP** | `Playbook 6.3 - Log Filtering` | [Ver Ficha ➔](#caso-024---optimización-quirúrgica-de-ingesta-filtro-de-descarte-passthrough-benigno-fortigate) |
+| **025** | `INCIDENT-541` | 15/10/2026 | Cortex XDR / Stellar Cyber | `NB-JTORALES` | `josetorales` | Trazabilidad y Conciliación de Auditoría: Incidente Cortex XDR 541 & Caso #17797 | **Falso Positivo (Resolved - Auto)** | `PB-2.2 / T1018` | [Ver Ficha ➔](#caso-025---trazabilidad-y-conciliación-de-auditoría-incidente-cortex-xdr-541-failed-connections---nb-jtorales) |
 
 ---
 
@@ -40,6 +51,8 @@
 | **04/10/2026** | Mañana (06:00 - 14:00) | **8.69 GB** / 10.0 GB (86.9%)<br>*(Pico: 17.05 GB)* | **8.61 GB** ⚠️<br>*(Leve exceso +0.61 GB / 107%)* | 0.07 GB ✅<br>*(1.4% nominal)* | 0.00 GB ✅<br>*(Sin ingesta)* | 🟢 **Pozo Normal (86.9%)** | **Consumo Nominal:** Pozo global operando dentro del contrato. Technoma con leve exceso habitual (~8.6 GB). Se auditó regla 'Ingestion threshold exceeded' con umbral residual erróneo en 20 MB (0.02 GB). |
 | **10/10/2026** | Guardia Sábado (Home Office) | **14.27 GB** / 10.0 GB (142.7%)<br>*(Prom: 14.23 GB)* | **14.23 GB** ⚠️<br>*(99.53% del Clúster)* | 0.04 GB ✅<br>*(0.47% nominal)* | 0.00 GB ✅<br>*(Sin ingesta)* | 🔴 **POZO DESBORDADO** | **Auditoría Forense de Ingesta:** Se aisló la causa raíz de saturación en Syslog de FortiGate (8.22 GB/d, 2.9M eventos) y bucle DNS de Grafana hacia zbx (2.90 GB/d, 1.75M consultas). Emitidos informes ejecutivos y plan maestro para descender a ~6.5 GB/día. |
 | **11/10/2026** | Guardia Domingo (Home Office) | **8.60 GB** / 10.0 GB (86.0%) | **8.55 GB** ⚠️<br>*(En rango habitual)* | 0.05 GB ✅<br>*(1.0% nominal)* | 0.00 GB ✅<br>*(Sin ingesta)* | 🟢 **Pozo Normal (86.0%)** | **Consumo Controlado & Remediación:** Filtros Dahua (DHCP) y WUDO 7680 corregidos a 5 dimensiones (0% ceguera). Ruido Zabbix 10050 detectado y puesto en seguimiento formal. |
+| **14/10/2026** | Mañana (06:00 - 14:00) | **17.05 GB** / 10.0 GB (170.5%)<br>*(Pico Máximo Registrado)* | **17.01 GB** ⚠️<br>*(Excedido +9.01 GB / 212%)* | 0.04 GB ✅<br>*(0.8% nominal)* | 0.00 GB ✅<br>*(Sin ingesta)* | 🔴 **POZO DESBORDADO** | **Alerta Crítica de Licencia & Tuning:** Technoma desbordó cuota por ráfagas de denegaciones firewall (Dahua CCTV e inter-VLAN). Se ejecutó auditoría técnica sobre 67 Log Filters descartando ceguera en Helpdesk y diseñando filtro L7 para Dahua (Playbook 6.3). |
+| **15/10/2026** | Tarde (14:00 - 20:00) | **12.40 GB** / 10.0 GB (124.0%)<br>*(Tendencia a la Baja)* | **12.35 GB** ⚠️<br>*(En descenso post-tuning)* | 0.05 GB ✅<br>*(1.0% nominal)* | 0.00 GB ✅<br>*(Sin ingesta)* | 🟡 **Contención Operativa** | **Tuning Quirúrgico de Log Filters:** Despliegue de filtros API `Drop_FW_Passthrough_Benign_Telemetry`, `Drop_FW_PaloAlto_Traps_Heartbeats` y `Drop_FW_Windows_Diagnostics_Telemetry`. Purga de telemetría passthrough benigna redundante (~170.000 logs/día ahorrados). Conciliación de Incidente Cortex XDR 541 / Caso #17797. |
 
 ---
 
@@ -880,4 +893,398 @@ Ante los continuos escaneos y ráfagas de fuerza bruta observados desde Internet
 #### 5. Acciones y Seguimiento
 * [x] Alerta/Caso cerrado en consola.
 * [ ] Acciones pendientes con cliente o Helpdesk (si aplica).
-```
+### Caso 016 - Auditoría de Log Filters: Reglas Inoperativas vs Reglas Corregidas (WUDO 7680 y Dahua CCTV)
+* **ID Interno:** `THN-AUDIT-FILTERS-01`
+* **Fecha:** 14/10/2026 08:42:00
+* **Plataforma:** Stellar Cyber OpenXDR v7.0.0s / FortiGate `FG-Technoma`
+* **Analista:** Kevin Moraes
+* **Activos:** Sensor `technoma-sensor`, Domain Controller `10.11.1.2` (`ad2.technoma.local`), Servidor Helpdesk `192.168.169.44`, Cámara Dahua `192.168.16.16` (`VLAN16`), Subredes LAN/WiFi (`192.168.169.0/24`, `192.168.100.0/24`).
+* **Veredicto:** **Tuning Quirúrgico L7 & Eliminación de Ceguera Operativa**
+* **Playbook:** `Playbook 6.3 - Log Filtering and Ingestion Control`
+
+#### 1. Contexto y Objetivos Operativos
+Durante la guardia del 14/10/2026 se auditó el inventario de 67 reglas de `log_filters` en Stellar Cyber para mitigar el desbordamiento de cuota diaria (170.5% del pozo global). Se identificaron dos reglas críticas que **no estaban funcionando (inoperativas por error de sintaxis / puertos)** y se corrigieron con filtros quirúrgicos en 3 dimensiones sin causar ceguera en el SOC.
+
+---
+
+#### 2. REGLA 1: WUDO (Windows Update Delivery Optimization - Puerto 7680)
+
+##### ❌ Regla Antigua (Por qué NO funcionaba / 0 Hits):
+* **Filtro Original:** Se intentaba silenciar el ruido P2P de Windows Update usando reglas genéricas o vinculando el descarte a alias de texto en `fw_policy_id` (ej. `"Block_Countries"` o texto alfanumérico) o a un protocolo sin acotar:
+  * El sensor modular de Stellar Cyber compara identificadores de política como números enteros (`uint`). Al recibir strings, el evaluador jamás hacía match.
+  * Los broadcasts y denegaciones TCP 7680 entre estaciones de trabajo (`192.168.169.0/24` y `192.168.100.0/24`) seguían saturando la ingesta diaria con miles de eventos denegados.
+
+##### ✅ Regla Nueva / Corregida (La que SÍ funciona ahora):
+* **Nombre:** `Drop_FW_Denial_Internal_WUDO_7680`
+* **Sintaxis JSON Quirúrgica Aplicada:**
+  ```json
+  {
+    "action": {"type": "string", "op": "==", "value": ["deny"]},
+    "dstport": {"type": "number", "op": "==", "value": [7680]},
+    "proto": {"type": "number", "op": "==", "value": [6]},
+    "srcip": {"type": "ip", "op": "matches", "value": ["192.168.169.0/24", "192.168.100.0/24"]},
+    "dstip": {"type": "ip", "op": "matches", "value": ["192.168.169.0/24", "192.168.100.0/24"]}
+  }
+  ```
+* **Evaluación de Ceguera:** **CERO CEGUERA**. Solo silencia denegaciones (`deny`) de tráfico P2P entre puestos de trabajo en el puerto específico 7680/TCP. Si un equipo intenta movimiento lateral en SMB (445), RDP (3389) o SSH (22), es 100% visible.
+
+---
+
+#### 3. REGLA 2: Dahua CCTV a Domain Controller (Anomalía de Bloqueo DNS)
+
+##### ❌ Regla Antigua (Por qué NO funcionaba / 0 Hits contra la anomalía):
+* **Nombre del Filtro Existente:** `filter dahua DNS to AD` (creado por `ivancenturion@technoma.com.py`).
+* **Definición Antigua en Consola:**
+  ```json
+  {
+    "srcip": {"op": "matches", "value": ["192.168.16.16", "192.168.16.3"]},
+    "dstip": {"op": "matches", "value": ["192.168.16.1"]},
+    "dstport": {"op": "==", "value": [67]},
+    "srcport": {"op": "==", "value": [68]},
+    "proto": {"op": "==", "value": [17]},
+    "appid_name": {"op": "==", "value": ["DHCP/DHCP Relay"]}
+  }
+  ```
+* **Causa del Fallo:** A pesar de llamarse *"filter dahua DNS to AD"*, la regla tenía configurados los puertos **67/68 (DHCP)** y destino `192.168.16.1`. 
+* **Impacto Operativo:** La cámara Dahua (`192.168.16.16`, `AF0A18DPAGB9E8D`) enviaba ráfagas continuas de **200 a 405 consultas DNS por intervalo de 5 minutos** dirigidas al Domain Controller `10.11.1.2:53` (`ad2.technoma.local`), siendo bloqueada por la política 0 (Implicit Deny) del FortiGate y detonando la anomalía de Machine Learning `internal_fw_action` (`Internal Firewall Denial Anomaly`, fidelidad 98-99%). El filtro antiguo jamás descartaba un solo paquete de este ruido porque no filtraba el puerto 53 ni el DC.
+
+##### ✅ Regla Nueva / Corregida (La que SÍ funciona ahora):
+* **Nombre:** `Drop_FW_Denial_Internal_CCTV_Dahua_DNS_DC`
+* **Sintaxis JSON Quirúrgica Aplicada:**
+  ```json
+  {
+    "action": {"type": "string", "op": "==", "value": ["deny"]},
+    "dstport": {"type": "number", "op": "==", "value": [53]},
+    "proto": {"type": "number", "op": "==", "value": [17]},
+    "srcip": {"type": "ip", "op": "matches", "value": ["192.168.16.16", "192.168.16.3"]},
+    "dstip": {"type": "ip", "op": "matches", "value": ["10.11.1.2"]}
+  }
+  ```
+* **Evaluación de Ceguera:** **CERO CEGUERA**. Solo descarta el syslog de denegación de resolución de nombres de la cámara hacia el DC. Si la cámara llega a ser comprometida e intenta un ataque de fuerza bruta, escaneo de red o propagación lateral, el evento será alertado inmediatamente en Stellar Cyber.
+* **Acción de Fondo:** Solicitar formalmente a Infraestructura reasignar el DNS del pool DHCP de `VLAN16` hacia el gateway local o forwarders públicos para apagar el tráfico residual en el FortiGate.
+
+---
+
+#### 4. REGLA 3 (Extra): Helpdesk (`Ruido_servidor_helpdesk`)
+* **Regla:** `srcip: 192.168.169.44` | `appid_name: PING` | `dstip: 10.49.70.0/24, 10.49.71.0/24`
+* **Auditoría:** Se comprobó que el filtro **SÍ funciona** acumulando **70,970 hits (157.58 MB)**. El módulo del Cockpit marcaba falso positivo porque asumía que `PING` no existía en Interflow, cuando en realidad el parser Syslog de FortiGate mapea `service="PING"` directamente a `appid_name="PING"`. Se corrigió el código del Cockpit.
+
+---
+
+### Caso 017 - Contención de Cuota Stellar: Pre-DPI BPF contra Flood DNS de Grafana
+* **ID Interno:** `THN-INGEST-GRAFANA-01`
+* **Fecha:** 14/10/2026 11:55:00
+* **Plataforma:** Stellar Cyber OpenXDR v7.0.0_023bdc1 / NDR Modular Sensor en Linux (`ubuntu-22.04` QEMU)
+* **Analista:** Kevin Moraes
+* **Activos Involucrados:**
+  - Sensor Modular: `technoma-sensor` (`192.168.15.70`, interfaz espejo `ethernet1`)
+  - Servidor Grafana NOC: `192.168.15.23`
+  - Servidor Zabbix Backend: `192.168.15.31` (`zbx.technoma.com.py`)
+  - Domain Controllers / DNS: `10.11.1.1` (`ad.technoma.local`), `10.11.1.2` (`ad2.technoma.local`)
+* **Veredicto Final:** **Resolución Técnica / Rescate de Cuota de Licencia**
+* **Playbook Aplicado:** `Playbook 6.3 - Ingestion Control and Pre-DPI Optimization`
+
+#### 1. Contexto y Problema Crítico de Compliance
+La plataforma Stellar Cyber OpenXDR registraba una violación crítica de cumplimiento de cuota de servicio (*"Violation : System is out of compliance due to continuous daily usage violations for over 21 days"*). El Tenant `technoma` operaba en un rango de 14 a 17 GB/día superando el pozo contratado de 8 GB/día.
+La auditoría volumétrica en Interflow Search detectó que una sola máquina (`192.168.15.23`, servidor Grafana del NOC) generaba ráfagas constantes de **~19 consultas DNS por segundo** resolviendo el FQDN `zbx.technoma.com.py` hacia los Domain Controllers de Active Directory, sumando más de **1.760.000 eventos diarios y ~2.88 GB/día** de sobreingesta pura.
+
+#### 2. Causa Raíz y Falla del Motor Pre-DPI Preexistente
+Al auditar el perfil del sensor (`profile-modular-sensor-technoma`), se constató que ninguna de las 13 reglas históricas de Pre-DPI estaba descartando paquetes:
+1. **Falla Atómica de `pcap_compile()` (PCAP_ERROR -1):** Conforme al estándar BPF (`pcap_compile(3PCAP)`), el motor de Stellar Cyber concatena todas las líneas del perfil con el operador lógico `OR` en un único string. La lista contenía 5 reglas con errores léxicos (`tcp 1500` en vez de `tcp port 1500`, `dst <ip>` sin la palabra clave `host`, y combinaciones ilógicas `host A and host B`). Un solo error de sintaxis causaba el fallo atómico del compilador eBPF, obligando al sensor `aella_flow` a operar en modo *fallback* (*accept all packets*), permitiendo el ingreso indiscriminado de todo el tráfico.
+2. **Encapsulamiento 802.1Q (VLAN 1101):** El tráfico físico espejo entra etiquetado con VLAN 1101. En el motor eBPF de libpcap, las reglas deben respetar el formato sin mezclas arbitrarias de desplazamientos de capa de enlace.
+
+#### 3. Implementación de la Solución Quirúrgica
+1. **Respaldo:** Se generó el documento de resguardo `Respaldo_Reglas_PreDPI_Stellar.md` con las 15 reglas originales y su corrección formal.
+2. **Aislamiento en Pre-DPI (`Action: Drop`):** Se cargó la sintaxis stateless bidireccional pura indicada en la documentación oficial de Stellar Cyber para tráfico pass-through:
+   ```text
+   src host 192.168.15.23 and dst port 53
+   src port 53 and dst host 192.168.15.23
+   ```
+3. **Eficacia Comprobada:**
+   - La regla se sincronizó a las **11:43:40**.
+   - El volumen en la ventana de 15 minutos cayó inmediatamente de 12.890 a 6.508 eventos.
+   - **0 eventos nuevos** recibidos en Interflow durante más de 12 minutos de monitoreo continuo.
+
+#### 4. Recomendación Definitiva de Arquitectura (NOC / Infraestructura)
+Para evitar depender de filtros de red en el futuro:
+- En la interfaz web de Grafana (`http://192.168.15.23:3000`), configurar el datasource de Zabbix para apuntar a la IP directa local `http://192.168.15.31/zabbix/api_jsonrpc.php` o habilitar el servicio de caché DNS local (`systemd-resolved`) en el host Linux de Grafana para que las consultas se resuelvan en memoria sin impactar la red.
+
+---
+
+### Caso 018 - Acceso Legítimo a protected_storage en VMBASE8 (Windows DPAPI)
+* **ID de Alerta / Caso:** `32592` (Alertas correlacionadas `32592`, `32593`, `32594`)
+* **Fecha:** 15/10/2026 08:32:00
+* **Plataforma:** Stellar Cyber OpenXDR v7.0.0s / Agente Windows Winlogbeat (`VMBASE8`)
+* **Analista:** Kevin Moraes
+* **Activos Involucrados:**
+  - Servidor Destino: `VMBASE8` (`172.16.201.8`, Windows Server 2019 Standard, DC Secundario CAJAANDE)
+  - Estación de Trabajo Origen: `172.16.202.9`
+  - Usuario: `CAJAANDE\Ktroche` (SID: `S-1-5-21-4088095093-1662279969-3535480394-1731`)
+* **Regla Disparada:** `windows_security_sensitive_networkshare` (`windows_security_152` / `Detailed File Share`)
+* **Técnica MITRE:** T1021.002 (SMB/Windows Admin Shares) / TA0008 (Lateral Movement)
+* **Veredicto Final:** **Falso Positivo (Benign True Positive - BTP)**
+* **Playbook Aplicado:** `PB-5.2: Triaje Forense de Alertas / PB-1.1: Control de Identidades`
+
+#### 1. Contexto y Descripción del Incidente
+Stellar Cyber disparó 3 alertas con severidad 75 catalogadas como *Sensitive Windows Network Share File or Folder Accessed* sobre el servidor `VMBASE8` (`172.16.201.8`), advirtiendo un potencial abuso de DPAPI (*Domain DPAPI Backup Key Extraction*) para robar claves maestras de cifrado desde los controladores de dominio.
+
+#### 2. Evidencia Forense Extraída de Interflow (Event ID 5145)
+* **Evento Windows:** `5145` (*Detailed File Share*)
+* **Recurso Compartido:** `ShareName: \\*\IPC$`
+* **Objeto Relativo:** `RelativeTargetName: protected_storage`
+* **Máscara de Acceso:** `0x12019f` (Read/Write/Sync estándar de cliente RPC)
+* **Resultado:** `outcome: success` / `Auditoría correcta`
+* **Proceso Originador:** `process_id: 4` (`System` / `lsass.exe`)
+
+#### 3. ¿Qué era en realidad? (Causa Raíz)
+Conforme a la Memoria Institucional del SOC (`SOC_GEM_v2.md`), el acceso a `protected_storage` a través de `IPC$` hacia `VMBASE8` es un comportamiento intrínseco y por diseño de Active Directory. Cuando un usuario de dominio (`Ktroche`) inicia sesión o renueva credenciales en su estación de trabajo (`172.16.202.9`), el subsistema DPAPI del sistema operativo Windows realiza de forma transparente una llamada RPC autenticada al DC para respaldar y custodiar la clave maestra de cifrado del usuario. No existe presencia de ejecutables ofensivos (Mimikatz, SharpDPAPI) ni anomalías de proceso.
+
+#### 4. Justificación Técnica de Cierre
+> "Se analizó el lote de eventos de auditoría de seguridad de Windows (Event ID 5145) registrados sobre el Controlador de Dominio secundario VMBASE8 (172.16.201.8). La interacción con el recurso compartido IPC$ y el objeto protected_storage por parte del usuario Ktroche (CAJAANDE\Ktroche) desde la estación 172.16.202.9 corresponde al comportamiento benigno y estándar de Microsoft Windows Data Protection API (DPAPI), el cual efectúa de forma periódica el respaldo de las claves maestras de cifrado de usuario hacia el KDC. La auditoría confirma que la operación concluyó exitosamente bajo privilegios estándar de sesión, sin indicios de manipulación o extracción maliciosa de credenciales (T1021.002)."
+
+#### 5. Conclusión y Cierre
+* [x] Análisis forense completado: descartada extracción ofensiva o abuso de credenciales.
+* [x] Causa raíz atribuida al comportamiento legítimo de Windows DPAPI contra el DC.
+* [x] Caso cerrado como Falso Positivo (Benign True Positive) en la consola de Stellar Cyber.
+
+---
+
+
+---
+
+### Caso 019 - Investigación Forense Cortex XDR: Carga a Proton Drive (NB-FMORA)
+* **ID / Referencia:** Alerta Cortex Magnifier / DLP & Upload Anomaly
+* **Fecha:** 15/10/2026 09:15:00
+* **Plataforma:** Palo Alto Networks Cortex XDR (Magnifier + Endpoint Agent)
+* **Analista:** Kevin Moraes
+* **Activo Involucrado:** `NB-FMORA` (Notebook corporativa - Fabio Mora)
+* **Destino Remoto:** `fra-storage.proton.me` (`185.205.70.10`, Frankfurt - Proton AG)
+* **Volumen:** 10.2 GB (608 sesiones HTTPS / TLS en puerto 443)
+* **Veredicto Final:** **Uso No Autorizado de Herramienta Cloud / Sin Fuga de Información Sensible (Benigno)**
+
+#### 1. Contexto y Detección
+Cortex XDR Magnifier alertó sobre un volumen inusual de carga de datos (10.2 GB) desde el endpoint `NB-FMORA` hacia la nube de almacenamiento de Proton Drive durante el fin de semana del 12-13 de octubre.
+
+#### 2. Evidencia Forense Recabada (Consultas Cortex XQL)
+1. **Actividad de Proceso y Carpeta Local:**
+   - La consulta XQL sobre el endpoint confirmó la ejecución de `ProtonDrive.exe` (`C:\Users\fabiomora\AppData\Local\Proton\ProtonDrive\`).
+   - El usuario configuró como carpeta local de sincronización `Downloads\Mis cosas\`.
+2. **Conciliación de Datos (10.2 GB):**
+   - El análisis del sistema de archivos local evidenció imágenes ISO y máquinas virtuales OVA (laboratorios de sistemas operativos para estudio técnico).
+   - El peso total de dichos archivos totalizó exactamente 10.2 GB, cuadrando 1 a 1 con la telemetría de red de Magnifier.
+3. **Evidencia de Configuración de Cuenta:**
+   - Se localizó el archivo `proton-recovery-phrase.pdf` (frase de recuperación generada por Proton al crear la cuenta) depositado el 13/10 a las 06:18 AM en la misma carpeta.
+4. **Validación Operativa:**
+   - Se verificó con personal de Helpdesk que el usuario se encuentra estudiando activamente para certificaciones técnicas, lo que motivó el respaldo personal de sus laboratorios. No hubo compromiso de credenciales corporativas ni exfiltración de bases de datos/documentos de la empresa.
+
+---
+
+### Caso 020 - Optimización de Cuota Stellar Cyber: Log Filter Quirúrgico FortiGate WiFi
+* **ID de Casos Asociados:** Casos #16302 (4.116 alertas) y #12661 (10 alertas)
+* **Fecha:** 15/10/2026 09:50:00
+* **Plataforma:** Stellar Cyber OpenXDR v7.0.0s / Fortinet FortiGate (`FG-Technoma`)
+* **Analista:** Kevin Moraes
+* **Tipo de Alerta:** `External Firewall Denial Anomaly` (Etapa Kill Chain: *Initial Attempts*)
+* **Activos Involucrados:** Subred WiFi Corporativa (`192.168.169.102`, `192.168.169.131` en `WiFi_Corp`)
+* **Veredicto Final:** **Falso Positivo / Ruido Operativo de Firewall (Benigno)**
+
+#### 1. Diagnóstico y Causa Raíz
+Dispositivos conectados a la red `WiFi_Corp` intentaban resolver nombres y sincronizar servicios de seguridad hacia resolvers públicos (Google DNS) y la nube de FortiGuard. La política de seguridad del firewall (`Block_WIFI-Corp`, ID 214) denegó estas salidas, generando miles de logs de descarte (`action: deny`) que saturaron la ingesta de Stellar Cyber e inflaron la cuota diaria (caso 16302 con más de 4.100 eventos).
+
+#### 2. Implementación de Mitigación e Ingestión en Stellar Cyber
+Para erradicar el ruido masivo y reducir el sobreconsumo de almacenamiento diario de la licencia, se crearon los siguientes filtros de descarte en **System → Log Forwarders (Log Filters)**:
+
+1. **Filtro Inicial de Descarte DNS 53:**
+   * **Nombre:** `Drop_FW_Denial_WiFiCorp_DNS_53`
+   * **Definición JSON:**
+     ```json
+     {"fw_policy_id":{"type":"string","op":"==","value":["FG-Technoma_214"]},"dstport":{"type":"number","op":"==","value":[53]},"action":{"type":"string","op":"==","value":["deny"]}}
+     ```
+   * **Acción:** `DROP` (descarta denegaciones de resolución estándar en puerto 53 de la regla 214).
+
+2. **Filtro Quirúrgico Multipuerto y Destinos Benignos (Sin Puntos Ciegos):**
+   * **Nombre:** `DROP-FG-Technoma-WIFI_Corp-Known-Public-DNS`
+   * **Condiciones Aplicadas:**
+     - `fw_policy_id` **is** `FG-Technoma_214`
+     - `dstport` **is** `53, 853, 443` (DNS estándar, DNS-over-TLS y telemetría/firmas FortiGuard)
+     - `dstip` **matches** `96.45.46.46, 96.45.45.45, 173.243.140.18, 173.243.132.25, 173.243.143.6, 141.109.161.95, 8.8.8.8, 8.8.4.4`
+     - `action` **is** `deny`
+   * **Acción:** `DROP` (neutraliza casos masivos como el #16302 y #12661 preservando detección ante C2 o DNS tunneling a IPs no autorizadas).
+
+#### 3. Impacto Operativo
+* Se neutraliza la generación de casos falsos masivos derivados de la política WiFi corporativa.
+* Se preserva el almacenamiento diario de la licencia Stellar Cyber.
+* Se garantiza visibilidad total: cualquier intento de conexión hacia IPs no listadas (malware, C2) sigue siendo capturado y alertado con normalidad.
+
+
+---
+
+### Caso 021 - Cierre de Incidente THN-SOC-102 (Zabbix LDAP Mario Flores) y Estandarización FL-THN-POS-01
+* **ID Oficial de Ticket:** `THN-SOC-102` (Formulario `FL-THN-POS-01 Rev. 03` - Fila 16)
+* **Fecha y Hora de Apertura:** 14/10/2026 13:50:00
+* **Fecha y Hora de Resolución / Cierre:** 15/10/2026 09:56:00
+* **Tiempo de Resolución:** **19.7 horas** (19 h 39 min) — **Cumplió SLA: Sí** (Prioridad P4 / SLA 168 h)
+* **Plataforma de Detección:** Stellar Cyber OpenXDR / Logs de Active Directory
+* **Analista:** Kevin Moraes | **Resolución:** NOC Technoma / Kevin Moraes
+* **Activos Involucrados:** Servidor Zabbix `192.168.15.27`, Controlador de Dominio `10.11.1.1` (`ad.technoma.local`), Cuenta de Dominio: `Mario Flores` (OU Usuarios dados de baja).
+* **Veredicto Final:** **Incidente Operativo de Seguridad Resuelto y Remediado**
+* **Clasificación:** Compromiso de la información / Vulnerabilidad de Configuración
+* **Playbook Aplicado:** `FL-THN-POS-01 Rev. 03` / RFA de Remediación a Infraestructura
+
+#### 1. Diagnóstico y Causa Raíz
+El servidor de monitoreo Zabbix (`192.168.15.27`) realizaba intentos persistentes de autenticación contra el Domain Controller primario mediante el protocolo **LDAP simple sin cifrar (puerto 389/TCP)**. Las solicitudes utilizaban credenciales con contraseña por defecto pertenecientes a la cuenta de **Mario Flores**, colaborador que ya había sido desvinculado de la empresa y cuya cuenta residía en la Unidad Organizativa de bajas de Active Directory.
+
+#### 2. Acciones de Contención y Remediación (NOC & SOC)
+1. **Emisión de RFA del SOC:** Se escaló formalmente al NOC solicitando auditar el origen de las peticiones en los servidores Zabbix, revocar credenciales huérfanas y migrar la autenticación a canales seguros.
+2. **Migración a LDAPS (Puerto 636/TCP):** El NOC modificó los archivos de configuración y DNS en ambas instancias de Zabbix, cambiando el protocolo de `ldap://` a `ldaps://` (tráfico cifrado TLS por puerto 636) y configurando la cuenta de servicio autorizada con Bind DN `zbx-ldaps`.
+3. **Purga de Cuenta Local:** Se eliminó la cuenta local residual del usuario Mario Flores en ambas instancias de Zabbix, erradicando los reintentos automáticos.
+4. **Verificación:** Monitoreo en Stellar Cyber confirmó el cese total de eventos de autenticación fallida por puerto 389. Cierre con conformidad.
+
+#### 3. Lecciones Aprendidas Institucionales
+1. **Checklist de Offboarding Integral:** La desvinculación de un colaborador en Active Directory debe incluir la purga inmediata de sus accesos y cuentas locales residuales en consolas internas de gestión (Zabbix, firewalls, dashboards).
+2. **Prohibición de LDAP Simple en Texto Claro:** Establecer como directiva obligatoria de infraestructura el uso exclusivo de **LDAPS (puerto 636)** con certificados corporativos válidos, eliminando el riesgo de intercepción de credenciales (*sniffing*) en la red interna.
+
+#### 4. Estandarización y Blindaje de `FL-THN-POS-01 Rev. 03` (Google Sheets)
+Para prevenir errores de arrastre y manipulación manual por parte de los operadores del SOC, se crearon e integraron 4 **Funciones con Nombre** con argumentos dinámicos en la hoja oficial:
+* `=CALCULAR_PRIORIDAD(H16; I16)`: Cruza automáticamente Impacto y Urgencia contra la matriz oficial.
+* `=CALCULO_TIEMPO_NOTIFICACION(B16; C16; X16; Y16)`: Calcula el tiempo transcurrido hasta la notificación al cliente en horas.
+* `=CALCULO_RESOLUCION(B16; C16; AA16; AB16)`: Calcula la duración total de resolución en horas.
+* `=SLA(Z16; K16)`: Valida el cumplimiento del SLA contractual según la prioridad.
+
+---
+
+### Caso 022 - Falso Positivo Lote Interflow (Firmas IDS INFO y Falsa Correlación C&C LDAP)
+* **ID Interno:** `ST-BATCH-OCT15`
+* **Fecha:** 15/10/2026 12:55:00
+* **Plataforma:** Stellar Cyber OpenXDR v7.0.0s / Sensor Modular NDR
+* **Analista:** Kevin Moraes
+* **Activos Involucrados:** `10.11.1.1` (`ad.technoma.local`), `192.168.169.71` (`NB-ICENTURION`), `192.168.169.78`, `192.168.169.19`
+* **Severidad:** Low (IDS) elevada a High (75) por Playbook ATH (`Exploited C&C Connection`)
+* **Veredicto Final:** **Falso Positivo (False Positive / Benign True Positive)**
+* **Playbook:** `PB-3.1 Triaje de Tráfico de Red Anómalo y Falsos Positivos IDS`
+
+#### 1. Triaje Forense y Causa Raíz
+Se procesó un lote de 10 eventos correlacionados en Interflow. El análisis de las cargas útiles demostró que las alertas originales correspondían a firmas informacionales de Proofpoint ET (`classtype: misc-activity`):
+* `SID 2071407`: Consultas DNS hacia `release-assets.githubusercontent.com` (actualización de software).
+* `SID 2060507`: Consultas DNS de relevo AnyDesk (`relay-*.net.anydesk.com`) por soporte técnico.
+* `SIDs 2067085, 2067086, 2067087`: Negociación y desafío NTLM/SMB corporativo del usuario `ivancenturion` desde `NB-ICENTURION` hacia `\technoma.local\IPC$` con autenticación exitosa (`NT_STATUS_SUCCESS`).
+* `SID 2071627`: Consultas DNS hacia `web.telegram.org` desde el puesto `192.168.169.78`.
+
+#### 2. Falsa Correlación de C&C
+El playbook ATH de Stellar Cyber (`exploit_attempt_correlation`) tomó estas firmas INFO como "exploits" y correlacionó erróneamente el tráfico posterior de sincronización de Active Directory por el puerto **389/TCP (LDAP)** entre el DC y los endpoints como supuestas conexiones de Comando y Control.
+
+#### 3. Resolución
+Se cerró el caso como Falso Positivo en Stellar Cyber tras confirmar que no hubo intrusión ni balizamiento malicioso, y se documentó la recomendación de excluir firmas `misc-activity` de las reglas de correlación de intrusión.
+
+---
+
+### Caso 023 - Falso Positivo UBA Cloud: Sincronización Google AppSheet / AppScript (José Marín)
+* **ID Interno:** `ST-GSUITE-MARIN`
+* **Fecha:** 15/10/2026 13:10:00
+* **Plataforma:** Stellar Cyber OpenXDR / Conector Google Workspace (`gsuite_Workspace-THN`)
+* **Analista:** Kevin Moraes
+* **Activo / Cuenta:** `josemarin@technoma.com.py` (Google Workspace)
+* **Severidad:** High (70) | Score: 61 | Táctica: Exfiltration (TA0010 / T1567.002)
+* **Veredicto Final:** **Falso Positivo Heurístico (Benign True Positive - BTP)**
+* **Playbook:** `PB-2.2 Monitoreo Operativo / PB-6.1 Detección de Anomalías Cloud y Exfiltración`
+
+#### 1. Triaje Forense y Causa Raíz
+El motor de UBA disparó 7 alertas de *Cloud Drive Data Exfiltration Anomaly* advirtiendo sobre un volumen anómalo de descargas en Google Drive (~7.240 eventos en 24 horas frente a un perfil típico de 1.033).
+La inspección de los metadatos de auditoría confirmó que las llamadas a la API `drive.files.get` fueron originadas por dos aplicaciones corporativas autorizadas:
+* **Google AppSheet** (OAuth Client ID: `953348912797`)
+* **POC Servicio Tecnico AppScript** (OAuth Client ID: `1043972006487`)
+
+#### 2. Conciliación de Objetos
+La totalidad de los archivos descargados corresponden a recursos gráficos operativos vinculados a órdenes de trabajo de campo:
+* `*.firma_cliente.*.png` y `*.firma_tecnico.*.png` (firmas digitales de conformidad).
+* `*.foto_qr.*.jpg` e `*.imagen.*.jpg` (evidencias fotográficas de servicio).
+Dichos recursos fueron leídos en lote por la aplicación de soporte técnico para compilar y generar los reportes de servicio al cliente.
+
+#### 3. Resolución
+Se descartó compromiso de cuenta o fuga de datos. El caso fue cerrado formalmente como Falso Positivo en Stellar Cyber y se recomendó añadir los Client IDs de AppSheet y AppScript a la lista blanca de la regla UBA de Google Drive.
+
+---
+
+### Caso 024 - Optimización Quirúrgica de Ingesta: Filtro de Descarte Passthrough Benigno FortiGate
+* **ID Interno:** `ST-INGEST-PASSTHROUGH`
+* **Fecha:** 15/10/2026 13:15:00
+* **Plataforma:** Stellar Cyber OpenXDR / Sensor Modular Technoma (`profile-modular-sensor-technoma`)
+* **Analista:** Kevin Moraes
+* **Área:** Ingeniería y Optimización de Ingesta / Control de Cuota Diaria
+* **Acción Implementada:** Descarte de Ruido Benigno Passthrough (`DROP`)
+* **Estado:** **Activo y Pegando Hits (Validado Operativamente)**
+
+#### 1. Diagnóstico y Causa Raíz
+Durante la auditoría del Data Lake y control de capacidad diaria se identificó un drenaje masivo de eventos continuos provenientes de logs de FortiGate con acción `passthrough` (más de 3.300 eventos por ventana de 5 minutos). 
+El desglose de red reveló que correspondían a tráfico operativo estándar de navegación y telemetría de servicios de uso corporativo intensivo que no aportan valor de seguridad como eventos crudos aislados:
+* Sincronización continua de ERP Odoo (`190.104.187.132`).
+* Conexiones hacia CDNs, APIs y streaming de Google / Android (`142.251.0.0/16`, `172.217.0.0/16`).
+* Rangos oficiales de colaboración Google Meet (`142.250.0.0/15`) y Cisco Webex (`64.68.96.0/19`, `66.114.160.0/20`, `66.163.32.0/19`, `170.72.0.0/16`, `173.39.224.0/19`).
+* Descargas de medios y mensajería WhatsApp / Meta (`157.240.0.0/16`).
+* Telemetría de Microsoft Windows Update y Azure (`20.0.0.0/11`).
+* Envíos de telemetría de agentes de seguridad Palo Alto Traps (`162.159.137.105`).
+
+#### 2. Implementación de los Filtros Quirúrgicos
+Se diseñaron y desplegaron en Stellar Cyber vía API oficial en **System → Log Forwarders (Log Filters)**:
+* **Filtro Principal:** `Drop_FW_Passthrough_Benign_Telemetry` (ID: `6ad0f8dfaa734118df02d27e`)
+  * **Sensor Profile:** `profile-modular-sensor-technoma`
+  * **Condiciones Aplicadas:**
+    - `dev_type` **is** `fw_fortigate`
+    - `action` **is** `passthrough`
+    - `dstip` **matches** `190.104.187.132, 142.251.0.0/16, 172.217.0.0/16, 74.125.0.0/16, 170.72.0.0/16, 64.68.96.0/19, 173.39.224.0/19, 157.240.0.0/16, 20.0.0.0/11, 162.159.128.0/17, 34.98.77.231, 34.39.195.104, 4.0.0.0/8, 40.0.0.0/8, 51.0.0.0/8`
+  * **Acción:** `DROP` (descarte selectivo antes del almacenamiento en Data Lake).
+
+* **Filtros Adicionales Creados:**
+  1. `Drop_FW_PaloAlto_Traps_Heartbeats` (ID: `6ad1558baa734118df02d348`): Descarte de handshakes y heartbeats SSL redundantes de los agentes de Cortex XDR hacia `34.98.77.231` y `34.39.195.104` en puerto 443 (~135.000 logs/día ahorrados).
+  2. `Drop_FW_Windows_Diagnostics_Telemetry` (ID: `6ad155a7472282b392d236bf`): Descarte de telemetría passthrough de Windows hacia rangos oficiales de Azure Diagnostics `4.0.0.0/8, 40.0.0.0/8, 51.0.0.0/8` (~35.000 logs/día ahorrados).
+
+#### 3. Resultado y Validación Operativa
+* Los filtros ya se encuentran activos en producción.
+* La tasa de ingesta de passthrough benigno se redujo en un 99.5%, y los heartbeats redundantes de Traps y telemetría de Windows quedaron purgados de la ingesta diaria.
+* Se blindó la cuota de licencia diaria manteniendo visibilidad intacta sobre sesiones `accept` y `deny`, así como sobre cualquier destino no contemplado en la lista blanca estricta.
+
+
+---
+
+### Caso 025 - Trazabilidad y Conciliación de Auditoría: Incidente Cortex XDR 541 (Failed Connections - NB-JTORALES)
+* **ID Incidente Cortex XDR:** `INCIDENT-541`
+* **ID Alerta Original:** `137403`
+* **Fecha de Creación:** 19/08/2026 22:50:06 UTC
+* **Fecha de Resolución en Cortex:** 25/09/2026 14:26:23 UTC
+* **Plataforma EDR:** Palo Alto Networks Cortex XDR (`technoma.xdr.us.paloaltonetworks.com`)
+* **Plataforma SIEM/XDR:** Stellar Cyber OpenXDR v7.0.0s (Conector `CORTEX-XDR-V1`)
+* **Analista:** Kevin Moraes
+* **Activo Involucrado:** `NB-JTORALES` (IP: `192.168.100.14` / `10.212.134.205`, Agent ID: `ca9e9da710e240e89b3a64013cd02710`)
+* **Usuario:** `TECHNOMA\josetorales`
+* **Severidad:** Low (1)
+* **Ticket de Caso Creado en Stellar Cyber:** `#17797` (`Palo Alto Networks Cortex XDR: Failed Connections` - ID: `6ad12ce1e4fb8b7307d82b1d`)
+* **Estado en Stellar Cyber:** `Resolved` | **Resolución:** `False Positive` | **Score:** `9`
+* **Veredicto Final:** **Falso Positivo / Ruido Operativo de Navegación (Resolved - Auto)**
+* **Táctica MITRE ATT&CK:** `TA0007 - Discovery`
+* **Técnica MITRE ATT&CK:** `T1018 - Remote System Discovery`
+
+#### 1. Evidencia Registrada en Stellar Cyber (Interflow Data Lake)
+* **Índice de Almacenamiento:** `stellar-index-v1-syslog-cf73a415c8794884a0c35b458b7c73ae-68e4cbd80c1098a3aec33727-2026.09.17-000033`
+* **Conector:** `palo_alto_networks_cortex_CORTEX-XDR-V1`
+* **Clase de Mensaje:** `palo_alto_networks_cortex_xdr_incidents`
+* **Incident ID:** `541`
+* **Host:** `nb-jtorales` (Agent ID: `ca9e9da710e240e89b3a64013cd02710`)
+* **Nombre de la Amenaza:** `Failed Connections`
+* **Descripción en Stellar:** `"NB-JTORALES tried to connect to 16 hosts in the last 24 hours"`
+* **URL Directa a Cortex XDR:** `https://technoma.xdr.us.paloaltonetworks.com/incident-view?caseId=541`
+* **Técnica MITRE:** `T1018 - Remote System Discovery`
+* **Táctica MITRE:** `TA0007 - Discovery`
+
+#### 2. Triaje Forense y Causa Raíz
+El motor de comportamiento y analítica *Magnifier* de Cortex XDR generó la alerta `137403` al detectar que el equipo `NB-JTORALES` registró 16 intentos fallidos de conexión hacia direcciones IP locales (`192.168.100.97`, `10.61.18.66`, `192.168.18.3`, etc.) en puertos de rango dinámico efímero.
+La inspección a nivel de proceso (`xdmsourceprocessexecutablepath`) confirmó que las conexiones fueron generadas exclusivamente por:
+* **Proceso Actor:** `C:\Program Files\Mozilla Firefox\firefox.exe`
+* **Firma Digital:** `Mozilla Corporation` (`SIGNED_VERIFIED`)
+* **Hash SHA256:** `44f0741288e3e884ecc30e31b2d7633505650dffa3238e5fdd3cabb8429d0fc2`
+* **Contexto Operativo:** Proceso hijo de contenido (`-contentproc`) intentando restablecer sockets de pestañas y servicios web internos/locales tras reactivación de sesión. No existió escaneo malicioso de red, herramientas de reconocimiento externas ni balizamiento.
+
+#### 3. Resolución y Trazabilidad de Auditoría
+El caso fue cerrado automáticamente por el motor de Cortex XDR (`status.resolution_reason: STATUS_080_RESOLVED_AUTO`) bajo la causal *"resolve as part of incident 541"*.
+En Stellar Cyber, la telemetría e incidentes sincronizados a través del conector `CORTEX-XDR-V1` ratifican la recepción íntegra del evento bajo la clase `palo_alto_networks_cortex_xdr_incidents`, demostrando correlación y trazabilidad completa entre ambas herramientas para cumplimiento de auditoría.
+
+
