@@ -2633,7 +2633,7 @@ class XdrDashboard(QMainWindow):
         layout_pb63.addWidget(self.btn_auditoria_ingesta)
 
         self.btn_creador_log_filters = QPushButton("➕ Creador Log Filters (API)")
-        self.btn_creador_log_filters.setStyleSheet(ui_theme.chip_button_style(ui_theme.COLOR_CYAN))
+        self.btn_creador_log_filters.setStyleSheet(ui_theme.chip_button_style(ui_theme.ACCENT_CYBER))
         self.btn_creador_log_filters.setToolTip("Diseña, valida sintaxis sin ceguera y despliega Log Filters en Stellar Cyber vía API")
         self.btn_creador_log_filters.clicked.connect(self.open_log_filter_creator)
         layout_pb63.addWidget(self.btn_creador_log_filters)

@@ -29,6 +29,7 @@ COLOR_CRITICAL = "#f43f5e"   # P1 / Crítico / Alerta Roja
 COLOR_HIGH     = "#f97316"   # P2 / Alta / Naranja
 COLOR_MEDIUM   = "#eab308"   # P3 / Media / Amarillo
 COLOR_LOW      = "#38bdf8"   # P4 / Baja / Azul Cielo
+COLOR_CYAN     = "#38bdf8"   # Cian Tecnológico
 COLOR_SUCCESS  = "#10b981"   # Resuelto / Online / Verde Esmeralda
 COLOR_PURPLE   = "#a855f7"   # IA / Notificaciones Móviles / Morado
 COLOR_INDIGO   = "#6366f1"   # Forense / Terminal / Índigo
