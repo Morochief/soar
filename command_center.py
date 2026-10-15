@@ -2761,7 +2761,7 @@ class XdrDashboard(QMainWindow):
 
         self.action_soar_dpapi = QAction("Auto-Cierre DPAPI (protected_storage)", self)
         self.action_soar_dpapi.setCheckable(True)
-        self.action_soar_dpapi.setChecked(True)
+        self.action_soar_dpapi.setChecked(False)
         self.action_soar_dpapi.setToolTip("Auto-toma y resuelve como False Positive accesos legítimos de Windows DPAPI a protected_storage en VMBASE8")
         self.action_soar_dpapi.toggled.connect(self._update_soar_menu_label)
 

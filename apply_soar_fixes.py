@@ -56,23 +56,23 @@ def patch_file(target_path):
 
     new_defaults = """        self.action_soar_hm = QAction("Auto-Cierre HealthMailbox (Ley de Oro)", self)
         self.action_soar_hm.setCheckable(True)
-        self.action_soar_hm.setChecked(True)
+        self.action_soar_hm.setChecked(False)
         self.action_soar_hm.setToolTip("Auto-toma y resuelve como False Positive los casos de HealthMailbox bajo la Ley de Oro")
         self.action_soar_hm.toggled.connect(self._update_soar_menu_label)
 
         self.action_soar_translate = QAction("Auto-Cierre Sophos Translate", self)
         self.action_soar_translate.setCheckable(True)
-        self.action_soar_translate.setChecked(True)
+        self.action_soar_translate.setChecked(False)
         self.action_soar_translate.setToolTip("Auto-toma y resuelve como False Positive los casos de Sophos WebControl hacia translate.google.com")
         self.action_soar_translate.toggled.connect(self._update_soar_menu_label)
 
         self.action_soar_sati = QAction("Auto-Cierre SATI VPN (DNS 53 Failover)", self)
         self.action_soar_sati.setCheckable(True)
-        self.action_soar_sati.setChecked(True)"""
+        self.action_soar_sati.setChecked(False)"""
 
     if old_defaults in content:
         content = content.replace(old_defaults, new_defaults)
-        print("  [+] Defaults de checkboxes SOAR configurados en True exitosamente.")
+        print("  [+] Defaults de checkboxes SOAR configurados en False exitosamente.")
     else:
         print("  [!] old_defaults de checkboxes no encontrado exactamente.")
 
