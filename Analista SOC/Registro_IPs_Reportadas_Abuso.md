@@ -16,6 +16,7 @@
 | **04** | `172.71.127.147` | 09/10/2026 | Cloudflare Inc. (AS13335) | Francia (Paris) | HTTPS (443) | Fuerza Bruta / Scan | `abuse@cloudflare.com` | `Ivan` | `Scan - 172.71.127.147 [Cloudflare Inc.]` | 🟢 Notificado |
 | **05** | `104.23.254.12` | 09/10/2026 | Cloudflare Inc. (AS13335) | EE.UU. / Edge | HTTPS (443) | Escaneo | `abuse@cloudflare.com` | `Ivan` | `Scan - 104.23.254.12 [Cloudflare Inc.]` | 🟢 Notificado |
 | **06** | `5.61.209.106` | 09/10/2026 | Amarutu Technology Ltd | Seychelles | HTTP (443) | Fuerza Bruta | `abuse@koddos.com` | `Ivan` | `Brute force attack HTTP - 5.61.209.106 [Amarutu Technology Ltd]` | 🟢 Notificado |
+| **07** | `45.198.224.125` | 09/10/2026 | Cloud Innovation Support / Vpsvault.host Ltd | United States | HTTP (443) | Escaneo | `abuse@vpsvault.host, tech@cloudinnovation.org` | `Ivan` | `Scan - 45.198.224.125 [Cloud Innovation Support / Vpsvault.host Ltd]` | 🟢 Notificado |
 
 ---
 

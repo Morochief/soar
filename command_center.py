@@ -62,6 +62,7 @@ from email_header_analyzer import PhishingHeaderAnalyzerDialog
 from thn_ticket_generator import TechnomaTicketGeneratorDialog, TechnomaTicketEngine
 from feeds_intel_module import FeedsIntelDialog
 from abuse_report_dialog import AbuseReportDialog
+from predpi_validator_module import PreDpiValidatorWidget
 from cyber_telemetry_widgets import CyberTopProtocolsWidget, CyberInfrastructureHealthWidget
 
 # Desactivar advertencias SSL de forma nativa e indestructible
@@ -3424,6 +3425,7 @@ class XdrDashboard(QMainWindow):
         self._worker_so_telemetry = None
         self._so_telemetry_items = []
         self._init_tab7_security_onion()
+        self._init_tab8_predpi_validator()
 
         # Memoria interna para casos extendidos (Pool en RAM)
         self._extended_cases_pool = []
@@ -10606,6 +10608,17 @@ class XdrDashboard(QMainWindow):
         self.tabs_so_main.setCurrentIndex(0) # Sub-pestaña de Caza Forense
         self.txt_so_hunt_ioc.setText(ioc.strip())
         self.trigger_so_hunt()
+
+    def _init_tab8_predpi_validator(self):
+        """Inicializa la Pestana 8: Modulo de Auditoria y Validacion Sintactica Pre-DPI (BPF/eBPF)."""
+        self.tab8 = QWidget()
+        self.tabs.addTab(self.tab8, "🛡️ Pre-DPI BPF Validator")
+        layout_tab8 = QVBoxLayout(self.tab8)
+        layout_tab8.setContentsMargins(4, 4, 4, 4)
+        layout_tab8.setSpacing(0)
+        
+        self.predpi_widget = PreDpiValidatorWidget(self)
+        layout_tab8.addWidget(self.predpi_widget)
 
     def closeEvent(self, event):
         """Destructor coordinado. Activa la cancelación cooperativa y libera sockets."""

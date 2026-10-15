@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-09T15:09:04.030427",
+  "updated_at": "2026-10-15T08:58:32.638967",
   "analyst": "Kevin Moraes",
   "reported_ips": [
     {
@@ -78,6 +78,19 @@
       "recipient": "abuse@koddos.com",
       "bcc": "Ivan",
       "subject": "Brute force attack HTTP - 5.61.209.106 [Amarutu Technology Ltd]",
+      "status": "notificado"
+    },
+    {
+      "ip": "45.198.224.125",
+      "date": "2026-10-15",
+      "org": "Cloud Innovation Support / Vpsvault.host Ltd",
+      "country": "United States",
+      "service": "HTTP",
+      "port": 443,
+      "incident_type": "escaneo",
+      "recipient": "abuse@vpsvault.host, tech@cloudinnovation.org",
+      "bcc": "Ivan",
+      "subject": "Scan - 45.198.224.125 [Cloud Innovation Support / Vpsvault.host Ltd]",
       "status": "notificado"
     }
   ]
