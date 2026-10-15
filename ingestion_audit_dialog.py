@@ -2162,6 +2162,26 @@ class IngestionAuditDialog(QDialog):
         self.cmb_filter_sev.currentIndexChanged.connect(self._render_log_filters_table)
         top_bar.addWidget(self.cmb_filter_sev)
 
+        self.btn_open_filter_creator = QPushButton("➕ Crear Nuevo Filtro (API)")
+        self.btn_open_filter_creator.setStyleSheet("""
+            QPushButton {
+                background-color: #0284c7;
+                color: #ffffff;
+                font-family: 'Consolas';
+                font-weight: bold;
+                font-size: 11px;
+                padding: 6px 14px;
+                border: 1px solid #38bdf8;
+                border-radius: 4px;
+            }
+            QPushButton:hover {
+                background-color: #0369a1;
+            }
+        """)
+        self.btn_open_filter_creator.setToolTip("Diseñar, previsualizar sintaxis sin ceguera y desplegar Log Filters en Stellar Cyber vía API")
+        self.btn_open_filter_creator.clicked.connect(self._abrir_creador_filtros)
+        top_bar.addWidget(self.btn_open_filter_creator)
+
         layout.addLayout(top_bar)
 
         # Banner de Gobernanza
@@ -2631,6 +2651,23 @@ class IngestionAuditDialog(QDialog):
             self.tbl_sensors_hw.setItem(r, 5, QTableWidgetItem(disk_val))
             self.tbl_sensors_hw.setItem(r, 6, QTableWidgetItem(in_txt))
             self.tbl_sensors_hw.setItem(r, 7, QTableWidgetItem(f"{prof} (v{ver})"))
+
+    def _abrir_creador_filtros(self):
+        """Abre la ventana interactiva para diseñar y desplegar Log Filters en Stellar Cyber vía API."""
+        try:
+            from log_filter_creator_dialog import LogFilterCreatorDialog
+            dlg = LogFilterCreatorDialog(self)
+            dlg.filter_created_signal.connect(lambda res: self._on_filter_created_refresh(res))
+            dlg.exec()
+        except Exception as e:
+            QMessageBox.critical(self, "Error Creador de Filtros", f"No se pudo abrir el creador de filtros:\n\n{e}")
+
+    def _on_filter_created_refresh(self, res: dict):
+        """Recarga la vista tras desplegar un nuevo filtro exitosamente."""
+        if hasattr(self, '_cargar_datos_remotos'):
+            self._cargar_datos_remotos()
+        elif hasattr(self, '_render_log_filters_table'):
+            self._render_log_filters_table()
 
     def _render_log_filters_table(self):
         blind_spots = self.data_cache.get("blind_spots", [])

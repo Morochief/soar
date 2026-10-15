@@ -2632,6 +2632,12 @@ class XdrDashboard(QMainWindow):
         self.btn_auditoria_ingesta.clicked.connect(self._abrir_auditoria_ingesta_dialog)
         layout_pb63.addWidget(self.btn_auditoria_ingesta)
 
+        self.btn_creador_log_filters = QPushButton("➕ Creador Log Filters (API)")
+        self.btn_creador_log_filters.setStyleSheet(ui_theme.chip_button_style(ui_theme.COLOR_CYAN))
+        self.btn_creador_log_filters.setToolTip("Diseña, valida sintaxis sin ceguera y despliega Log Filters en Stellar Cyber vía API")
+        self.btn_creador_log_filters.clicked.connect(self.open_log_filter_creator)
+        layout_pb63.addWidget(self.btn_creador_log_filters)
+
         layout_h.addWidget(bar_pb63)
         grid_layout.addWidget(frame_health, 1, 0)
 
@@ -6262,6 +6268,15 @@ class XdrDashboard(QMainWindow):
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo abrir el Centro de Auditoría de Ingesta: {e}")
 
+    def open_log_filter_creator(self):
+        """Abre la ventana interactiva del Creador y Gestor de Log Filters Quirúrgicos (API Stellar Cyber)."""
+        try:
+            from log_filter_creator_dialog import LogFilterCreatorDialog
+            dlg = LogFilterCreatorDialog(self)
+            dlg.exec()
+        except Exception as e:
+            QMessageBox.critical(self, "Error Creador de Filtros", f"No se pudo abrir el Creador de Log Filters:\n\n{e}")
+
     def _persistir_bitacora_auto(self, tsv_row: str, ticket_id: str):
         """Guarda persistentemente el registro de bitácora generado en bitacora_auto_export.tsv."""
         try:
@@ -7579,6 +7594,11 @@ class XdrDashboard(QMainWindow):
         # Atajo CLI para abrir el Generador de Reportes de Abuso
         if clean_lower in ["abuso", "reporte-abuso", "scan-abuse", "abuse-report"]:
             self.open_abuse_report_dialog()
+            return
+
+        # Atajo CLI para abrir el Creador y Gestor de Log Filters API
+        if clean_lower in ["filter", "filtros", "logfilter", "creadorfiltro", "crearfiltro", "crear-filtro"]:
+            self.open_log_filter_creator()
             return
 
         # Intercepción inteligente de comandos CTI Directos
