@@ -21,13 +21,20 @@ Esta skill establece la regla de oro operativa para la interacción técnica con
    Toda interacción, auditoría, prueba o modificación contra la API debe materializarse en un archivo script Python (`.py`), ubicado preferentemente en la carpeta correspondiente (`auditoria_cuota_stellar/` o scripts de soporte).
 2. **Autenticación Limpia y Robusta:**  
    Los scripts deben reutilizar las variables de entorno oficiales del sistema o valores seguros de fallback (`STELLAR_HOST`, `STELLAR_EMAIL`, `STELLAR_TOKEN`), obteniendo el JWT mediante Basic Auth contra `/connect/api/v1/access_token` con manejo de excepciones y desactivación de advertencias SSL (`urllib3.disable_warnings`).
-3. **Manejo Estructurado de Errores y Output Legible:**  
+3. **Herramienta Unificada Central (`stellar_cli.py`):**  
+   Antes de crear cualquier script nuevo, utilizar siempre la herramienta definitiva de la raíz:
+   `.\Scripts\python.exe stellar_cli.py --case <ID> | --list-cases | --quota | --search <QUERY> | --filters`
+   Documentación completa: `Analista SOC/Stellar Documentacion/GUIA_STELLAR_MCP_Y_CLI_UNIFICADO.md`.
+4. **Manejo Estructurado de Errores y Output Legible:**  
    No dejar volcados crudos incomprensibles. El script debe formatear tablas, listas y mensajes con prefijos claros (`[*]`, `[+]`, `[-]`, `[!]`).
-4. **Reproducibilidad y Trazabilidad:**  
+5. **Reproducibilidad y Trazabilidad:**  
    Al crear un archivo `.py`, el analista puede volver a ejecutarlo directamente en cualquier momento desde su terminal o integrarlo al Command Center.
-5. **Ejecución Vía Entorno Virtual:**  
+6. **Ejecución Vía Entorno Virtual:**  
    Siempre ejecutar utilizando el intérprete del entorno protegido del SOC:  
    `.\Scripts\python.exe ruta_del_script.py`
+7. **Reglas del MCP Server de Stellar Cyber (`https://technoma.stellarcyber.cloud/mcp`):**
+   - `ticket_id` DEBE ser string (ej: `"17813"`, NUNCA número `17813`).
+   - Cada llamada al MCP requiere `access_token` en los argumentos del payload JSON-RPC.
 
 ---
 
