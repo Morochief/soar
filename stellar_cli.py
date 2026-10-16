@@ -95,7 +95,8 @@ def call_mcp(tool_name: str, arguments: dict) -> Any:
         
     res = r.json()
     if "error" in res:
-        print(f"[-] Error MCP ({res['error'].get('code')}): {res['error'].get('message')}", file=sys.stderr)
+        req_id = res.get("request_id") or res.get("requestId") or "N/A"
+        print(f"[-] Error MCP ({res['error'].get('code')} | Request ID: {req_id}): {res['error'].get('message')}", file=sys.stderr)
         sys.exit(1)
         
     content = res.get("result", {}).get("content", [])
@@ -158,7 +159,8 @@ def handle_get_case(ticket_id: str, as_json: bool = False):
     for m_id, m_val in metrics.items():
         if isinstance(m_val, dict):
             elapsed_sec = round(m_val.get("elapsed_ms", 0) / 1000.0, 1)
-            print(f"Métrica SLA:      {m_val.get('name')}: {elapsed_sec}s ({round(elapsed_sec/60.0, 1)} min)")
+            state = m_val.get("state", "N/A").upper()
+            print(f"Métrica SLA (7.0.0s):{m_val.get('name')}: {elapsed_sec}s ({round(elapsed_sec/60.0, 1)} min) [Estado: {state}]")
 
     print("\n" + "-"*80)
     print(f" ALERTAS AGRUPADAS ({len(alerts)})")
@@ -167,6 +169,7 @@ def handle_get_case(ticket_id: str, as_json: bool = False):
         src = alt.get("_source", {})
         xdr = src.get("xdr_event", {})
         forti = src.get("fortinet", {})
+        ids_payload = src.get("ids", {}).get("payload_details", {}).get("payload_printable")
         
         print(f"\n[Alerta #{i}] {xdr.get('display_name', src.get('event_name'))}")
         print(f"  * Kill Chain / Técnica: {xdr.get('xdr_killchain_stage')} | {xdr.get('technique', {}).get('name')}")
@@ -178,6 +181,8 @@ def handle_get_case(ticket_id: str, as_json: bool = False):
         print(f"  * Acción Firewall:      {str(src.get('action')).upper()} por Política: {src.get('fw_policy_id')} (Regla {forti.get('rule_id')})")
         print(f"  * Detección ML:         Bloqueos Actuales={src.get('actual')} vs Típico={src.get('typical')} (Intervalo: {src.get('run_every')} min)")
         print(f"  * Fidelidad / Severidad:Fidelity={src.get('fidelity')}% | Severity={src.get('severity')} | Event Score={src.get('event_score')}")
+        if ids_payload:
+            print(f"  * Payload Imprimible IDS (7.0.0s): {ids_payload[:300]}")
 
     print("\n" + "-"*80)
     print(" OBSERVABLES IDENTIFICADOS")
@@ -348,6 +353,32 @@ def handle_filters():
     print("="*80 + "\n")
 
 # =============================================================================
+# COMANDOS: ACCIONES RESPONDER FORTIGATE (7.0.0s AELDEV-67465)
+# =============================================================================
+
+def handle_block_target(target: str, target_type: str = "domain", device_name: str = "FG-Technoma", duration: int = 0):
+    print(f"[*] Ejecutando orden de bloqueo de {target_type.upper()}: '{target}' en Firewall {device_name} (Stellar 7.0.0s)...")
+    headers = get_rest_headers()
+    action_name = f"block_{target_type}"
+    payload = {
+        "action": action_name,
+        "target": target,
+        "device_name": device_name,
+        "duration": duration,
+        "description": f"Bloqueo de {target_type.upper()} ejecutado vía Stellar SOC CLI"
+    }
+    url = f"https://{HOST}/connect/api/v1/actions/firewall"
+    try:
+        r = requests.post(url, headers=headers, json=payload, timeout=20, verify=False)
+        req_id = r.headers.get("request_id") or r.headers.get("requestId") or "N/A"
+        if r.status_code in [200, 201]:
+            print(f"[+] [SUCCESS] Bloqueo de {target_type.upper()} '{target}' aplicado exitosamente en {device_name} (ReqID: {req_id})")
+        else:
+            print(f"[-] [FAILED] Error al ejecutar bloqueo en FortiGate ({r.status_code} | ReqID: {req_id}): {r.text}")
+    except Exception as e:
+        print(f"[-] Error de conexión al despachar acción: {e}")
+
+# =============================================================================
 # MAIN PARSER
 # =============================================================================
 
@@ -381,6 +412,12 @@ def main():
     # Filtros
     parser.add_argument("--filters", action="store_true", help="Listar filtros de logs activos")
     
+    # Responders FortiGate 7.0.0s (AELDEV-67465)
+    parser.add_argument("--block-domain", type=str, help="Bloquear dominio malicioso en FortiGate (ej: --block-domain evil.com)")
+    parser.add_argument("--block-url", type=str, help="Bloquear URL de phishing en FortiGate (ej: --block-url http://phish.com/login)")
+    parser.add_argument("--device-name", type=str, default="FG-Technoma", help="Nombre del Firewall (def: FG-Technoma)")
+    parser.add_argument("--duration", type=int, default=0, help="Duración del bloqueo en segundos (0 = permanente)")
+    
     # Formato
     parser.add_argument("--json", action="store_true", help="Imprimir salida en formato JSON crudo")
 
@@ -404,6 +441,10 @@ def main():
         handle_search(args.search, cust_id=args.tenant, limit=args.limit)
     elif args.filters:
         handle_filters()
+    elif args.block_domain:
+        handle_block_target(args.block_domain, target_type="domain", device_name=args.device_name, duration=args.duration)
+    elif args.block_url:
+        handle_block_target(args.block_url, target_type="url", device_name=args.device_name, duration=args.duration)
     else:
         parser.print_help()
 

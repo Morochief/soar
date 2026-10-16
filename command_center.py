@@ -4360,11 +4360,32 @@ class XdrDashboard(QMainWindow):
 
         if action == "triage":
             self.txt_triage.clear()
+            details_raw = result.get("details_text") or "{}"
             sb = []
+            
+            # Stellar Cyber 7.0.0s (AELDEV-66747): Métricas y SLAs Nativos
+            try:
+                dt_obj = json.loads(details_raw)
+                metrics = dt_obj.get("data", {}).get("details", {}).get("metrics") or dt_obj.get("metrics") or {}
+                if metrics and isinstance(metrics, dict):
+                    sb.append("=========================================================================")
+                    sb.append("  [STELLAR CYBER 7.0.0s] MÉTRICAS Y TIEMPOS OPERATIVOS (SLA NATIVO)")
+                    sb.append("=========================================================================")
+                    for m_id, m_val in metrics.items():
+                        if isinstance(m_val, dict):
+                            m_name = m_val.get("name", m_id)
+                            elapsed_sec = round(m_val.get("elapsed_ms", 0) / 1000.0, 1)
+                            elapsed_min = round(elapsed_sec / 60.0, 1)
+                            m_state = m_val.get("state", "N/A").upper()
+                            sb.append(f"  * {m_name:<28}: {elapsed_sec:>6}s ({elapsed_min:>4} min)  [ESTADO: {m_state}]")
+                    sb.append("=========================================================================\n")
+            except Exception:
+                pass
+
             sb.append("=========================================================================")
             sb.append("  [FASE 1] RAW JSON - DETALLES E INSPECCIÓN ESTRUCTURAL DEL CASO")
             sb.append("=========================================================================\n")
-            sb.append(result.get("details_text") or "{}")
+            sb.append(details_raw)
             sb.append("\n=========================================================================")
             sb.append("  [FASE 1] RAW JSON - MATRIZ DE EVIDENCIAS DE OBSERVABLES INDEXADOS")
             sb.append("=========================================================================\n")
@@ -4385,6 +4406,30 @@ class XdrDashboard(QMainWindow):
             self.txt_triage.clear()
             alerts_text = result.get("alerts_text") or "[]"
             sb = []
+            
+            # Stellar Cyber 7.0.0s (AELDEV-72713): Payload Imprimible en Alertas IDS
+            try:
+                alt_obj = json.loads(alerts_text)
+                alerts_list = alt_obj if isinstance(alt_obj, list) else alt_obj.get("data", {}).get("alerts", [])
+                ids_payloads = []
+                for idx, alt in enumerate(alerts_list, 1):
+                    src = alt.get("_source", {}) if isinstance(alt, dict) else {}
+                    p_print = src.get("ids", {}).get("payload_details", {}).get("payload_printable")
+                    if p_print:
+                        ev_name = src.get("xdr_event", {}).get("display_name") or src.get("event_name", f"Alerta #{idx}")
+                        ids_payloads.append((idx, ev_name, p_print))
+                if ids_payloads:
+                    sb.append("=========================================================================")
+                    sb.append("  [STELLAR CYBER 7.0.0s] PAYLOADS IMPRIMIBLES DE ALERTAS IDS DETECTADOS")
+                    sb.append("=========================================================================")
+                    for idx, ev_name, p_print in ids_payloads:
+                        sb.append(f"  [Alerta #{idx}] {ev_name}:")
+                        preview = p_print if len(p_print) <= 500 else p_print[:500] + "... [TRUNCADO]"
+                        sb.append(f"  {preview}\n")
+                    sb.append("=========================================================================\n")
+            except Exception:
+                pass
+
             sb.append("=========================================================================")
             sb.append("  [FASE 2] RAW JSON - LOTE COMPLETO DE ALERTAS NATIVAS DE INTERFLOW")
             sb.append("=========================================================================\n")
@@ -4954,33 +4999,45 @@ class XdrDashboard(QMainWindow):
                 mttr_info = SlaGovernanceEngine.evaluate_mttr(c)
                 pri = mttd_info["priority"]
                 
+                # Extracción complementaria de métricas oficiales de caso Stellar Cyber 7.0.0s (AELDEV-66747)
+                stellar_metrics = c.get("metrics") or c.get("details", {}).get("metrics", {})
+                stellar_tta_suffix = ""
+                if isinstance(stellar_metrics, dict):
+                    for m_val in stellar_metrics.values():
+                        if isinstance(m_val, dict) and "acknowledge" in str(m_val.get("name", "")).lower():
+                            el_ms = m_val.get("elapsed_ms", 0)
+                            if el_ms > 0:
+                                el_min = round(el_ms / 60000.0, 1)
+                                stellar_tta_suffix = f" | TTA: {el_min}m"
+                                break
+
                 st = str(c.get("status", "")).strip().lower()
                 if st in ["resolved", "cancelled", "closed"]:
                     if mttr_info["breached"]:
-                        sla_display = f"CERRADO (SLA VIOLADO {mttr_info['remaining_str']} | MTTR: {mttr_info['elapsed_str']})"
+                        sla_display = f"CERRADO (SLA VIOLADO {mttr_info['remaining_str']} | MTTR: {mttr_info['elapsed_str']}{stellar_tta_suffix})"
                     else:
-                        sla_display = f"CERRADO (MTTR: {mttr_info['elapsed_str']})"
+                        sla_display = f"CERRADO (MTTR: {mttr_info['elapsed_str']}{stellar_tta_suffix})"
                     row_color = "#64748b"
                     font_weight = "normal"
                 else:
                     if assignee == "Libre":
                         if mttd_info["breached"]:
-                            sla_display = f"MTTD VENCIDO ({mttd_info['remaining_str']} | Total: {mttd_info['elapsed_str']})"
+                            sla_display = f"MTTD VENCIDO ({mttd_info['remaining_str']} | Total: {mttd_info['elapsed_str']}{stellar_tta_suffix})"
                             if pri in ["P1", "P2"]:
                                 new_breached_count += 1
                         elif mttd_info["warning"]:
-                            sla_display = f"MTTD RIESGO ({mttd_info['remaining_str']})"
+                            sla_display = f"MTTD RIESGO ({mttd_info['remaining_str']}{stellar_tta_suffix})"
                         else:
-                            sla_display = f"MTTD OK ({mttd_info['remaining_str']})"
+                            sla_display = f"MTTD OK ({mttd_info['remaining_str']}{stellar_tta_suffix})"
                     else:
                         if mttr_info["breached"]:
-                            sla_display = f"MTTR VENCIDO ({mttr_info['remaining_str']} | Total: {mttr_info['elapsed_str']})"
+                            sla_display = f"MTTR VENCIDO ({mttr_info['remaining_str']} | Total: {mttr_info['elapsed_str']}{stellar_tta_suffix})"
                             if pri in ["P1", "P2"]:
                                 new_breached_count += 1
                         elif mttr_info["warning"]:
-                            sla_display = f"MTTR RIESGO ({mttr_info['remaining_str']})"
+                            sla_display = f"MTTR RIESGO ({mttr_info['remaining_str']}{stellar_tta_suffix})"
                         else:
-                            sla_display = f"MTTR OK ({mttr_info['remaining_str']})"
+                            sla_display = f"MTTR OK ({mttr_info['remaining_str']}{stellar_tta_suffix})"
 
                     if is_auth_anomaly and not is_hm:
                         cached_info = self._case_identity_cache.get(t_id)
@@ -7351,6 +7408,13 @@ class XdrDashboard(QMainWindow):
         act_decode_local = menu_pivots.addAction("🔓 Decodificar Objetivo Local (B64/URL/Hex)")
         act_decode_local.triggered.connect(lambda: self._execute_forensic_decode(self._get_active_target_or_observable()))
 
+        menu_pivots.addSeparator()
+        act_fg_domain = menu_pivots.addAction("🔥 [FortiGate] Bloquear Dominio Malicioso (7.0.0s)")
+        act_fg_domain.triggered.connect(lambda: self.execute_fortigate_block("domain"))
+
+        act_fg_url = menu_pivots.addAction("🛑 [FortiGate] Bloquear URL de Phishing (7.0.0s)")
+        act_fg_url.triggered.connect(lambda: self.execute_fortigate_block("url"))
+
         btn_pivots.setMenu(menu_pivots)
 
         row2_layout.addWidget(lbl_net)
@@ -8514,6 +8578,68 @@ class XdrDashboard(QMainWindow):
                 f"<span style='color: #38bdf8;'>{he(s_name)}</span> para objetivo: <b>{he(clean_target)}</b><br>"
             )
             self.txt_terminal_output.moveCursor(QTextCursor.End)
+
+    def execute_fortigate_block(self, target_type: str = "domain"):
+        """
+        Ejecuta la orden de contención activa en FortiGate vía Stellar Cyber 7.0.0s (AELDEV-67465).
+        Permite bloquear dominios de C2 o URLs de phishing en el firewall perimetral.
+        """
+        target = self._get_active_target_or_observable()
+        if target:
+            if target_type == "domain":
+                clean_target = re.sub(r"^https?://", "", target.strip(), flags=re.IGNORECASE).rstrip("/").split("/")[0].split(":")[0]
+            else:
+                clean_target = target.strip()
+        else:
+            clean_target = ""
+
+        label_type = "Dominio Malicioso" if target_type == "domain" else "URL de Phishing"
+        val, ok = QInputDialog.getText(
+            self,
+            f"FortiGate Responder (Stellar 7.0.0s) - Bloqueo de {label_type}",
+            f"Confirme o ingrese el {label_type} a bloquear en FG-Technoma:",
+            QLineEdit.Normal,
+            clean_target
+        )
+        if not ok or not val.strip():
+            return
+
+        target_to_block = val.strip()
+        confirm = QMessageBox.question(
+            self,
+            "Confirmar Bloqueo Perimetral FortiGate",
+            f"¿Confirma el envío de la orden de contención inmediata al Firewall FortiGate?\n\n"
+            f"• Tipo de Objeto: {label_type}\n"
+            f"• Valor: {target_to_block}\n"
+            f"• Dispositivo: FG-Technoma\n"
+            f"• Conector: Stellar Cyber OpenXDR 7.0.0s\n\n"
+            f"Esta acción aplicará la directiva de denegación en el firewall.",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+        if confirm != QMessageBox.Yes:
+            return
+
+        if hasattr(self, "tabs") and hasattr(self, "tab5"):
+            self.tabs.setCurrentWidget(self.tab5)
+
+        script_path = os.path.join(os.path.abspath("."), "stellar_cli.py")
+        venv_py = os.path.join(os.path.abspath("."), "venv", "Scripts", "python.exe")
+        if not os.path.exists(venv_py):
+            venv_py = os.path.join(os.path.abspath("."), "Scripts", "python.exe")
+        if not os.path.exists(venv_py):
+            venv_py = sys.executable if sys.executable else "python"
+
+        flag = "--block-domain" if target_type == "domain" else "--block-url"
+        cmd = f"& '{venv_py}' -u '{script_path}' {flag} '{target_to_block}'"
+        
+        self.txt_terminal_output.moveCursor(QTextCursor.End)
+        self.txt_terminal_output.insertHtml(
+            f"<br><span style='color: #ef4444; font-weight: bold;'>[🛡️ RESPONDER FORTIGATE 7.0.0s]:</span> "
+            f"Despachando bloqueo de {he(label_type)} <b>{he(target_to_block)}</b> en FG-Technoma...<br>"
+        )
+        self.txt_terminal_output.moveCursor(QTextCursor.End)
+        self.execute_terminal_command(cmd)
 
     def _execute_forensic_decode(self, payload: str, mode: str = "auto"):
         """Decodifica strings ofuscadas (Base64 UTF-8/UTF-16LE, URL encode, Hex, Defang/Refang) en memoria sin disparar alertas EDR."""
