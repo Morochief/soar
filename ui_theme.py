@@ -10,6 +10,7 @@ from PySide6.QtGui import QFontDatabase, QFont
 # 1. TOKENS DE COLOR (DESIGN TOKENS - SLATE DARK CYBER SUITE)
 # -----------------------------------------------------------------------------
 BG_BASE        = "#0a0e17"   # Fondo base general (Slate Dark neutro, no negro puro)
+BG_PRIMARY     = BG_BASE     # Alias fondo primario
 BG_SURFACE     = "#111827"   # Superficie de contenedores, tarjetas y paneles
 BG_ELEVATED    = "#1e293b"   # Elementos elevados, hover y cabeceras
 BG_INPUT       = "#0b1120"   # Cajas de texto, visores de consola y búsqueda

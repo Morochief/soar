@@ -41,7 +41,7 @@ class LogFilterCreatorDialog(QDialog):
     def _setup_ui(self):
         self.setStyleSheet(f"""
             QDialog {{
-                background-color: {ui_theme.BG_PRIMARY};
+                background-color: {ui_theme.BG_BASE};
                 color: {ui_theme.TEXT_PRIMARY};
             }}
             QGroupBox {{
