@@ -645,4 +645,40 @@ Al cumplirse las condiciones definidas en el criterio (`ALL` / `ANY`), Stellar C
   4. **Acción:** **`Filter Out`**.
   5. **Verificación:** Hacer clic en **`Test`** para comprobar cuántas alertas se silenciarán y presionar **`Save`**.
 
+### 12.5. Estándar de Identificación: Name y Notes (Save alert filter as)
+Al hacer clic en **`Save`**, la plataforma despliega obligatoriamente la ventana modal **"Save alert filter as"**, la cual exige identificar y documentar el filtro antes de activarlo:
+
+```text
++--------------------------------------------------------------+
+| Save alert filter as                                     [X] |
+|                                                              |
+| Name                                                         |
+| [ Maximum 100 characters                                   ] |
+|                                                              |
+| Notes                                                        |
+| [ Maximum 500 characters                                   ] |
+|                                                              |
+|                                             [Cancel]  [Save] |
++--------------------------------------------------------------+
+```
+
+#### Reglas de Gobernanza para el Modal de Guardado:
+1. **`Name` (Obligatorio — Máximo 100 caracteres):**
+   * Debe seguir la convención corporativa del SOC:  
+     $$\mathbf{<Acción>\_<Tecnología>\_<Entidad/Servicio>\_<Detalle>}$$
+   * *Prefijos Válidos:* `FilterOut_`, `AdjustScore_`, `IgnoreCase_`, `Tag_`.
+   * *Ejemplos:*
+     - `FilterOut_WinAudit_Exchange_HealthMailbox_4776`
+     - `FilterOut_Firewall_Zabbix_Monitoring_443`
+     - `AdjustScore_EDR_Dev_LanguageServer_Antigravity`
+2. **`Notes` (Obligatorio por Auditoría — Máximo 500 caracteres):**
+   * Prohibido dejar notas vacías o con textos vagos como *"filtro"* o *"prueba"*.
+   * Debe responder en 2 o 3 líneas técnicas:
+     1. **Causa Raíz:** Qué software o proceso legítimo origina la anomalía.
+     2. **Justificación de Seguridad:** Por qué se descarta compromiso real o intrusión.
+     3. **Activos Involucrados:** Hosts, cuentas o protocolos afectados.
+   * *Ejemplo Oficial para HealthMailbox:*  
+     `"Supresión quirúrgica (Filter Out) de alertas de Login Failure / Brute Force generadas por eventos de auditoría de Windows 4776 sobre cuentas sintéticas HealthMailbox de Microsoft Exchange (VM-MARANDU / VMBASE8). Las cuentas presentan estado deshabilitado legítimo (0xc0000072) correspondiente a pruebas automatizadas de Managed Availability de Exchange, descartando fuerza bruta real."`
+
+
 

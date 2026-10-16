@@ -47,6 +47,9 @@ Se utiliza para suprimir alertas falsas positivas generadas por Machine Learning
   2. `event_id` **`is`** `4776`
   3. `srcip_username` **`starts with`** `HealthMailbox`
 * **Acción:** `Filter Out`
+* **Guardado del Filtro (Save alert filter as):**
+  - **Name (Máx 100 caracteres):** `FilterOut_WinAudit_Exchange_HealthMailbox_4776`
+  - **Notes (Máx 500 caracteres):** `"Supresión quirúrgica (Filter Out) de alertas de Login Failure / Brute Force generadas por eventos de auditoría de Windows 4776 sobre cuentas sintéticas HealthMailbox de Microsoft Exchange (VM-MARANDU / VMBASE8). Las cuentas presentan estado deshabilitado legítimo (0xc0000072) correspondiente a pruebas automatizadas de Managed Availability de Exchange, descartando fuerza bruta real."`
 * **Resultado:** El motor de ML deja de emitir falsos positivos de *Brute Force / Login Failure* sobre las cuentas rotativas de salud de Exchange.
 
 ---
