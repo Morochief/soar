@@ -1281,10 +1281,45 @@ La inspección a nivel de proceso (`xdmsourceprocessexecutablepath`) confirmó q
 * **Proceso Actor:** `C:\Program Files\Mozilla Firefox\firefox.exe`
 * **Firma Digital:** `Mozilla Corporation` (`SIGNED_VERIFIED`)
 * **Hash SHA256:** `44f0741288e3e884ecc30e31b2d7633505650dffa3238e5fdd3cabb8429d0fc2`
-* **Contexto Operativo:** Proceso hijo de contenido (`-contentproc`) intentando restablecer sockets de pestañas y servicios web internos/locales tras reactivación de sesión. No existió escaneo malicioso de red, herramientas de reconocimiento externas ni balizamiento.
-
 #### 3. Resolución y Trazabilidad de Auditoría
 El caso fue cerrado automáticamente por el motor de Cortex XDR (`status.resolution_reason: STATUS_080_RESOLVED_AUTO`) bajo la causal *"resolve as part of incident 541"*.
 En Stellar Cyber, la telemetría e incidentes sincronizados a través del conector `CORTEX-XDR-V1` ratifican la recepción íntegra del evento bajo la clase `palo_alto_networks_cortex_xdr_incidents`, demostrando correlación y trazabilidad completa entre ambas herramientas para cumplimiento de auditoría.
+
+---
+
+### Caso 026 - Automatización SOAR/XDR: Playbook ATH para Creación Automática de Casos de Cortex XDR en Stellar Cyber
+* **Fecha de Implementación:** 15/10/2026 18:30:00
+* **Plataforma SIEM/XDR:** Stellar Cyber OpenXDR v7.0.0s
+* **Módulo:** Automation | Automated Threat Hunting (ATH) Playbooks
+* **Analista:** Kevin Moraes
+* **Área:** Ingeniería de Detección, SOAR y Automatización de Operaciones SOC
+* **Estado:** **Activo en Producción (Scheduled / Continuous)**
+
+#### 1. Contexto Operativo y Objetivo
+A través del conector `CORTEX-XDR-V1`, Stellar Cyber ingesta continuamente incidentes y alertas de Palo Alto Networks Cortex XDR (`msg_class: palo_alto_networks_cortex_xdr_incidents` y `palo_alto_networks_cortex_xdr_alerts`).
+Con el fin de garantizar que ningún incidente detectado por el EDR quede sin gestión dentro del flujo unificado de trabajo del SOC y evitar la necesidad de creación manual de tickets por parte del analista de guardia, se implementó un playbook de **Automated Threat Hunting (ATH)** dedicado.
+
+#### 2. Configuración y Lógica del Playbook ATH
+* **Nombre del Playbook:** `Auto-Create Cases for Cortex XDR Incidents`
+* **Menú / Ruta:** `Automation → Automation (Automated Threat Hunting Playbooks)`
+* **Índice Objetivo (Target Index):** `stellar-index-v1-syslog-*` (Eventos de incidentes Cortex XDR)
+* **Condición de Búsqueda (Query Filter):**
+  - `msg_class` **is** `palo_alto_networks_cortex_xdr_incidents`
+  - `dev_type` **is** `cortex_xdr` (o conector asociado `CORTEX-XDR-V1`)
+* **Intervalo de Ejecución:** Programado continuo (intervalo periódico de 5 minutos sobre nuevos eventos ingeridos).
+* **Acción Automatizada (Action Pipeline):**
+  - **Acción:** `Create Case` (Generación automática de caso en Case Management).
+  - **Mapeo de Campos:**
+    - Título del Caso: `Palo Alto Networks Cortex XDR: {threat_name} (Incident #{incident_id})`
+    - Severidad y Score: Heredado dinámicamente según severidad de Cortex (`Low`, `Medium`, `High`, `Critical`).
+    - Activos y Usuarios: Mapeo automático de `host` y `user` involucrados.
+    - Evidencia Vinculada: Enlace directo al incidente en la consola de Palo Alto Networks (`https://technoma.xdr.us.paloaltonetworks.com/incident-view?caseId={incident_id}`).
+  - **Deduplicación:** Activada por `incident_id` para evitar duplicidad de tickets ante actualizaciones de estado del incidente.
+
+#### 3. Validación y Beneficio Operativo
+* **Trazabilidad 100% Automatizada:** Los incidentes generados por Cortex XDR se materializan automáticamente como tickets de caso en Stellar Cyber (ej. Caso `#17797` para el incidente Cortex `541`), permitiendo triaje centralizado, asignación a analistas y registro de playbooks de respuesta.
+* **Reducción de MTTR:** Elimina el delay operativo humano entre la detección del EDR y la apertura formal del ticket en el sistema central del SOC.
+* **Sincronización Bidireccional de Auditoría:** Garantiza cumplimiento de SLA y trazabilidad cruzada exigida por estándares de auditoría de seguridad.
+
 
 
