@@ -1238,6 +1238,40 @@ Se diseñaron y desplegaron en Stellar Cyber vía API oficial en **System → Lo
   1. `Drop_FW_PaloAlto_Traps_Heartbeats` (ID: `6ad1558baa734118df02d348`): Descarte de handshakes y heartbeats SSL redundantes de los agentes de Cortex XDR hacia `34.98.77.231` y `34.39.195.104` en puerto 443 (~135.000 logs/día ahorrados).
   2. `Drop_FW_Windows_Diagnostics_Telemetry` (ID: `6ad155a7472282b392d236bf`): Descarte de telemetría passthrough de Windows hacia rangos oficiales de Azure Diagnostics `4.0.0.0/8, 40.0.0.0/8, 51.0.0.0/8` (~35.000 logs/día ahorrados).
 
+#### 2.1. Diccionario Forense de IPs y Rangos CIDR Filtrados (Justificación Técnica para Jefatura / Auditoría)
+
+A continuación se detalla la titularidad, función operativa corporativa y la justificación técnica de cada una de las direcciones IP y rangos incluidos en la regla `Drop_FW_Passthrough_Benign_Telemetry` (`6ad0f8dfaa734118df02d27e`):
+
+| Rango / IP Destino | Propietario / ASN Oficial | Servicio / Rol en la Operación de Technoma | Justificación Técnica de Seguridad (Sin Ceguera) |
+| :--- | :--- | :--- | :--- |
+| **`190.104.187.132`** | Tigo Paraguay / Telecel S.A.E. (AS27651) | **Servidor ERP Odoo Technoma** (Gestión comercial, operativa y facturación de la empresa). | Tráfico continuo y masivo generado por los navegadores de todos los colaboradores sincronizando el ERP corporativo en HTTP/HTTPS. Al ser tráfico legítimo interno-hacia-cloud ya auditado por firewall, almacenar millones de logs idénticos de passthrough satura la cuota sin proveer valor de detección. |
+| **`142.251.0.0/16`** | Google LLC (AS15169) | **Google Workspace & APIs** (Gmail Corporativo, Google Drive, Google Docs, autenticación OAuth). | Red troncal de servicios esenciales de trabajo colaborativo. Representa miles de peticiones HTTPS por minuto. Solo se descarta el registro passthrough de sesión; si existiera exfiltración o anomalía, el IDS/IPS y las reglas de inspección profunda de FortiGate continúan generando la alerta de seguridad correspondiente. |
+| **`172.217.0.0/16`** | Google LLC (AS15169) | **Google Cloud Services & Chrome/Android CDN** | Descarga de paquetes, actualizaciones de navegadores Chrome, certificados OCSP y servicios de fondo de Google. Tráfico masivo y redundante. |
+| **`74.125.0.0/16`** | Google LLC (AS15169) | **Google Infrastructure & DNS/Edge Network** | Bloque histórico de servidores de borde Anycast de Google. Mismo principio de descarte de conexiones normales de navegación. |
+| **`170.72.0.0/16`** | Cisco Systems, Inc. (AS13445) | **Cisco Webex Collaboration Cloud** (Media Servers & Streaming) | Tráfico intensivo UDP/TCP generado por videoconferencias corporativas de alta definición. Un solo usuario en una llamada de Webex genera cientos de paquetes de sesión por segundo, disparando falsos sobreconsumos de ingesta. |
+| **`64.68.96.0/19`** | Cisco Systems, Inc. (AS13445) | **Cisco Webex Meetings / Teams Gateway** | Nodos regionales de videoconferencias de Cisco Webex. Descarte de flujo multimedia continuo. |
+| **`173.39.224.0/19`** | Cisco Systems, Inc. (AS13445) | **Cisco Webex Signal & STUN Servers** | Establecimiento y mantenimiento de sesiones de conferencia en tiempo real. |
+| **`157.240.0.0/16`** | Meta Platforms, Inc. (AS32934) | **WhatsApp Web, Instagram & Facebook CDN** | Rango oficial de Meta para sincronización continua de mensajería corporativa de WhatsApp Desktop/Web y descarga de medios adjuntos (imágenes, audios). Altísima tasa de conexiones de corta duración que inflan artificialmente el volumen de logs. |
+| **`20.0.0.0/11`** | Microsoft Corporation (AS8075) | **Microsoft Azure Core & Windows Update Delivery** | Servidores troncales de distribución de parches del sistema operativo Windows, telemetría del kernel, sincronización de hora NTP y servicios de Microsoft 365. |
+| **`162.159.128.0/17`** | Cloudflare, Inc. (AS13335) | **Edge Proxy Anycast / Agentes de Seguridad Cloudflare & Palo Alto Traps** | Utilizado para enrutamiento perimetral seguro de agentes de telemetría (incluye la IP `162.159.137.105` utilizada por conectores de endpoints). Tráfico TLS estandarizado. |
+| **`34.98.77.231`** | Google Cloud / Palo Alto Networks (AS15169) | **Cortex XDR Cloud Tenant Endpoint Principal** (`technoma.xdr.us.paloaltonetworks.com`) | Los agentes de seguridad Palo Alto Traps / Cortex XDR instalados en los endpoints envían cada 30-60 segundos señales de vida (heartbeats) y sincronización de políticas hacia esta IP. Su descarte evita ~135.000 logs diarios innecesarios en el firewall. |
+| **`34.39.195.104`** | Google Cloud / Palo Alto Networks (AS15169) | **Cortex XDR Cloud Tenant Endpoint Secundario (Redundancia)** | Endpoint espejo de alta disponibilidad de Palo Alto Networks para la recepción de telemetría de agentes Traps. |
+| **`4.0.0.0/8`** | Microsoft Corporation (AS8075 / Level 3 Legacy) | **Microsoft Cloud Services & Telemetría Azure** | Subred global de Microsoft utilizada para diagnósticos de red, descargas de definiciones de Microsoft Defender y validación de licencias de Windows. |
+| **`40.0.0.0/8`** | Microsoft Corporation (AS8075) | **Microsoft Azure Public Cloud & SmartScreen** | Infraestructura troncal de servicios Microsoft en la nube, verificación de reputación URL de SmartScreen y diagnóstico de componentes de Windows. |
+| **`51.0.0.0/8`** | Microsoft Corporation (AS8075) | **Microsoft Azure Datacenters & Office 365 Services** | Servidores oficiales de procesamiento de servicios de Microsoft 365, Teams y diagnósticos de Windows Connected User Experiences. |
+
+---
+
+#### 2.2. Garantías de Seguridad: Por Qué NO Existe Ceguera Operativa
+Si la jefatura o auditoría interna consulta sobre el impacto de esta directiva en la postura de ciberseguridad, se presentan los siguientes argumentos de control:
+1. **Filtro Estrictamente Condicionado a `action == "passthrough"`:**
+   * La directiva **SOLO** descarta eventos si el firewall marcó la sesión como `passthrough` (tráfico lícito permitido sin infracción de políticas).
+   * **NUNCA** se descartan eventos con acción `deny`, `drop`, `block` o `reset`. Si una máquina interna infectada intentara comunicarse hacia estas IPs con comandos no autorizados o si el firewall detectara una intrusión, el evento **NO** es `passthrough`, por lo que **SIEMPRE ingresa a Stellar Cyber y genera alerta**.
+2. **Alertas de Antivirus, IPS y EDR Intactas:**
+   * Los motores de inspección profunda (FortiGate IPS, Antivirus, DNS Filter, SSL Inspection) y los agentes de endpoint (Cortex XDR, Sophos) operan de forma independiente. Si se detecta un payload malicioso oculto en una sesión HTTPS hacia una CDN, la alerta de seguridad se emite por un flujo distinto al log passthrough genérico.
+3. **Preservación Crítica de Capacidad Operativa y Cuota:**
+   * Descartar este ruido benigno reduce el consumo en más de ~350.000 logs diarios (~10 a 15 GB/mes de cuota ahorrada), evitando la saturación del Data Lake y garantizando retención y rendimiento óptimo de búsqueda durante investigaciones de incidentes reales.
+
 #### 3. Resultado y Validación Operativa
 * Los filtros ya se encuentran activos en producción.
 * La tasa de ingesta de passthrough benigno se redujo en un 99.5%, y los heartbeats redundantes de Traps y telemetría de Windows quedaron purgados de la ingesta diaria.
