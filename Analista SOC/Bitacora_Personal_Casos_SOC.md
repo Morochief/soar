@@ -1231,7 +1231,7 @@ Se diseñaron y desplegaron en Stellar Cyber vía API oficial en **System → Lo
   * **Condiciones Aplicadas:**
     - `dev_type` **is** `fw_fortigate`
     - `action` **is** `passthrough`
-    - `dstip` **matches** `190.104.187.132, 142.251.0.0/16, 172.217.0.0/16, 74.125.0.0/16, 170.72.0.0/16, 64.68.96.0/19, 173.39.224.0/19, 157.240.0.0/16, 20.0.0.0/11, 162.159.128.0/17, 34.98.77.231, 34.39.195.104, 4.0.0.0/8, 40.0.0.0/8, 51.0.0.0/8`
+    - `dstip` **matches** `190.104.187.132, 142.251.0.0/16, 172.217.0.0/16, 74.125.0.0/16, 170.72.0.0/16, 64.68.96.0/19, 173.39.224.0/19, 157.240.0.0/16, 20.0.0.0/11, 162.159.128.0/17, 34.98.77.231, 34.39.195.104, 4.0.0.0/8, 40.0.0.0/8, 51.0.0.0/8, 57.144.0.0/16, 52.20.246.113, 34.117.0.0/16, 35.186.0.0/16, 199.232.0.0/16`
   * **Acción:** `DROP` (descarte selectivo antes del almacenamiento en Data Lake).
 
 * **Filtros Adicionales Creados:**
@@ -1240,20 +1240,25 @@ Se diseñaron y desplegaron en Stellar Cyber vía API oficial en **System → Lo
 
 #### 2.1. Diccionario Forense de IPs y Rangos CIDR Filtrados (Justificación Técnica para Jefatura / Auditoría)
 
-A continuación se detalla la titularidad, función operativa corporativa y la justificación técnica de cada una de las direcciones IP y rangos incluidos en la regla `Drop_FW_Passthrough_Benign_Telemetry` (`6ad0f8dfaa734118df02d27e`):
+A continuación se detalla la titularidad, función operativa corporativa y la justificación técnica de cada una de las 20 direcciones IP y rangos incluidos en la regla `Drop_FW_Passthrough_Benign_Telemetry` (`6ad0f8dfaa734118df02d27e`), ampliada el 16/10/2026 tras auditoría de telemetría residual:
 
 | Rango / IP Destino | Propietario / ASN Oficial | Servicio / Rol en la Operación de Technoma | Justificación Técnica de Seguridad (Sin Ceguera) |
 | :--- | :--- | :--- | :--- |
 | **`190.104.187.132`** | Tigo Paraguay / Telecel S.A.E. (AS27651) | **Servidor ERP Odoo Technoma** (Gestión comercial, operativa y facturación de la empresa). | Tráfico continuo y masivo generado por los navegadores de todos los colaboradores sincronizando el ERP corporativo en HTTP/HTTPS. Al ser tráfico legítimo interno-hacia-cloud ya auditado por firewall, almacenar millones de logs idénticos de passthrough satura la cuota sin proveer valor de detección. |
+| **`52.20.246.113`** | Amazon Web Services / AWS US-East (AS16509) | **Servidor Cloud Odoo Technoma** (`odoo15.technoma.com.py`) | Nodo troncal de hosting cloud de Odoo 15 utilizado por los sistemas internos. Sincronización continua en puerto 443 (~5.400 logs/día descartados). |
 | **`142.251.0.0/16`** | Google LLC (AS15169) | **Google Workspace & APIs** (Gmail Corporativo, Google Drive, Google Docs, autenticación OAuth). | Red troncal de servicios esenciales de trabajo colaborativo. Representa miles de peticiones HTTPS por minuto. Solo se descarta el registro passthrough de sesión; si existiera exfiltración o anomalía, el IDS/IPS y las reglas de inspección profunda de FortiGate continúan generando la alerta de seguridad correspondiente. |
 | **`172.217.0.0/16`** | Google LLC (AS15169) | **Google Cloud Services & Chrome/Android CDN** | Descarga de paquetes, actualizaciones de navegadores Chrome, certificados OCSP y servicios de fondo de Google. Tráfico masivo y redundante. |
 | **`74.125.0.0/16`** | Google LLC (AS15169) | **Google Infrastructure & DNS/Edge Network** | Bloque histórico de servidores de borde Anycast de Google. Mismo principio de descarte de conexiones normales de navegación. |
+| **`34.117.0.0/16`** | Google Cloud Platform / GCP (AS15169) | **Google AppSheet Corporativo** (`appsheet.com`) | Plataforma de aplicaciones operativas y formularios de recolección de datos de Technoma alojada en Google Cloud (~4.500 logs/día descartados). |
+| **`35.186.0.0/16`** | Google Cloud Platform / GCP (AS15169) | **Google Cloud Services & Spotify CDN** | Red de microservicios de Google Cloud (AppSheet backend) y distribución de streaming autorizado de Spotify en estaciones de trabajo (~5.800 logs/día descartados). |
 | **`170.72.0.0/16`** | Cisco Systems, Inc. (AS13445) | **Cisco Webex Collaboration Cloud** (Media Servers & Streaming) | Tráfico intensivo UDP/TCP generado por videoconferencias corporativas de alta definición. Un solo usuario en una llamada de Webex genera cientos de paquetes de sesión por segundo, disparando falsos sobreconsumos de ingesta. |
 | **`64.68.96.0/19`** | Cisco Systems, Inc. (AS13445) | **Cisco Webex Meetings / Teams Gateway** | Nodos regionales de videoconferencias de Cisco Webex. Descarte de flujo multimedia continuo. |
 | **`173.39.224.0/19`** | Cisco Systems, Inc. (AS13445) | **Cisco Webex Signal & STUN Servers** | Establecimiento y mantenimiento de sesiones de conferencia en tiempo real. |
 | **`157.240.0.0/16`** | Meta Platforms, Inc. (AS32934) | **WhatsApp Web, Instagram & Facebook CDN** | Rango oficial de Meta para sincronización continua de mensajería corporativa de WhatsApp Desktop/Web y descarga de medios adjuntos (imágenes, audios). Altísima tasa de conexiones de corta duración que inflan artificialmente el volumen de logs. |
+| **`57.144.0.0/16`** | Meta Platforms, Inc. (AS32934) | **WhatsApp Web CDN Sudamérica** (`media-eze1-1.cdn.whatsapp.net` / Ezeiza) | Bloque regional asignado por Meta para la entrega acelerada de mensajes y archivos adjuntos de WhatsApp Desktop en el Cono Sur (~13.000 logs/día ahorrados). |
 | **`20.0.0.0/11`** | Microsoft Corporation (AS8075) | **Microsoft Azure Core & Windows Update Delivery** | Servidores troncales de distribución de parches del sistema operativo Windows, telemetría del kernel, sincronización de hora NTP y servicios de Microsoft 365. |
 | **`162.159.128.0/17`** | Cloudflare, Inc. (AS13335) | **Edge Proxy Anycast / Agentes de Seguridad Cloudflare & Palo Alto Traps** | Utilizado para enrutamiento perimetral seguro de agentes de telemetría (incluye la IP `162.159.137.105` utilizada por conectores de endpoints). Tráfico TLS estandarizado. |
+| **`199.232.0.0/16`** | Fastly, Inc. (AS54113) | **Fastly CDN para Microsoft M365 & Azure AD** | Red de distribución Anycast utilizada por Microsoft para acelerar la autenticación de `login.microsoftonline.com` y descargas de parches (`delivery.mp.microsoft.com`). |
 | **`34.98.77.231`** | Google Cloud / Palo Alto Networks (AS15169) | **Cortex XDR Cloud Tenant Endpoint Principal** (`technoma.xdr.us.paloaltonetworks.com`) | Los agentes de seguridad Palo Alto Traps / Cortex XDR instalados en los endpoints envían cada 30-60 segundos señales de vida (heartbeats) y sincronización de políticas hacia esta IP. Su descarte evita ~135.000 logs diarios innecesarios en el firewall. |
 | **`34.39.195.104`** | Google Cloud / Palo Alto Networks (AS15169) | **Cortex XDR Cloud Tenant Endpoint Secundario (Redundancia)** | Endpoint espejo de alta disponibilidad de Palo Alto Networks para la recepción de telemetría de agentes Traps. |
 | **`4.0.0.0/8`** | Microsoft Corporation (AS8075 / Level 3 Legacy) | **Microsoft Cloud Services & Telemetría Azure** | Subred global de Microsoft utilizada para diagnósticos de red, descargas de definiciones de Microsoft Defender y validación de licencias de Windows. |
