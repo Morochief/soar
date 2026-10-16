@@ -126,8 +126,10 @@ def handle_get_case(ticket_id: str, as_json: bool = False):
     print(f"[*] Consultando detalle del Caso #{ticket_id}...")
     data = call_mcp("getCaseDetail", {"ticket_id": str(ticket_id)})
     
-    # Guardar respaldo
-    out_dir = os.path.dirname(os.path.abspath(__file__))
+    # Guardar respaldo en scratch/
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    out_dir = os.path.join(base_dir, "scratch")
+    os.makedirs(out_dir, exist_ok=True)
     json_path = os.path.join(out_dir, f"caso_{ticket_id}_detail.json")
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
