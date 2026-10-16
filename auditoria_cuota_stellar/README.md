@@ -15,6 +15,9 @@ Esta carpeta contiene las herramientas oficiales en Python para auditar en tiemp
 | `05_auditar_log_filters_existentes.py` | Audita los Log Filters activos en Stellar Cyber para verificar qué reglas de descarte están aplicadas a FortiGate. | `/connect/api/v1/log-filters` |
 | `06_auditoria_historica_total.py` | Auditoría consolidada de todo el Data Lake (106.3M de logs): Top 15 políticas, Top 15 orígenes, Top 15 destinos. Correlación 1-a-1 con la vista "Threat Hunting Library -> Firewall". | Elasticsearch Data Lake (`dev_type: fw_fortigate`) |
 | `07_investigar_activo_o_ip.py` | Permite auditar en detalle cualquier IP, hostname o activo anómalo (`192.168.169.102`, `10.11.4.2`, `192.168.16.6`, `BB09C2DPAG00002`). | Elasticsearch Data Lake por término / IP / Host |
+| `10_analisis_filtrado_healthmailbox.py` | Audita factibilidad de supresión para eventos de autenticación de buzones de salud de Exchange (`Event ID 4776`). | Stellar Cyber API |
+| **Documentación** | **[GUIA_FILTROS_Y_ALERT_CUSTOMIZATIONS.md](GUIA_FILTROS_Y_ALERT_CUSTOMIZATIONS.md)** | Guía maestra de operadores: Log Filters vs Alert Customizations (`starts with`, `contains`, `is in watchlist`). |
+
 
 ---
 
