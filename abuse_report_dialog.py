@@ -12,6 +12,7 @@ y de escaneo perimetral detectadas en Stellar Cyber OpenXDR / FortiGate.
 =============================================================================
 """
 
+import os
 import sys
 import re
 import json
@@ -1015,6 +1016,14 @@ class AbuseReportWidget(QWidget):
 
         actions_container.addLayout(row_tools)
 
+        row_cf = QHBoxLayout()
+        row_cf.setSpacing(8)
+        self.btn_cf_api = QPushButton("☁️ Reportar a Cloudflare API (1-Clic)")
+        self.btn_cf_api.setStyleSheet("background-color: #d97706; color: #ffffff; border: 1px solid #f59e0b; padding: 7px 14px; border-radius: 5px; font-weight: 700;")
+        self.btn_cf_api.clicked.connect(self._enviar_cloudflare_api)
+        row_cf.addWidget(self.btn_cf_api)
+        actions_container.addLayout(row_cf)
+
         self.btn_copy_all = QPushButton("🚀 Copiar Correo Completo (To + Subject + Body)")
         self.btn_copy_all.setStyleSheet("background-color: #238636; color: #ffffff; border: 1px solid #2ea043; padding: 8px 16px; border-radius: 5px; font-weight: 700; font-size: 13px;")
         self.btn_copy_all.clicked.connect(self._copy_full_email)
@@ -1142,6 +1151,69 @@ class AbuseReportWidget(QWidget):
             self._mostrar_reporte(idx)
         else:
             QMessageBox.warning(self, "Error", f"No se pudo guardar el registro para {ip}.")
+
+    def _enviar_cloudflare_api(self):
+        """Envía el reporte de abuso directamente a la API de Cloudflare Trust & Safety."""
+        idx = self.combo_ips.currentIndex()
+        if not (0 <= idx < len(self.reportes_actuales)):
+            QMessageBox.warning(self, "Aviso", "No hay ningún reporte o IP seleccionada.")
+            return
+        rep = self.reportes_actuales[idx]
+        ip = rep.get("ip")
+        log_clean = rep.get("log", "")
+
+        token = os.environ.get("CLOUDFLARE_API_TOKEN", "")
+        account_id = os.environ.get("CLOUDFLARE_ACCOUNT_ID", "")
+
+        import urllib.request
+        import urllib.error
+        import urllib.parse
+
+        url = f"https://api.cloudflare.com/client/v4/accounts/{account_id}/abuse-reports/abuse_network"
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/x-www-form-urlencoded",
+            "User-Agent": "TechnomaSOC-AbuseReporter/1.0"
+        }
+        data = {
+            "act": "abuse_network",
+            "source_ips": ip,
+            "destination_ips": "10.11.3.196",
+            "ports_protocols": f"{rep.get('port', 443)}/TCP",
+            "justification": f"SOC Technoma Security Report - Raw Log:\n{log_clean}",
+            "name": "Kevin Moraes",
+            "email": "kevinmoraes@technoma.com.py",
+            "company": "Technoma SOC"
+        }
+
+        try:
+            encoded_data = urllib.parse.urlencode(data).encode("utf-8")
+            req = urllib.request.Request(url, data=encoded_data, headers=headers, method="POST")
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                res_json = json.loads(resp.read().decode("utf-8", errors="ignore"))
+                report_id = res_json.get("result", {}).get("id", "OK")
+                QMessageBox.information(
+                    self,
+                    "Reporte Cloudflare Enviado",
+                    f"✓ Reporte enviado con éxito a Cloudflare Trust & Safety API.\nID de Reporte: {report_id}\nIP: {ip}"
+                )
+                self._marcar_actual_como_reportada()
+        except urllib.error.HTTPError as e:
+            err_body = e.read().decode("utf-8", errors="ignore")
+            if "Not entitled to use feature" in err_body:
+                msg = (
+                    "⚠️ Cloudflare respondió: 'Not entitled to use feature: Abuse Report API'\n\n"
+                    "Motivo: El endpoint de envío directo por API (POST) requiere que la cuenta esté enrolada "
+                    "en el Cloudflare Trusted Reporter Program (Enterprise / Whitelist de confianza).\n\n"
+                    "Tu token es 100% válido y tiene permisos de Trust & Safety activos.\n"
+                    "Para enviar esta denuncia de inmediato, puedes usar el botón 'Copiar Correo Completo' "
+                    "hacia abuse@cloudflare.com o el formulario web oficial."
+                )
+                QMessageBox.warning(self, "Entitlement de Cloudflare", msg)
+            else:
+                QMessageBox.critical(self, "Error Cloudflare API", f"Error {e.code}: {err_body}")
+        except Exception as ex:
+            QMessageBox.critical(self, "Error de Conexión", f"Fallo al conectar con Cloudflare API:\n{str(ex)}")
 
     def _on_playbook_config_changed(self):
         """Regenera asunto y cuerpo cuando el usuario cambia el tipo, plantilla o idioma."""

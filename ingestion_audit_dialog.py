@@ -221,22 +221,25 @@ class IngestionAuditEngine:
         return result
 
 
-    def fetch_threat_hunting_matrix(self, target_index: str = None) -> Dict[str, Any]:
+    def fetch_threat_hunting_matrix(self, target_index: str = None, time_filter: dict = None) -> Dict[str, Any]:
         """Consulta en paralelo los 20 modulos de Threat Hunting Library mediante un solo request en <1 segundo."""
         headers = self.get_headers()
         cust_id = "e511c3fc54cd4d668bb67612c2ef4b04"
         if not target_index:
-            today_str = datetime.now().strftime("%Y.%m.%d")
-            target_index = f"*{today_str}*{cust_id}*"
+            target_index = f"*{cust_id}*"
             
         filters_map = {m["name"]: {"query_string": {"query": m["query"]}} for m in THREAT_HUNTING_MODULES_DEF}
+        
+        filter_clauses = [{"term": {"tenantid": cust_id}}]
+        if time_filter:
+            filter_clauses.append(time_filter)
+
         body = {
             "size": 0,
+            "track_total_hits": True,
             "query": {
                 "bool": {
-                    "filter": [
-                        {"term": {"tenantid": cust_id}}
-                    ]
+                    "filter": filter_clauses
                 }
             },
             "aggs": {
@@ -273,22 +276,26 @@ class IngestionAuditEngine:
         except Exception as e:
             return {"status": "error", "error": str(e), "counts": {}, "elapsed": 0}
 
-    def fetch_threat_hunting_drilldown(self, module_name: str, query_str: str, target_index: str = None) -> Dict[str, Any]:
+    def fetch_threat_hunting_drilldown(self, module_name: str, query_str: str, target_index: str = None, time_filter: dict = None) -> Dict[str, Any]:
         """Realiza un drill-down forense sobre un modulo: top srcip, top dstip, top msg_class y muestra cruda."""
         headers = self.get_headers()
         cust_id = "e511c3fc54cd4d668bb67612c2ef4b04"
         if not target_index:
-            today_str = datetime.now().strftime("%Y.%m.%d")
-            target_index = f"*{today_str}*{cust_id}*"
+            target_index = f"*{cust_id}*"
             
+        filter_clauses = [
+            {"term": {"tenantid": cust_id}},
+            {"query_string": {"query": query_str}}
+        ]
+        if time_filter:
+            filter_clauses.append(time_filter)
+
         body = {
             "size": 5,
+            "track_total_hits": True,
             "query": {
                 "bool": {
-                    "filter": [
-                        {"term": {"tenantid": cust_id}},
-                        {"query_string": {"query": query_str}}
-                    ]
+                    "filter": filter_clauses
                 }
             },
             "aggs": {
@@ -1059,14 +1066,17 @@ class ThreatHuntingRadarWorker(QThread):
     finished = Signal(dict)
     error = Signal(str)
 
-    def __init__(self, target_index: str = None):
+    def __init__(self, target_index: str = None, time_filter: dict = None, scope_desc: str = ""):
         super().__init__()
         self.target_index = target_index
+        self.time_filter = time_filter
+        self.scope_desc = scope_desc
         self.engine = IngestionAuditEngine()
 
     def run(self):
         try:
-            data = self.engine.fetch_threat_hunting_matrix(self.target_index)
+            data = self.engine.fetch_threat_hunting_matrix(self.target_index, self.time_filter)
+            data["scope_desc"] = self.scope_desc
             if data.get("status") == "success":
                 self.finished.emit(data)
             else:
@@ -1079,16 +1089,19 @@ class ThreatHuntingDrilldownWorker(QThread):
     finished = Signal(dict)
     error = Signal(str)
 
-    def __init__(self, module_name: str, query_str: str, target_index: str = None):
+    def __init__(self, module_name: str, query_str: str, target_index: str = None, time_filter: dict = None, scope_desc: str = ""):
         super().__init__()
         self.module_name = module_name
         self.query_str = query_str
         self.target_index = target_index
+        self.time_filter = time_filter
+        self.scope_desc = scope_desc
         self.engine = IngestionAuditEngine()
 
     def run(self):
         try:
-            data = self.engine.fetch_threat_hunting_drilldown(self.module_name, self.query_str, self.target_index)
+            data = self.engine.fetch_threat_hunting_drilldown(self.module_name, self.query_str, self.target_index, self.time_filter)
+            data["scope_desc"] = self.scope_desc
             if data.get("status") == "success":
                 self.finished.emit(data)
             else:
@@ -2938,7 +2951,12 @@ class IngestionAuditDialog(QDialog):
         ctrl_l.addWidget(lbl_scope)
 
         self.cmb_th_scope = QComboBox()
-        self.cmb_th_scope.addItems(["📅 Hoy (Índice Activo)", "📆 Mes Actual (*2026.10*)", "🌐 Histórico Total (*)"])
+        self.cmb_th_scope.addItems([
+            "📅 Hoy (Desde 00:00)",
+            "⏱️ Últimas 24 Horas",
+            "📆 Mes Actual",
+            "🌐 Histórico Total (*)"
+        ])
         self.cmb_th_scope.setStyleSheet(get_dropdown_style())
         self.cmb_th_scope.currentIndexChanged.connect(self._refresh_threat_hunting_radar)
         ctrl_l.addWidget(self.cmb_th_scope)
@@ -3100,23 +3118,30 @@ class IngestionAuditDialog(QDialog):
         card.mousePressEvent = lambda e, m=mod: self._on_th_card_clicked(m)
         return card
 
-    def _refresh_threat_hunting_radar(self):
+    def _get_current_th_scope(self):
         scope_idx = self.cmb_th_scope.currentIndex()
         cust_id = "e511c3fc54cd4d668bb67612c2ef4b04"
+        target_index = f"*{cust_id}*"
+        
         if scope_idx == 0:
-            today_str = datetime.now().strftime("%Y.%m.%d")
-            target_index = f"*{today_str}*{cust_id}*"
-            scope_desc = "Hoy"
+            time_filter = {"range": {"write_time": {"gte": "now/d", "lte": "now"}}}
+            scope_desc = "Hoy (Desde 00:00)"
         elif scope_idx == 1:
-            month_str = datetime.now().strftime("%Y.%m")
-            target_index = f"*{month_str}*{cust_id}*"
+            time_filter = {"range": {"write_time": {"gte": "now-24h", "lte": "now"}}}
+            scope_desc = "Últimas 24 Horas"
+        elif scope_idx == 2:
+            time_filter = {"range": {"write_time": {"gte": "now/M", "lte": "now"}}}
             scope_desc = "Mes Actual"
         else:
-            target_index = f"*{cust_id}*"
+            time_filter = None
             scope_desc = "Histórico Total"
+            
+        return target_index, time_filter, scope_desc
 
+    def _refresh_threat_hunting_radar(self):
+        target_index, time_filter, scope_desc = self._get_current_th_scope()
         self.lbl_th_stats.setText(f"⚡ Escaneando 20 módulos en paralelo [{scope_desc}]...")
-        self.th_worker = ThreatHuntingRadarWorker(target_index)
+        self.th_worker = ThreatHuntingRadarWorker(target_index, time_filter, scope_desc)
         self.th_worker.finished.connect(self._on_th_radar_finished)
         self.th_worker.error.connect(self._on_th_radar_error)
         self.th_worker.start()
@@ -3126,9 +3151,10 @@ class IngestionAuditDialog(QDialog):
         counts = data.get("counts", {})
         total_matched = data.get("total_matched", 0)
         elapsed = data.get("elapsed", 0.0)
+        scope_desc = data.get("scope_desc", "Rango Actual")
 
         self.lbl_th_stats.setText(
-            f"⚡ Matriz sincronizada en {elapsed:.2f}s | Total Eventos Detectados: {total_matched:,} | Índice: {data.get('target_index', '')}"
+            f"⚡ Matriz sincronizada en {elapsed:.2f}s | Total Eventos Detectados: {total_matched:,} | Rango: [{scope_desc}]"
         )
 
         for mod in THREAT_HUNTING_MODULES_DEF:
@@ -3168,25 +3194,15 @@ class IngestionAuditDialog(QDialog):
 
     def _on_th_card_clicked(self, mod: dict):
         self.current_selected_module = mod
-        self.lbl_drill_title.setText(f"🔍 Drilldown Forense: {mod['icon']} {mod['name']} ({mod['category']})")
+        target_index, time_filter, scope_desc = self._get_current_th_scope()
+        self.lbl_drill_title.setText(f"🔍 Drilldown Forense: {mod['icon']} {mod['name']} ({mod['category']}) — [{scope_desc}]")
         self.btn_copy_th_query.setEnabled(True)
         self.btn_jump_to_filter.setEnabled(True)
 
-        self.txt_drill_actors.setText(f"Consultando agregaciones para {mod['name']}...")
-        self.txt_drill_samples.setText(f"Cargando muestra forense de eventos...")
+        self.txt_drill_actors.setText(f"Consultando agregaciones [{scope_desc}] para {mod['name']}...")
+        self.txt_drill_samples.setText(f"Cargando muestra forense de eventos [{scope_desc}]...")
 
-        scope_idx = self.cmb_th_scope.currentIndex()
-        cust_id = "e511c3fc54cd4d668bb67612c2ef4b04"
-        if scope_idx == 0:
-            today_str = datetime.now().strftime("%Y.%m.%d")
-            target_index = f"*{today_str}*{cust_id}*"
-        elif scope_idx == 1:
-            month_str = datetime.now().strftime("%Y.%m")
-            target_index = f"*{month_str}*{cust_id}*"
-        else:
-            target_index = f"*{cust_id}*"
-
-        self.drill_worker = ThreatHuntingDrilldownWorker(mod["name"], mod["query"], target_index)
+        self.drill_worker = ThreatHuntingDrilldownWorker(mod["name"], mod["query"], target_index, time_filter, scope_desc)
         self.drill_worker.finished.connect(self._on_th_drilldown_finished)
         self.drill_worker.error.connect(self._on_th_drilldown_error)
         self.drill_worker.start()
@@ -3195,11 +3211,12 @@ class IngestionAuditDialog(QDialog):
         m_name = data.get("module_name", "")
         total_docs = data.get("total_docs", 0)
         elapsed = data.get("elapsed", 0.0)
+        scope_desc = data.get("scope_desc", "Rango Actual")
 
         # 1. Formatear Actores Top
         actors_lines = [
-            f"=== TOP ACTORES ({m_name}) ===",
-            f"Total coincidente: {total_docs:,} (en {elapsed:.2f}s)",
+            f"=== TOP ACTORES ({m_name}) [{scope_desc}] ===",
+            f"Total coincidente en rango: {total_docs:,} (en {elapsed:.2f}s)",
             "",
             "[Top Direcciones IP / Hosts Origen]"
         ]
