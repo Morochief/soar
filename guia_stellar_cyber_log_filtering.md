@@ -1,16 +1,16 @@
 # Guía Maestra de Filtrado Integral — Stellar Cyber OpenXDR v7.0.0s
-### Pre-DPI Filters, Traffic Filters (Post-DPI) y Log Filters
+### Pre-DPI Filters, Traffic Filters (Post-DPI), Log Filters y Alert Customizations
 
 **Clasificación:** Uso Interno Exclusivo — Equipo SOC & N2 / Ingeniería de Detección  
 **Versión de Plataforma:** Stellar Cyber OpenXDR v7.0.0s  
 **Última Actualización:** Octubre 2026  
-**Objetivo:** Manual técnico de referencia operativo para la creación, parametrización, optimización y auditoría de **Pre-DPI Filters**, **Traffic Filters** y **Log Filters**, orientado a la supresión de ruido operacional, tuning de sensores y control estricto de cuota de ingesta (Playbook 6.3).
+**Objetivo:** Manual técnico de referencia operativo para la creación, parametrización, optimización y auditoría de **Pre-DPI Filters**, **Traffic Filters**, **Log Filters** y **Alert Customizations**, orientado a la supresión de ruido operacional, tuning de sensores, control estricto de cuota de ingesta (Playbook 6.3) y silenciamiento quirúrgico de falsos positivos en el motor de detección.
 
 ---
 
-## 1. Arquitectura Integral y Flujo de Filtrado en el Sensor
+## 1. Arquitectura Integral y Flujo de Filtrado en el Sensor y Data Processor
 
-En Stellar Cyber v7.0.0s, el sensor implementa un pipeline de procesamiento por etapas. Cada etapa tiene una función específica para reducir la carga de CPU/RAM del sensor y evitar la saturación de ancho de banda, almacenamiento y licencias en el Procesador de Datos (**Data Processor - DP**).
+En Stellar Cyber v7.0.0s, el pipeline de procesamiento opera en dos grandes planos: **En el Sensor (Pre-Ingesta / Cuota)** y **En el Data Processor (Post-Ingesta / Alertas)**. Cada etapa tiene una función específica para reducir la carga de CPU/RAM del sensor, evitar la saturación de cuota y silenciar alertas falsas positivas de Machine Learning.
 
 ```text
                                         PIPELINE DE PROCESAMIENTO DEL SENSOR
@@ -32,18 +32,26 @@ En Stellar Cyber v7.0.0s, el sensor implementa un pipeline de procesamiento por 
                                                                                                        +--------------------------+
                                                                                                        |   DATA PROCESSOR (DP)    |
                                                                                                        | - Enriquecimiento Geo/CTI|
-                                                                                                       | - Machine Learning       |
+                                                                                                       | - Machine Learning / XDR |
                                                                                                        | - CONSUMO DE LICENCIA    |
+                                                                                                       |             |            |
+                                                                                                       |             v            |
+                                                                                                       |  +---------------------+ |
+                                                                                                       |  | Alert Customizations| |
+                                                                                                       |  | (Filter Out / Score)| |
+                                                                                                       |  +---------------------+ |
                                                                                                        +--------------------------+
 ```
 
-### Tabla Comparativa de los 3 Mecanismos de Filtrado
+### Tabla Comparativa de los 4 Mecanismos de Filtrado
 
-| Nivel de Filtrado | Tipo de Tráfico / Entrada | Punto de Evaluación en el Pipeline | Tecnología / Sintaxis | Impacto en Rendimiento del Sensor |
+| Nivel de Filtrado | Tipo de Tráfico / Entrada | Punto de Evaluación en el Pipeline | Tecnología / Sintaxis | Impacto en Cuota y Rendimiento |
 | :--- | :--- | :--- | :--- | :--- |
-| **Pre-DPI Filter** | Tráfico de red bruto (SPAN / Mirror / TAP). | **Antes** de que el motor DPI inspeccione los paquetes (`Receiver -> Pre-DPI`). | Sintaxis BPF (*tcpdump* / *libpcap*). Expresiones L2-L4 (`and`, `or`, `not`). | **Máximo Ahorro de CPU y RAM.** Evita que el motor DPI gaste ciclos decodificando protocolos de paquetes que serán descartados. |
-| **Post-DPI Filter (Traffic Filter)** | Tráfico de red inspeccionado. | **Después** de que el motor DPI procesa los paquetes y extrae metadatos. | Reglas por aplicación (`appid_name`), protocolos L7 y firmas de aplicación. | Menor ahorro de CPU (el sensor ya inspeccionó el paquete), pero permite filtrar por nombres de aplicación o comportamientos L7. |
-| **Log Filter** | Logs de eventos de texto (Syslog de Firewalls, Switches, Windows Events, Conectores). | Módulo **Log Forwarder** y agente de Windows antes de transmitir al DP. | Motor de reglas nativo de Stellar Cyber (Campos normalizados, Operadores y Valores). | Reduce el tráfico de red WAN hacia el DP y ahorra 100% de almacenamiento y cuota de licencia para eventos descartados. |
+| **Pre-DPI Filter** | Tráfico de red bruto (SPAN / Mirror / TAP). | **Antes** de que el motor DPI inspeccione los paquetes (`Receiver -> Pre-DPI`). | Sintaxis BPF (*tcpdump* / *libpcap*). Expresiones L2-L4 (`and`, `or`, `not`). | **Máximo Ahorro de CPU y RAM.** Evita que el motor DPI gaste ciclos decodificando paquetes que serán descartados. |
+| **Post-DPI Filter (Traffic Filter)** | Tráfico de red inspeccionado. | **Después** de que el motor DPI procesa los paquetes y extrae metadatos. | Reglas por aplicación (`appid_name`), protocolos L7 y firmas de aplicación. | Menor ahorro de CPU (el sensor ya inspeccionó el paquete), pero filtra por nombres de aplicación o firmas L7. |
+| **Log Filter** | Logs de eventos de texto (Syslog de Firewalls, Switches, Windows Events, Conectores). | Módulo **Log Forwarder** y agente de Windows antes de transmitir al DP. | Motor de reglas nativo de Stellar Cyber (Campos normalizados, Operadores y Valores). | **Reduce 100% de almacenamiento y cuota de licencia** en el Data Lake para eventos descartados (Drop en borde). |
+| **Alert Customization** | Alertas y Anomalías generadas por Machine Learning o Reglas IDS. | **En el Data Processor** tras la ingesta y correlación analítica. | Criterios lógicos de alerta (`ALL` / `ANY`) con acciones de supresión (`Filter Out`, `Adjust Score`). | **No ahorra cuota de ingesta** (el log crudo ya ingresó), pero **silencia al 100% la fatiga de alertas** y falsos positivos del SOC. |
+
 
 ---
 
@@ -592,4 +600,49 @@ Antes de dar por concluido un procedimiento de filtrado, verifique obligatoriame
 - [ ] ¿Se asoció el filtro al perfil del sensor correspondiente (`Log Forwarder | Data Filtering`, pestaña `Windows` o `Pre-DPI Filter`)?
 - [ ] ¿Se verificó en la columna `Hit count` o en la consola del sensor que el contador comience a incrementarse tras 5 a 10 minutos de operación?
 - [ ] ¿Se registró la acción técnica en la Bitácora de Turno del SOC con referencia al Playbook 6.3 y Matriz de Impacto?
+
+---
+
+## 12. Alert Customizations (Supresión Post-Ingesta y Tuning de Falsos Positivos)
+
+Mientras que los Log Filters operan en el sensor antes de almacenar datos, las **Alert Customizations** operan en el **Data Processor (DP)** sobre las alertas ya correlacionadas por Machine Learning, reglas IDS o firmas XDR.
+
+### 12.1. Cuándo Utilizar Alert Customizations
+* Cuando el evento crudo debe seguir almacenándose para auditoría forense (por ejemplo, auditoría de Windows `4776` o denegaciones de Firewall), pero **no se desea que abra tickets ni genere alertas en la consola**.
+* Para suprimir comportamientos de ruido recurrente originados por cuentas de servicio del sistema (como `HealthMailbox` de Microsoft Exchange, agentes de inventario o escáneres de vulnerabilidades internos programados).
+
+### 12.2. Acciones Disponibles (Trigger Action)
+Al cumplirse las condiciones definidas en el criterio (`ALL` / `ANY`), Stellar Cyber ejecuta una de las siguientes acciones:
+* **`Filter Out` (Acción Recomendada para Falsos Positivos):** Descarta la alerta por completo. No aparece en la bandeja de Alertas ni genera casos.
+* **`Adjust Score`:** Permite reducir o aumentar dinámicamente el puntaje de severidad (por ejemplo, reducir el score a 15 para mantenerlo visible pero sin alcanzar el umbral de apertura de caso).
+* **`Ignore in Case Score`:** La alerta permanece registrada de forma informativa, pero no suma puntos al score ponderado del caso del incidente.
+* **`Add Custom Tag`:** Inyecta etiquetas analíticas automáticas (ej. `cuenta-servicio`, `exchange-healthcheck`, `whitelisted`).
+
+### 12.3. Catálogo Completo de Operadores en Alert Customizations
+
+| Operador | Comportamiento Técnico | Caso de Uso Típico en SOC | Ejemplo Práctico |
+| :--- | :--- | :--- | :--- |
+| **`is`** | Coincidencia exacta estricta del valor literal o numérico. | Identificadores de evento, puertos o IPs fijas. | `event_id is 4776` |
+| **`is not`** | Exclusión exacta. | Descartar si el host NO es un servidor crítico. | `srcip_host is not "DC-SRV01"` |
+| **`contains`** | Subcadena contenida en cualquier posición del texto. | Palabras clave dentro de comandos o rutas. | `srcip_username contains "HealthMailbox"` |
+| **`does not contain`** | Exclusión si la subcadena está presente. | Evitar alertar procesos firmados conocidos. | `process_name does not contain "chrome"` |
+| **`starts with`** | Coincidencia por prefijo inicial (ideal para cuentas y hashes). | Cuentas de servicio rotativas con sufijo GUID. | `srcip_username starts with "HealthMailbox"` |
+| **`ends with`** | Coincidencia por sufijo final. | Dominios corporativos o extensiones de archivo. | `dstip_host ends with ".googleapis.com"` |
+| **`field exists`** | Comprueba que el campo haya sido extraído y no sea nulo. | Validación de presencia de usuario autenticado. | `unauthuser field exists` |
+| **`field does not exist`**| Comprueba que el campo esté completamente ausente. | Detección de conexiones sin resolución DNS. | `dstip_host field does not exist` |
+| **`is in watchlist`** | Cruza el valor del campo contra una Watchlist de Stellar. | Eximir listas de IPs confiables o escáneres. | `srcip is in watchlist "Servidores_NOC"` |
+| **`is not in watchlist`** | Dispara si el valor NO pertenece a la lista aprobada. | Control de acceso perimetral. | `srcip is not in watchlist "Gateways_Conocidos"` |
+
+### 12.4. Caso de Estudio: Supresión Definitiva de Buzones Exchange HealthMailbox
+* **Problema:** Microsoft Exchange intenta autenticar cuentas de salud `HealthMailbox<GUID>@cajaande.local` cada pocos segundos. Como la cuenta está deshabilitada (`0xc0000072`), Windows genera miles de eventos `4776`, y el Machine Learning de Stellar Cyber emite alertas continuas de *Internal Account Login Failure Anomaly* (Score 55 - 71).
+* **Solución Quirúrgica en Alert Customizations:**
+  1. **Ruta:** `Detections → Alerts → View Alert → Actions → Add Alert Customization`.
+  2. **Tenants:** `technoma` (y/o `CAJAANDE`).
+  3. **Criterio:** `ALL of the following criteria are met:`
+     - `msg_class` **`is`** `Microsoft-Windows-Security-Auditing`
+     - `event_id` **`is`** `4776`
+     - `srcip_username` **`starts with`** `HealthMailbox`
+  4. **Acción:** **`Filter Out`**.
+  5. **Verificación:** Hacer clic en **`Test`** para comprobar cuántas alertas se silenciarán y presionar **`Save`**.
+
 
