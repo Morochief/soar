@@ -28,7 +28,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # Configuración por variables de entorno o valores por defecto del SOC
 HOST = os.environ.get("STELLAR_HOST", "technoma.stellarcyber.cloud")
 EMAIL = os.environ.get("STELLAR_EMAIL", "kevinmoraes@technoma.com.py")
-TOKEN = os.environ.get("STELLAR_TOKEN", "796e625a6552636a4e326b54784a553868504f47514a387768636b4d32646f364375494d485050516b763131766a4f65")
+TOKEN = os.environ.get("STELLAR_TOKEN", "rOnKd624_hTAvi5TyDDsPmfbiEOf3NThpGMkUL8sR6IrmkBEovOn41EvFdLtdWkTO6XuFSH6d16x0B1J3lJSBQ")
 MCP_URL = f"https://{HOST}/mcp"
 
 _CACHED_JWT = None
@@ -156,7 +156,9 @@ def cmd_get_case(ticket_id: str, as_json: bool = False):
         print(f"  * Origen:               IP={src.get('srcip')} | Host={src.get('srcip_host')} | MAC={src.get('srcmac')}")
         print(f"  * Usuario / Dispositivo:User={forti.get('unauthuser')} | DevName={forti.get('srcname')} | InIntf={forti.get('srcintf')}")
         print(f"  * Destino:              IP={src.get('dstip')} | Host={src.get('dstip_host')} | Port={src.get('dstport')} ({src.get('appid_name')})")
-        print(f"  * Acción Firewall:      {src.get('action').upper()} por Política: {src.get('fw_policy_id')} (Regla {forti.get('rule_id')})")
+        act = src.get('action')
+        act_str = act.upper() if act else 'N/A'
+        print(f"  * Acción Firewall:      {act_str} por Política: {src.get('fw_policy_id')} (Regla {forti.get('rule_id')})")
         print(f"  * Detección ML:         Bloqueos Actuales={src.get('actual')} vs Típico={src.get('typical')} (Intervalo: {src.get('run_every')} min)")
         print(f"  * Fidelidad / Severidad:Fidelity={src.get('fidelity')}% | Severity={src.get('severity')} | Event Score={src.get('event_score')}")
 

@@ -16,9 +16,19 @@ import urllib3
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+try:
+    from dotenv import load_dotenv
+    _env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
+    if os.path.exists(_env_path):
+        load_dotenv(_env_path)
+    else:
+        load_dotenv()
+except Exception:
+    pass
+
 HOST = os.environ.get("STELLAR_HOST", "technoma.stellarcyber.cloud")
 EMAIL = os.environ.get("STELLAR_EMAIL", "kevinmoraes@technoma.com.py")
-TOKEN = os.environ.get("STELLAR_TOKEN", "")
+TOKEN = os.environ.get("STELLAR_TOKEN", "rOnKd624_hTAvi5TyDDsPmfbiEOf3NThpGMkUL8sR6IrmkBEovOn41EvFdLtdWkTO6XuFSH6d16x0B1J3lJSBQ")
 
 def get_jwt():
     auth_str = f"{EMAIL}:{TOKEN}"

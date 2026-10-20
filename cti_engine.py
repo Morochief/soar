@@ -9,9 +9,11 @@
 import os
 import re
 import json
+import time
 import requests
 import urllib3
-from typing import Dict, Any, Optional, List
+from concurrent.futures import ThreadPoolExecutor
+from typing import Dict, Any, Optional, List, Tuple
 from datetime import datetime
 
 # Desactivar advertencias SSL en consultas CTI perimetrales
@@ -32,10 +34,22 @@ class CtiEngine:
 
     DEFAULT_TIMEOUT = 12
     VERIFY_SSL = False
+    CACHE_TTL_SECONDS = 900  # 15 minutos de caché en memoria para evitar rate-limits y acelerar consultas repetidas
+    _TRI_SCAN_CACHE: Dict[str, Tuple[float, Dict[str, Any]]] = {}
 
     @classmethod
     def get_api_keys(cls) -> Dict[str, str]:
-        """Obtiene las API keys desde variables de entorno con fallback a registro Windows."""
+        """Obtiene las API keys desde variables de entorno (.env) con fallback a registro Windows."""
+        try:
+            from dotenv import load_dotenv
+            env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+            if os.path.exists(env_path):
+                load_dotenv(env_path)
+            else:
+                load_dotenv()
+        except Exception:
+            pass
+
         keys = {
             "virustotal": os.environ.get("VIRUSTOTAL_API_KEY", "").strip(),
             "abuseipdb": os.environ.get("ABUSEIPDB_API_KEY", "").strip(),
@@ -61,18 +75,6 @@ class CtiEngine:
                         pass
         except Exception:
             pass
-
-        # Fallback a claves autorizadas por el analista
-        defaults = {
-            "virustotal": "6f21ffa2f287fee6c29090d96546648093f77bb4a2569bd92c46e0a659db586b",
-            "abuseipdb": "c561b84d9edb984b134da2b0a89da35f1ef4752f15b03431a7fb2fbc0bf71b7aad9c1c5d3bbad716",
-            "urlscan": "019d698b-2d09-7490-9557-421d09b380d8",
-            "mxtoolbox": "3991dd4f-b601-477f-8e5e-c1a7232bc079",
-            "nvd": "ce79f233-34e5-4445-a3fd-84a8cd00beb6",
-        }
-        for k, v in defaults.items():
-            if not keys[k]:
-                keys[k] = v
 
         return keys
 
@@ -385,9 +387,13 @@ class CtiEngine:
         clean_domain = domain.strip()
         clean_domain = re.sub(r"^https?://", "", clean_domain).split("/")[0].split(":")[0]
 
-        spf_res = cls.query_mxtoolbox(clean_domain, "spf")
-        dmarc_res = cls.query_mxtoolbox(clean_domain, "dmarc")
-        mx_res = cls.query_mxtoolbox(clean_domain, "mx")
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            f_spf = executor.submit(cls.query_mxtoolbox, clean_domain, "spf")
+            f_dmarc = executor.submit(cls.query_mxtoolbox, clean_domain, "dmarc")
+            f_mx = executor.submit(cls.query_mxtoolbox, clean_domain, "mx")
+            spf_res = f_spf.result()
+            dmarc_res = f_dmarc.result()
+            mx_res = f_mx.result()
 
         spoofing_risk = "BAJO"
         risk_color = "#10b981"
@@ -483,10 +489,20 @@ class CtiEngine:
             return {"source": "AlienVault OTX", "status": "exception", "error": str(e)}
 
     @classmethod
-    def tri_scan(cls, observable: str) -> Dict[str, Any]:
+    def tri_scan(cls, observable: str, use_cache: bool = True) -> Dict[str, Any]:
         obs = observable.strip()
+        cache_key = obs.lower()
+        now = time.time()
+        if use_cache and cache_key in cls._TRI_SCAN_CACHE:
+            cached_ts, cached_res = cls._TRI_SCAN_CACHE[cache_key]
+            if (now - cached_ts) < cls.CACHE_TTL_SECONDS:
+                cached_copy = dict(cached_res)
+                cached_copy["cached"] = True
+                return cached_copy
+
+        t0 = time.perf_counter()
         obs_type = cls.detect_observable_type(obs)
-        res = {
+        res: Dict[str, Any] = {
             "observable": obs,
             "type": obs_type,
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -495,25 +511,38 @@ class CtiEngine:
             "urlscan": None,
             "mxtoolbox": None,
             "alienvault_otx": None,
+            "cached": False,
         }
 
-        res["virustotal"] = cls.query_virustotal(obs)
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            f_vt = executor.submit(cls.query_virustotal, obs)
+            f_otx = executor.submit(cls.query_alienvault_otx, obs)
+            f_abuse = executor.submit(cls.query_abuseipdb, obs) if obs_type == "ip" else None
+            f_us = executor.submit(cls.query_urlscan, obs) if obs_type in ("ip", "domain", "url") else None
+            if obs_type in ("domain", "url"):
+                domain_part = re.sub(r"^https?://", "", obs).split("/")[0].split(":")[0]
+                f_mx = executor.submit(cls.query_phishing_email_defense, domain_part)
+            else:
+                f_mx = None
 
-        if obs_type == "ip":
-            res["abuseipdb"] = cls.query_abuseipdb(obs)
-        else:
-            res["abuseipdb"] = {"source": "AbuseIPDB", "status": "skipped", "reason": "No aplicable para observables no-IP"}
+            res["virustotal"] = f_vt.result()
+            res["alienvault_otx"] = f_otx.result()
+            res["abuseipdb"] = (
+                f_abuse.result()
+                if f_abuse is not None
+                else {"source": "AbuseIPDB", "status": "skipped", "reason": "No aplicable para observables no-IP"}
+            )
+            res["urlscan"] = (
+                f_us.result()
+                if f_us is not None
+                else {"source": "URLScan.io", "status": "skipped", "reason": "No aplicable para hashes"}
+            )
+            if f_mx is not None:
+                res["mxtoolbox"] = f_mx.result()
 
-        if obs_type in ("ip", "domain", "url"):
-            res["urlscan"] = cls.query_urlscan(obs)
-        else:
-            res["urlscan"] = {"source": "URLScan.io", "status": "skipped", "reason": "No aplicable para hashes"}
-
-        if obs_type in ("domain", "url"):
-            domain_part = re.sub(r"^https?://", "", obs).split("/")[0].split(":")[0]
-            res["mxtoolbox"] = cls.query_phishing_email_defense(domain_part)
-
-        res["alienvault_otx"] = cls.query_alienvault_otx(obs)
+        # --- EVALUACIÓN HEURÍSTICA DE PLATAFORMAS CLOUD/SERVERLESS ABUSADAS ---
+        cloud_abuse = cls.evaluate_cloud_abuse_heuristics(obs)
+        res["cloud_abuse_heuristic"] = cloud_abuse
 
         is_high_risk = False
         verdict_summary = "LIMPIO / BENIGNO"
@@ -537,13 +566,66 @@ class CtiEngine:
         if is_high_risk:
             verdict_summary = "CRÍTICO / MALICIOSO CONFIRMADO"
             sev_color = "#ef4444"
+        elif (cloud_abuse and cloud_abuse.get("is_abused_platform")):
+            verdict_summary = f"ALERTA HEURÍSTICA: {cloud_abuse.get('platform_category', 'PLATAFORMA ABUSADA')}"
+            sev_color = "#f97316"  # Naranja intenso
         elif (vt and vt.get("malicious_count", 0) > 0) or (abuse and abuse.get("score", 0) >= 20) or (us and us.get("verdict") == "SOSPECHOSO") or (mx and "ALTO" in mx.get("spoofing_risk", "")):
             verdict_summary = "SOSPECHOSO / REPUTACIÓN ADVERSA"
             sev_color = "#f59e0b"
 
         res["consolidated_verdict"] = verdict_summary
         res["consolidated_color"] = sev_color
+        res["elapsed_ms"] = round((time.perf_counter() - t0) * 1000, 1)
+
+        cls._TRI_SCAN_CACHE[cache_key] = (time.time(), dict(res))
+
         return res
+
+    @classmethod
+    def evaluate_cloud_abuse_heuristics(cls, observable: str) -> Dict[str, Any]:
+        """
+        Evalúa si un dominio/URL pertenece a plataformas serverless, túneles o CDNs
+        gratuitas que son abusadas sistemáticamente para campañas de Phishing, C2 efímero
+        y evasión de sandboxes (Zero-Day Phishing bypass).
+        """
+        obs_clean = re.sub(r"^https?://", "", observable.strip().lower()).split("/")[0].split(":")[0]
+
+        # Catálogo de plataformas comúnmente abusadas para phishing y bypass de reputación
+        ABUSED_PATTERNS = [
+            (r"\.workers\.dev$", "Cloudflare Workers (Serverless TDS / Phishing C2)", "Alto"),
+            (r"\.pages\.dev$", "Cloudflare Pages (Static Web Phishing Host)", "Medio-Alto"),
+            (r"\.vercel\.app$", "Vercel Serverless Edge (Phishing / Credential Harvesting)", "Medio-Alto"),
+            (r"\.web\.app$|\.firebaseapp\.com$", "Google Firebase Hosting (OAuth Phishing Clone)", "Medio-Alto"),
+            (r"\.appspot\.com$", "Google App Engine (Redirector TDS / Reverse Proxy)", "Medio"),
+            (r"\.ngrok-free\.app$|\.ngrok\.io$", "Ngrok Tunnel (C2 / Reverse Shell / Phishing)", "Alto"),
+            (r"\.trycloudflare\.com$", "Cloudflare Quick Tunnels (Túnel C2 Efímero)", "Alto"),
+            (r"\.loca\.lt$", "Localtunnel (Reverse Proxy Malicioso)", "Alto"),
+            (r"\.glitch\.me$", "Glitch Hosting (Micro-C2 / Phishing Host)", "Medio"),
+            (r"\.blob\.core\.windows\.net$", "Azure Blob Storage (Hosting de HTML / PDF Phishing)", "Medio-Alto"),
+            (r"\.s3\.amazonaws\.com$|\.s3\.[a-z0-9\-]+\.amazonaws\.com$", "AWS S3 Bucket (Payload Delivery / Phishing)", "Medio"),
+            (r"\.supabase\.co$", "Supabase Edge Functions / Storage (Exfiltración)", "Medio"),
+        ]
+
+        for pattern, desc, risk_level in ABUSED_PATTERNS:
+            if re.search(pattern, obs_clean):
+                subdomain_part = re.sub(pattern, "", obs_clean)
+                is_dga_like = bool(re.search(r"[a-z0-9]{8,}", subdomain_part) or (sum(c.isdigit() for c in subdomain_part) >= 3 and len(subdomain_part) >= 6))
+                return {
+                    "is_abused_platform": True,
+                    "platform_category": "CLOUD SERVERLESS / TUNNEL ABUSADO",
+                    "description": desc,
+                    "matched_pattern": pattern,
+                    "risk_level": risk_level,
+                    "subdomain": subdomain_part,
+                    "is_dga_like": is_dga_like,
+                    "warning_message": (
+                        f"⚠️ ATENCIÓN SOC: El dominio '{obs_clean}' reside en '{desc}'. "
+                        "Los atacantes despliegan estas infraestructuras por 2 a 6 horas para evadir VirusTotal (falsos limpios 0/90). "
+                        "Tratar con alta cautela independientemente del ratio de motores CTI."
+                    )
+                }
+
+        return {"is_abused_platform": False}
 
     @classmethod
     def format_terminal_report_html(cls, report: Dict[str, Any]) -> str:
@@ -605,6 +687,19 @@ class CtiEngine:
             </tr>
             """
 
+        cloud_row = ""
+        ca = report.get("cloud_abuse_heuristic") or {}
+        if ca.get("is_abused_platform"):
+            cloud_row = f"""
+            <tr style="border-bottom: 1px solid #1e293b; background-color: #431407;">
+                <td style="padding: 6px 8px; width: 150px; color: #fb923c; font-weight: bold;">☁️ Alerta Heurística Cloud:</td>
+                <td style="padding: 6px 8px; color: #fdba74;">
+                    <b>{ca.get('platform_category')}</b> ({ca.get('description')})<br>
+                    <span style="color: #f97316; font-size: 10px;">{ca.get('warning_message')}</span>
+                </td>
+            </tr>
+            """
+
         html = f"""
         <div style="background-color: #0b1120; border: 1px solid #1e293b; border-left: 4px solid {col}; border-radius: 6px; padding: 10px; margin: 8px 0; font-family: 'Consolas', monospace; font-size: 11px; color: #e2e8f0;">
             <div style="font-size: 12px; font-weight: bold; color: {col}; margin-bottom: 6px;">
@@ -615,6 +710,7 @@ class CtiEngine:
                 &nbsp;|&nbsp; <b>Fecha:</b> <span style="color: #94a3b8;">{ts}</span>
             </div>
             <table style="width: 100%; border-collapse: collapse; font-size: 11px; background-color: #020617; border-radius: 4px;">
+                {cloud_row}
                 <tr style="border-bottom: 1px solid #1e293b;">
                     <td style="padding: 6px 8px; width: 150px; color: #fb923c; font-weight: bold;">🦠 VirusTotal v3:</td>
                     <td style="padding: 6px 8px;">{vt_info}</td>

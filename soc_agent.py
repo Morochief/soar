@@ -34,7 +34,7 @@ from openai import OpenAI
 BASE_DIR = Path(__file__).resolve().parent
 
 NVIDIA_BASE_URL = os.environ.get("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1")
-NVIDIA_API_KEY = os.environ.get("NVIDIA_API_KEY", "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")
+NVIDIA_API_KEY = os.environ.get("NVIDIA_API_KEY", "")
 NVIDIA_MODEL_FAST = os.environ.get("NVIDIA_MODEL_FAST", "meta/llama-3.2-11b-vision-instruct")
 NVIDIA_MODEL_DEEP = os.environ.get("NVIDIA_MODEL_DEEP", "meta/llama-3.2-90b-vision-instruct")
 NVIDIA_MODEL = os.environ.get("NVIDIA_MODEL", NVIDIA_MODEL_FAST)
@@ -458,6 +458,26 @@ def auto_enriquecer_contexto(texto: str) -> str:
         if "Sin precedentes" not in info:
             hallazgos.append(f"• **Precedente en Base de Conocimiento ({th}):** {info.strip()}")
 
+    # 5. Cruce automático con el Cerebro Unificado de 7 Capas (Casos Históricos, SOC_GEM_v2 y Playbooks)
+    try:
+        from rag_engine import get_rag
+        rag = get_rag()
+        layers = rag.query_multi_layer(texto[:450])
+        for cat_label, cat_key in [
+            ("Memoria SOC (`SOC_GEM_v2` / Plantillas)", "MEMORIA_SOC"),
+            ("Caso Histórico Resuelto (`Analista SOC/Casos/`)", "CASO_HISTORICO"),
+            ("Playbook Oficial (`00_Playbooks/`)", "PLAYBOOK"),
+        ]:
+            hits = layers.get(cat_key, [])
+            if hits:
+                top_hit = hits[0]
+                snippet = top_hit["content"][:400].replace("\n", " ").strip()
+                hallazgos.append(
+                    f"• **{cat_label} [{top_hit['rel_path']}] (Score {top_hit['score']}):** {snippet}..."
+                )
+    except Exception:
+        pass
+
     if not hallazgos:
         return ""
     
@@ -511,9 +531,13 @@ def ejecutar_consulta(prompt_usuario: str, modelo: str = None):
         "2. **Bitácora Oficial de Turno (18 Columnas):** Tabla de apoyo visual de 18 columnas oficiales (A: Fecha/Hora, B: Analista [Kevin Moraes], C: Tenant, D: ID caso, E: Fuente, F: Nro Ticket, G: Prioridad, H: Tipo evento, I: Asunto, J: Activos, K: Descripción, L: Evidencia, M: Solicitud Acción, N: Estado, O: URL, P: Generación Ticket, Q: TICKET, R: Playbook) seguida obligatoriamente de un bloque ```tsv con 1 única línea con campos delimitados por tabuladores (\\t) y comillas dobles en campos largos para pegar en Excel con 1 clic."
     )
 
-    if not NVIDIA_API_KEY:
-        print("❌ Falta NVIDIA_API_KEY (defínela en el archivo .env).")
+    from soar_ai_client import is_antigravity_available, SoarUnifiedOpenAIClient
+
+    antigravity_ok = is_antigravity_available()
+    if not antigravity_ok and not NVIDIA_API_KEY:
+        print("❌ Ni Google Antigravity OAuth ni NVIDIA_API_KEY están disponibles (defínela en el archivo .env).")
         sys.exit(1)
+
     print("\n🔍 [SOC AGENT] Analizando caso localmente (Pre-extracción de evidencias)...", flush=True)
     evidencias_locales = auto_enriquecer_contexto(prompt_usuario)
     prompt_compacto = preparar_entrada(prompt_usuario)
@@ -537,13 +561,17 @@ def ejecutar_consulta(prompt_usuario: str, modelo: str = None):
         {"role": "user", "content": prompt_enriquecido}
     ]
 
-    print(f"🚀 Conectando con NVIDIA NIM ({target_model}) en modo streaming...", flush=True)
+    effective_model = os.environ.get("SOAR_AI_MODEL", "gemini-3.8-flash-high") if antigravity_ok else target_model
+    provider_label = "Google Antigravity OAuth" if antigravity_ok else "NVIDIA NIM"
+    client = SoarUnifiedOpenAIClient(base_url=NVIDIA_BASE_URL, api_key=NVIDIA_API_KEY)
+
+    print(f"🚀 Conectando con {provider_label} ({effective_model}) en modo streaming...", flush=True)
     print("\n" + "=" * 75)
-    print(f"📋 DICTAMEN FORENSE DEL AGENTE SOC (Modelo: {target_model})")
+    print(f"📋 DICTAMEN FORENSE DEL AGENTE SOC (Modelo: {effective_model})")
     print("=" * 75 + "\n", flush=True)
 
     stream = client.chat.completions.create(
-        model=target_model,
+        model=effective_model,
         messages=messages,
         temperature=0.3,
         max_tokens=8192,

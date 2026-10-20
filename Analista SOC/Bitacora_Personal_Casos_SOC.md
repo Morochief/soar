@@ -38,6 +38,18 @@
 | **023** | `ST-GSUITE-MARIN` | 15/10/2026 | Google Workspace / Stellar | Google Drive | `josemarin` | Falsa Alarma UBA Exfiltración Google Drive: Sincronización AppSheet y AppScript | **Falso Positivo (BTP)** | `PB-6.1 / UBA Cloud` | [Ver Ficha ➔](#caso-023---falso-positivo-uba-cloud-sincronización-google-appsheet--appscript-josé-marín) |
 | **024** | `ST-INGEST-PASSTHROUGH` | 15/10/2026 | Stellar Cyber / Modular Sensor | `profile-modular-sensor-technoma` | Red Interna / WAN | Optimización Quirúrgica de Ingesta: Filtro de Descarte Passthrough Benigno FortiGate | **Tuning Quirúrgico / DROP** | `Playbook 6.3 - Log Filtering` | [Ver Ficha ➔](#caso-024---optimización-quirúrgica-de-ingesta-filtro-de-descarte-passthrough-benigno-fortigate) |
 | **025** | `INCIDENT-541` | 15/10/2026 | Cortex XDR / Stellar Cyber | `NB-JTORALES` | `josetorales` | Trazabilidad y Conciliación de Auditoría: Incidente Cortex XDR 541 & Caso #17797 | **Falso Positivo (Resolved - Auto)** | `PB-2.2 / T1018` | [Ver Ficha ➔](#caso-025---trazabilidad-y-conciliación-de-auditoría-incidente-cortex-xdr-541-failed-connections---nb-jtorales) |
+| **026** | `ATH-CORTEX-01` | 15/10/2026 | Stellar Cyber / OpenXDR | Plataforma Global | `SOC Automation` | Playbook ATH para Creación Automática de Casos de Cortex XDR | **Automatización Desplegada** | `ATH / Correlation` | [Ver Ficha ➔](#caso-026---automatización-soarxdr-playbook-ath-para-creación-automática-de-casos-de-cortex-xdr-en-stellar-cyber) |
+| **027** | `CORTEX-OCT-BATCH` | 17/10/2026 | Cortex XDR / Stellar Cyber | Varios Endpoints | Varios Usuarios | Control Cruzado, Triaje Forense y Resolución de 11 Casos Cortex XDR (Octubre) | **Resuelto (Benign / FP)** | `PB-2.2: Monitoreo Operativo` | [Ver Ficha ➔](#caso-027---control-cruzado-triaje-forense-y-resolución-masiva-de-casos-cortex-xdr-octubre-2026) |
+| **028** | `ATH-CORTEX-QUERY-OPT` | 17/10/2026 | Stellar Cyber OpenXDR | Plataforma Global | `SOC Automation` | Optimización de Saved Query ATH Global de Cortex XDR (Syslog & Data Lake) | **Regla Optimizada (0% Ceguera)** | `Automation / ATH` | [Ver Ficha ➔](#caso-028---optimización-de-saved-query-global-de-incidentes-y-alertas-cortex-xdr) |
+| **029** | `THN-LOGFILT-BENIGN-02` | 17/10/2026 | Stellar Cyber / Modular Sensor | `profile-modular-sensor-technoma` | Red Interna / WAN | Expansión y Refuerzo de Filtro Quirúrgico de Descarte: Passthrough Benign Telemetry | **Tuning Quirúrgico / DROP** | `Playbook 6.3 - Log Filtering` | [Ver Ficha ➔](#caso-029---expansión-del-filtro-quirúrgico-drop_fw_passthrough_benign_telemetry) |
+| **030** | `AUDIT-ATH-DMZ-01` | 17/10/2026 | Stellar Cyber / FortiGate | DMZ DigitalCert (`190.104.178.146`) | WAN / Atacantes | Auditoría Técnica de Regla ATH: THN FW Ataque Recurrente a DMZ (Umbral 50 Hits & Throttling) | **Regla Auditada y Operativa** | `Playbook Escaneo y Fuerza Bruta` | [Ver Ficha ➔](#caso-030---auditoría-técnica-de-regla-ath-thn-fw-ataque-recurrente-a-dmz) |
+| **031** | `ATH-GSUITE-SEC-01` | 17/10/2026 | Google Workspace / Stellar | Dominio `technoma.com.py` | Usuarios Corporativos | Automatización ATH: Detección y Generación de Casos Críticos de Google Workspace | **Automatización Desplegada (0% Ceguera)** | `ATH / Cloud Identity` | [Ver Ficha ➔](#caso-031---automatización-ath-para-eventos-críticos-y-gobernanza-de-google-workspace) |
+| **032** | `THN-LOGFILT-TCP7001-01` | 17/10/2026 | Stellar Cyber / Modular Sensor | Servidor Aplicaciones (`192.168.15.60`) | Red Interna / WebLogic | Log Filter Quirúrgico FortiGate: Descarte de Telemetría de Cierre (TCP 7001 `action: close`) | **Tuning Quirúrgico / DROP (0% Ceguera)** | `Playbook 6.3 - Log Filtering` | [Ver Ficha ➔](#caso-032---log-filter-quirúrgico-descarte-de-telemetría-de-cierre-tcp-7001-action-close) |
+| **033** | `THN-LOGFILT-DNS-CLOSE-01`| 17/10/2026 | Stellar Cyber / Modular Sensor | Controladores de Dominio (`10.11.1.1`, `.2`) | Red WiFi / Active Directory | Log Filter Quirúrgico: Descarte de Telemetría de Cierre DNS (Policy 74 `action: close`) | **Tuning Quirúrgico / DROP (0% Ceguera)** | `Playbook 6.3 - Log Filtering` | [Ver Ficha ➔](#caso-033---log-filter-quirúrgico-descarte-de-cierre-dns-ad-policy-74) |
+| **034** | `THN-LOGFILT-DNS-DENY-01` | 17/10/2026 | Stellar Cyber / Modular Sensor | Controladores de Dominio (`10.11.1.1`, `.2`) | VLANs Aisladas (16 CCTV / 5 Serv) | Log Filter Quirúrgico: Descarte de Denegaciones DNS Bloqueadas hacia DCs (Policy 0) | **Tuning Quirúrgico / DROP (0% Ceguera)** | `Playbook 6.3 - Log Filtering` | [Ver Ficha ➔](#caso-034---log-filter-quirúrgico-descarte-de-denegaciones-dns-vlan16-y-vlan5-hacia-dcs) |
+| **035** | `THN-LOGFILT-ORACLE-01` | 17/10/2026 | Stellar Cyber / Modular Sensor | Gateway Core CAJA ANDE (`192.168.9.5`) y Technoma (`192.168.15.70`) | Red Interna / Oracle Cloud | Actualización Quirúrgica de Log Filter: Inclusión de Tráfico Transaccional Oracle Cloud (Puerto 8889) | **Tuning Quirúrgico / DROP (0% Ceguera)** | `Playbook 6.3 - Log Filtering` | [Ver Ficha ➔](#caso-035---actualización-quirúrgica-de-log-filter-tráfico-oracle-cloud-1651125196-y-caja-ande) |
+| **036** | `THN-LOGFILT-WUDO-02` | 18/10/2026 | Stellar Cyber / Modular Sensor | Servidor Postventa (`192.168.15.167`) y Subredes LAN | Red Interna / Windows Update P2P | Expansión Quirúrgica de Filtro WUDO 7680: Inclusión de VLAN Servidores (`192.168.15.0/24`) | **Tuning Quirúrgico / DROP (0% Ceguera)** | `Playbook 6.3 - Log Filtering` | [Ver Ficha ➔](#caso-036---expansión-quirúrgica-de-log-filter-wudo-puerto-7680-vlan-servidores) |
+| **037** | `THN-LOGFILT-CLOSE8010-01`| 18/10/2026 | Stellar Cyber / Modular Sensor | Servidores Internos (`10.11.4.2` -> `10.11.5.4`) | VLAN 4 y VLAN 5 / Core Services | Expansión de Filtro de Cierre: Descarte de Telemetría de Cierre en Puertos 7001 y 8010 (`action: close`) | **Tuning Quirúrgico / DROP (0% Ceguera)** | `Playbook 6.3 - Log Filtering` | [Ver Ficha ➔](#caso-037---log-filter-quirúrgico-descarte-de-cierre-tcp-8010-y-7001) |
 
 ---
 
@@ -53,6 +65,8 @@
 | **11/10/2026** | Guardia Domingo (Home Office) | **8.60 GB** / 10.0 GB (86.0%) | **8.55 GB** ⚠️<br>*(En rango habitual)* | 0.05 GB ✅<br>*(1.0% nominal)* | 0.00 GB ✅<br>*(Sin ingesta)* | 🟢 **Pozo Normal (86.0%)** | **Consumo Controlado & Remediación:** Filtros Dahua (DHCP) y WUDO 7680 corregidos a 5 dimensiones (0% ceguera). Ruido Zabbix 10050 detectado y puesto en seguimiento formal. |
 | **14/10/2026** | Mañana (06:00 - 14:00) | **17.05 GB** / 10.0 GB (170.5%)<br>*(Pico Máximo Registrado)* | **17.01 GB** ⚠️<br>*(Excedido +9.01 GB / 212%)* | 0.04 GB ✅<br>*(0.8% nominal)* | 0.00 GB ✅<br>*(Sin ingesta)* | 🔴 **POZO DESBORDADO** | **Alerta Crítica de Licencia & Tuning:** Technoma desbordó cuota por ráfagas de denegaciones firewall (Dahua CCTV e inter-VLAN). Se ejecutó auditoría técnica sobre 67 Log Filters descartando ceguera en Helpdesk y diseñando filtro L7 para Dahua (Playbook 6.3). |
 | **15/10/2026** | Tarde (14:00 - 20:00) | **12.40 GB** / 10.0 GB (124.0%)<br>*(Tendencia a la Baja)* | **12.35 GB** ⚠️<br>*(En descenso post-tuning)* | 0.05 GB ✅<br>*(1.0% nominal)* | 0.00 GB ✅<br>*(Sin ingesta)* | 🟡 **Contención Operativa** | **Tuning Quirúrgico de Log Filters:** Despliegue de filtros API `Drop_FW_Passthrough_Benign_Telemetry`, `Drop_FW_PaloAlto_Traps_Heartbeats` y `Drop_FW_Windows_Diagnostics_Telemetry`. Purga de telemetría passthrough benigna redundante (~170.000 logs/día ahorrados). Conciliación de Incidente Cortex XDR 541 / Caso #17797. |
+| **16/10/2026** | Jornada Operativa | **10.05 GB** / 10.0 GB (100.5%)<br>*(Descenso desde 17.05 GB -> 12.40 GB -> 10.05 GB)* | **10.02 GB** ✅<br>*(Baja sostenida post-tuning)* | 0.04 GB ✅<br>*(0.8% nominal)* | 0.00 GB ✅<br>*(Sin ingesta)* | 🟢 **Estabilizado (~10 GB)** | **Tuning Security Onion & Optimización Stellar:** Inicio de tuning en Security Onion tras detectar un bucle continuo de errores que saturaba la herramienta, logrando cortar la generación repetitiva y bajar los valores de carga. En Stellar Cyber se ampliaron los filtros de telemetría benigna y se auditaron los 29 casos cerrados del día dejando la consola en 0 pendientes. |
+| **17/10/2026** | Guardia Sábado | **4.38 GB** / 10.0 GB (43.8%)<br>*(📉 Caída Histórica: -69.3% vs Sábado 10/10)* | **4.34 GB** ✅<br>*(📉 Reducción del -54% respecto a su límite de 8 GB)* | 0.03 GB ✅<br>*(0.6% nominal)* | 0.00 GB ✅<br>*(Sin ingesta)* | 🟢 **ÉXITO HISTÓRICO (43.8%)** | **Despliegue Quirúrgico & Normalización Definitiva:** La consolidación oficial de la API de facturación registró apenas **4.38 GB totales**. Se redujo el consumo a menos de la mitad del límite contratado (10 GB) gracias a los filtros de TCP 7001, Passthrough Benigno ampliado a 52 dominios, cierre DNS Policy 74 y denegaciones DNS cámaras Dahua/VLAN 5 hacia DCs. Cero ceguera. |
 
 ---
 
@@ -831,6 +845,23 @@ Ante los continuos escaneos y ráfagas de fuerza bruta observados desde Internet
 
 ## 📋 Registros Oficiales de Cierre de Turno / Guardia (18 Columnas TSV)
 
+### 000. Cierre de Guardia Sábado (17/10/2026) — Descenso Histórico de Cuota Stellar Cyber (4.38 GB / -69% vs Sábado Pasado), Auditoría 1:1 de Threat Hunting y Optimización ATH
+* **Fila TSV Oficial:**
+```tsv
+17/10/2026 14:00:00	Kevin Moraes	Caja Ande, Technoma	N/A	Cierre de Turno	N/A	Informativo	Cierre de Turno	Reporte de Cierre de Guardia Sábado (17/10/2026) - Technoma y Caja Ande (Consolidación de Filtros Quirúrgicos, Descenso Histórico a 4.38 GB, Auditoría 1:1 Threat Hunting y Optimización ATH)	Infraestructura general Technoma / Endpoints y Servidores CAJA ANDE / Clúster SaaS Stellar Cyber / Sensores Modulares NDR / FortiGate	"REPORTE SOC - GUARDIA SÁBADO 17/10/2026 [06:00 a 14:00]. Monitoreo activo y continuo de consolas sobre Tenants Technoma y CAJA ANDE. Consolas en estado VERDE sin anomalías ni incidentes de seguridad reales activos (0 casos pendientes). 1) Éxito y Descenso Histórico de Ingesta: la consolidación oficial de la API de Stellar Cyber cerró el día 17/10 con apenas 4.38 GB en el pozo global (43.8% del límite de 10.0 GB), marcando un desplome histórico del -69.3% respecto al sábado anterior (14.27 GB). Technoma consumió apenas 4.34 GB (muy por debajo de su cuota de 8 GB), demostrando la efectividad de la contención. 2) Despliegue de Filtros Quirúrgicos de Cuota (0% Ceguera): despliegue vía API de 'Drop_FW_Close_TCP_7001_192.168.15.60' (contención de ~450k eventos/día de cierre en WebLogic), 'Drop_FW_Passthrough_Benign_Telemetry' (expandido a 52 dominios benignos validados), 'Drop_FW_Close_DNS_AD_DCs_Policy74' y 'Drop_FW_Denial_DNS_VLAN16_VLAN5_to_DCs' (mitigación de denegaciones repetitivas de cámaras Dahua y VLAN 5 hacia DCs). Asimismo, se actualizó el filtro preexistente 'filter - 165.1.125.196' (ID 69ba96e97ce7a80ccca17cc4) incluyendo a 192.168.9.5 de Caja Ande junto a 192.168.15.70 hacia receiver-technoma.stellarcyber.cloud en puerto 8889 (Data Processor oficial). 3) Auditoría Forense y Reconciliación 1:1 de Threat Hunting Library: desarrollo de script automatizado de auditoría que reconcilió 1:1 las 13 tarjetas de la librería de Stellar Cyber, auditando más de 8.3 millones de eventos en los índices nativos (*adr*, *wineventlog*, *audit*). 4) Triaje y Gobernanza ATH/Cortex: auditoría y resolución de 11 casos de Cortex XDR de octubre, optimización de Saved Query ATH global para Syslog/Data Lake, regla automatizada ATH para Google Workspace (ATH-GSUITE-SEC-01) y actualización de la Memoria Institucional con la confirmación oficial del NOC respecto al rol de testing de 192.168.15.27. CONTROL DE INGESTA STELLAR: Technoma: 4.34 GB (Límite 8.0 GB) | CAJA ANDE: 0.03 GB (Límite 5.0 GB) | Valores: 0.00 GB | Pozo Global: 4.38 GB / 10.0 GB (43.8% - 🟢 ÉXITO HISTÓRICO: POZO AL 43.8% POST-TUNING)."	"Stellar Cyber / Cortex XDR / Sophos Central: Consolas en estado VERDE sin incidentes activos para Technoma y CAJA ANDE (0 pendientes). En Stellar Cyber se confirmó el cierre histórico oficial en 4.38 GB/día (43.8% de la cuota global), logrando un ahorro del 69% respecto al sábado anterior. Filtros quirúrgicos activos y validados con 0% ceguera. CONTROL DE INGESTA STELLAR: Technoma: 4.34 GB | CAJA ANDE: 0.03 GB | Pozo Global: 4.38 GB / 10.0 GB (43.8% - Consolidado)."	N/A	Cerrado	N/A	NO	N/A	PB-2.2 / PB-6.3
+
+### 00. Cierre de Turno (16/10/2026) — Tuning de Security Onion, Migración 1:1 de Filtros y Descenso de Cuota Stellar Cyber
+* **Fila TSV Oficial:**
+```tsv
+16/10/2026 20:00:00	Kevin Moraes	Caja Ande, Technoma	N/A	Cierre de Turno	N/A	Informativo	Cierre de Turno	Reporte de Cierre de Turno (16/10/2026) - Technoma y Caja Ande (Tuning Security Onion, Migración 1:1 de Filtros y Reducción de Ingesta Stellar Cyber)	Infraestructura general Technoma / Endpoints y Servidores CAJA ANDE / Grid Security Onion / Sensor Modular Stellar Cyber	"REPORTE SOC - JORNADA 16/10/2026. Monitoreo continuo de consolas sobre Tenants Technoma y CAJA ANDE. Revisión, triaje y cierre de alertas operativas del día (29 casos gestionados y verificados sin incidentes reales activos). 1) Tuning en Security Onion y Migración 1:1 de Filtros: se inició el tuning de la plataforma y la migración 1:1 de los filtros de Stellar Cyber hacia Security Onion; asimismo, se detectó un bucle continuo de errores internos que estaba saturando la herramienta, aplicando las correcciones necesarias para cortar dicho bucle y logrando que los valores de carga y volumen de eventos desciendan notablemente. 2) Optimización de Ingesta en Stellar Cyber: se ajustaron los filtros de descarte de telemetría passthrough benigna conocida y se depuraron consultas huérfanas, logrando que el consumo diario del pozo global descienda de 12.40 GB (y picos previos de 17.05 GB) a 10.05 GB al cierre de la jornada. CONTROL DE INGESTA STELLAR: Technoma: 10.02 GB (Límite 8.0 GB) | CAJA ANDE: 0.04 GB (Límite 5.0 GB) | Valores: 0.00 GB | Pozo Global: 10.05 GB / 10.0 GB (100.5% - 🟢 ESTABILIZADO EN NIVEL NOMINAL POST-TUNING)."	"Stellar Cyber / Security Onion / Cortex XDR / Sophos Central: Consolas en estado VERDE sin alertas abiertas para Technoma y CAJA ANDE (0 pendientes). En Security Onion se verificó el cese del bucle de errores, el avance de la migración 1:1 de filtros desde Stellar Cyber y el descenso en los niveles de saturación. En Stellar Cyber se verificó la caída sostenida de ingesta a 10.05 GB/día. CONTROL DE INGESTA STELLAR: Technoma: 10.02 GB | CAJA ANDE: 0.04 GB | Pozo Global: 10.05 GB / 10.0 GB (100.5% - Estabilizado)."	N/A	Cerrado	N/A	NO	N/A	PB-2.2 / PB-6.3
+```
+
+### 0. Turno Tarde / Jornada Completa (15/10/2026) — Triaje Forense, Cierre THN-SOC-102 y Tuning Quirúrgico de Cuota
+* **Fila TSV Oficial:**
+```tsv
+15/10/2026 20:00:00	Kevin Moraes	Caja Ande, Technoma	#32592, #16302, #12661, THN-SOC-102, #17797	Cierre de Turno	THN-SOC-102	Informativo	Cierre de Turno Tarde	Reporte de Cierre de Turno (15/10/2026) - Technoma y Caja Ande (Triaje Forense, Cierre THN-SOC-102 y Tuning Quirúrgico Log Filters)	Infraestructura general Technoma / Endpoints y Servidores CAJA ANDE / VMBASE8 / NB-FMORA / Zabbix (192.168.15.27) / FG-Technoma	"REPORTE SOC - TURNO [14:00 a 20:00]. Monitoreo continuo de consolas sobre Tenants Technoma y CAJA ANDE. Descarte de falsos positivos de rutina. Sin anomalías ni incidentes activos al cierre del periodo. 1) Triaje CAJA ANDE (#32592 en VMBASE8): verificado acceso RPC legítimo de Windows DPAPI (protected_storage por usuario Ktroche). 2) Forense Cortex XDR (NB-FMORA): conciliada subida de 10.2 GB a Proton Drive correspondiente a respaldo personal de laboratorios OVA/ISO de estudio sin fuga de datos corporativos. 3) Cierre de Incidente THN-SOC-102 (Zabbix 192.168.15.27): remediado junto al NOC migrando autenticación de LDAP 389 a LDAPS 636 (cuenta zbx-ldaps) y purgando cuenta residual de Mario Flores; estandarización de fórmulas dinámicas en planilla FL-THN-POS-01 Rev. 03. 4) Triaje de lotes Stellar Cyber: descarte de lote IDS INFO / falsa correlación C&C LDAP (ST-BATCH-OCT15), validación de sincronización autorizada OAuth de Google AppSheet/AppScript para josemarin@technoma.com.py (ST-GSUITE-MARIN) y conciliación de auditoría de INCIDENT-541 / Caso #17797 en NB-JTORALES. 5) Tuning Quirúrgico de Ingesta (Playbook 6.3): despliegue de filtros de descarte Drop_FW_Denial_WiFiCorp_DNS_53, DROP-FG-Technoma-WIFI_Corp-Known-Public-DNS, Drop_FW_Passthrough_Benign_Telemetry, Drop_FW_PaloAlto_Traps_Heartbeats y Drop_FW_Windows_Diagnostics_Telemetry (~350.000 logs/día ahorrados). CONTROL DE INGESTA STELLAR: Technoma: 12.35 GB (Límite 8.0 GB) | CAJA ANDE: 0.05 GB (Límite 5.0 GB) | Valores: 0.00 GB | Pozo Global: 12.40 GB / 10.0 GB (124.0% - 🟡 CONTENCIÓN OPERATIVA EN DESCENSO POST-TUNING)."	"Stellar Cyber / Cortex XDR / Sophos Central: Consolas en estado VERDE sin alertas abiertas para Technoma y CAJA ANDE (0 pendientes). Evidencias documentadas en Bitácora Personal (#018 a #025): EventID 5145 DPAPI validado en VMBASE8; consultas XQL confirmadas en NB-FMORA; migración LDAPS 636 verificada sin eventos en puerto 389 (THN-SOC-102); filtros de ingesta activos y pegando hits en profile-modular-sensor-technoma. CONTROL DE INGESTA STELLAR: Technoma: 12.35 GB | CAJA ANDE: 0.05 GB | Pozo Global: 12.40 GB / 10.0 GB (124.0% - En descenso post-tuning)."	N/A	Cerrado	N/A	NO	THN-SOC-102	PB-2.2 / PB-6.3 / FL-THN-POS-01
+```
+
 ### 1. Guardia Domingo (11/10/2026) — Remediación WUDO/Dahua & Zabbix [EN SEGUIMIENTO]
 * **Fila TSV Oficial:**
 ```tsv
@@ -1126,13 +1157,16 @@ Para erradicar el ruido masivo y reducir el sobreconsumo de almacenamiento diari
 * **Tiempo de Resolución:** **19.7 horas** (19 h 39 min) — **Cumplió SLA: Sí** (Prioridad P4 / SLA 168 h)
 * **Plataforma de Detección:** Stellar Cyber OpenXDR / Logs de Active Directory
 * **Analista:** Kevin Moraes | **Resolución:** NOC Technoma / Kevin Moraes
-* **Activos Involucrados:** Servidor Zabbix `192.168.15.27`, Controlador de Dominio `10.11.1.1` (`ad.technoma.local`), Cuenta de Dominio: `Mario Flores` (OU Usuarios dados de baja).
+* **Activos Involucrados:** Servidor Zabbix `192.168.15.27` (**Instancia de Pruebas / Testing declarada formalmente por el NOC vía correo**), Controlador de Dominio `10.11.1.1` (`ad.technoma.local`), Cuenta de Dominio: `Mario Flores` (OU Usuarios dados de baja). Instancia paralela de producción en `192.168.15.31`.
 * **Veredicto Final:** **Incidente Operativo de Seguridad Resuelto y Remediado**
 * **Clasificación:** Compromiso de la información / Vulnerabilidad de Configuración
 * **Playbook Aplicado:** `FL-THN-POS-01 Rev. 03` / RFA de Remediación a Infraestructura
 
 #### 1. Diagnóstico y Causa Raíz
-El servidor de monitoreo Zabbix (`192.168.15.27`) realizaba intentos persistentes de autenticación contra el Domain Controller primario mediante el protocolo **LDAP simple sin cifrar (puerto 389/TCP)**. Las solicitudes utilizaban credenciales con contraseña por defecto pertenecientes a la cuenta de **Mario Flores**, colaborador que ya había sido desvinculado de la empresa y cuya cuenta residía en la Unidad Organizativa de bajas de Active Directory.
+* **Identificación de Entornos (Validación Oficial NOC):**
+  - `192.168.15.27`: **Instancia de Pruebas / Testing** (Servidor Zabbix homologación, origen directo de la alerta).
+  - `192.168.15.31`: **Instancia de Producción** (Servidor Zabbix productivo principal).
+* **Mecanismo del Incidente:** El servidor Zabbix de Testing (`192.168.15.27`) realizaba intentos persistentes de autenticación contra el Domain Controller primario mediante el protocolo **LDAP simple sin cifrar (puerto 389/TCP)**. Las solicitudes utilizaban credenciales con contraseña por defecto pertenecientes a la cuenta de **Mario Flores**, colaborador que ya había sido desvinculado de la empresa y cuya cuenta residía en la Unidad Organizativa de bajas de Active Directory.
 
 #### 2. Acciones de Contención y Remediación (NOC & SOC)
 1. **Emisión de RFA del SOC:** Se escaló formalmente al NOC solicitando auditar el origen de las peticiones en los servidores Zabbix, revocar credenciales huérfanas y migrar la autenticación a canales seguros.
@@ -1360,5 +1394,461 @@ Con el fin de garantizar que ningún incidente detectado por el EDR quede sin ge
 * **Reducción de MTTR:** Elimina el delay operativo humano entre la detección del EDR y la apertura formal del ticket en el sistema central del SOC.
 * **Sincronización Bidireccional de Auditoría:** Garantiza cumplimiento de SLA y trazabilidad cruzada exigida por estándares de auditoría de seguridad.
 
+---
+
+### Caso 027 - Control Cruzado, Triaje Forense y Resolución Masiva de Casos Cortex XDR (Octubre 2026)
+* **Fecha:** 17/10/2026 11:00:00 (Hora Local GMT-3)
+* **Plataforma:** Palo Alto Networks Cortex XDR ➔ Stellar Cyber OpenXDR v7.0.0s
+* **Analista:** Kevin Moraes
+* **Área:** Triaje de Incidentes L2, Control Cruzado EDR/SIEM y Auditoría SOC
+* **Veredicto Final:** **Resuelto (Resolved: Benign / False Positive)**
+
+#### 1. Contexto y Objetivos Operativos
+Se ejecutó una auditoría y control cruzado exhaustivo sobre el Data Lake de Stellar Cyber (`aella-ser-*` y `aella-syslog-*`) para identificar todos los incidentes generados por Cortex XDR con `case_id` formal correspondientes al mes de **octubre de 2026**. Se verificó su estado de ticket en Stellar Cyber, se asoció la telemetría forense correspondiente y se procedió a la evaluación técnica para su cierre.
+
+#### 2. Tabla de Casos Analizados y Dictamen Forense
+| Caso Cortex | Ticket Stellar | ID Stellar | Endpoint | Usuario | Resumen del Evento Técnico | Resolución | Justificación Técnica SOC |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **#610** | `#17830` | `6ad2370de4fb8b7307d83193` | `NB-EORLANDINI` | `eliasorlandini` | LOLBIN `curl.exe` hacia `www.bacn.gov.py` en puerto 443 | **Benign** | Consulta HTTP legítima a portal público del Estado (buscador legislativo). |
+| **#604** | `#17861` | `6ad37d44e4fb8b7307d8381a` | `NB-JTORALES` | `SYSTEM` | AMSI obfuscation alert en PID 4 (`System`) | **False Positive** | Falsa alarma de telemetría de kernel sin script payload ejecutable ni persistencia. |
+| **#601** | `#17862` | `6ad37e7ee4fb8b7307d83831` | `NB-GMARTINEZ` | `guidomartinez` | Ejecución de `LightscreenPortable_2.5_English.paf.exe` | **Benign** | Utilidad legítima de captura de pantalla desplegada en directorio de usuario. |
+| **#599** | `#17863` | `6ad37e81e4fb8b7307d83834` | `NB-FBENEGAS` | `flaviobenegas` | `conhost.exe` invoca `WAU-Notify.ps1` | **False Positive** | Script institucional de notificación de actualizaciones de Windows (`WAU-Notify.ps1`). |
+| **#597** | `#17864` | `6ad37e84e4fb8b7307d83837` | 7 Endpoints Corp | `NT AUTHORITY\SYSTEM` | `Start-BitsTransfer` hacia `teams.microsoft.com` | **Benign** | Remediación y despliegue corporativo oficial de Microsoft Teams firmado por Microsoft. |
+| **#596** | `#17865` | `6ad37e86e4fb8b7307d8383a` | `NB-RBARRETO` | `rubenbarreto` | `conhost.exe` invoca `WAU-Notify.ps1` | **False Positive** | Tarea programada de notificación de parches de Windows Update. |
+| **#595** | `#17866` | `6ad37e88e4fb8b7307d8383d` | `NB-NOC2` | `adminadsoc1` | `winget.exe upgrade --all` hacia repositorio espejo | **Benign** | Tarea administrativa de actualización de software mediante gestor oficial Windows Package Manager. |
+| **#594** | `#17867` | `6ad37e8ae4fb8b7307d83840` | `NB-EORLANDINI` | `eliasorlandini` | `curl.exe` descarga modelo desde `huggingface.co` | **Benign** | Descarga autorizada de pesos de IA local para entorno de desarrollo `.aegis-ai`. |
+| **#593** | `#17868` | `6ad37e8ce4fb8b7307d83843` | `NB-FBENEGAS` | `flaviobenegas` | `winget.exe upgrade VideoLAN.VLC` y `WAU-Notify.ps1` | **Benign** | Actualización desatendida de reproductor VLC y notificación de mantenimiento. |
+| **#588** | `#17869` | `6ad37e8fe4fb8b7307d83846` | `NB-RBARRETO` / `NB-IMAYOR` | `igormayor` | `conhost.exe` invoca `WAU-Notify.ps1` | **False Positive** | Script de notificación de actualizaciones de Windows (`WAU-Notify.ps1`). |
+| **#586** | `#17870` | `6ad37e92e4fb8b7307d83849` | `NB-FBENEGAS` | `flaviobenegas` | `conhost.exe` invoca `WAU-Notify.ps1` | **False Positive** | Script de notificación de actualizaciones de Windows (`WAU-Notify.ps1`). |
+
+#### 3. Resultado de Auditoría
+* Los 11 casos fueron conciliados en Stellar Cyber con sus 19 alertas forenses vinculadas.
+* Todos los casos fueron cerrados formalmente en estado `Resolved` con estricto apego a las directivas del SOC.
+
+---
+
+### Caso 028 - Optimización de Saved Query Global de Incidentes y Alertas Cortex XDR
+* **Fecha:** 17/10/2026 11:25:00 (Hora Local GMT-3)
+* **Plataforma:** Stellar Cyber OpenXDR v7.0.0s (Query & Filter Builder)
+* **Analista:** Kevin Moraes
+* **Módulo:** Queries & Filters | Automated Threat Hunting
+* **Estado:** **Guardado en Producción (`Incidentes Cortex XDR - Global`)**
+
+#### 1. Diagnóstico de Causa Raíz
+La consulta original del Alert Watcher presentaba dos limitaciones técnicas:
+1. Requería obligatoriamente la existencia de `palo_alto_networks.case_id`, lo que descartaba el 100% de los documentos de clase `palo_alto_networks_cortex_xdr_incidents` (donde el identificador se almacena como `palo_alto_networks.incident_id`).
+2. La interfaz visual generaba una advertencia de *Resource Intensive Query*, limitando la velocidad de búsqueda sobre el índice `Syslog`.
+
+#### 2. Sintaxis Optimizada Aplicada
+Se reescribió la consulta en modo texto (Query Mode) logrando indexación completa en Elasticsearch sin consumo intensivo:
+```lucene
+msg_class:(palo_alto_networks_cortex_xdr_incidents OR palo_alto_networks_cortex_xdr_alerts) AND (_exists_:palo_alto_networks.case_id OR _exists_:palo_alto_networks.incident_id)
+```
+
+#### 3. Validación y Beneficios
+* **Cobertura Total (0% Ceguera):** Los resultados del mes se incrementaron inmediatamente de 38 a **415 eventos capturados**, recuperando la visibilidad de incidentes críticos y alertas con caso asignado.
+* **Eliminación del Warning:** Desapareció el cartel de advertencia de rendimiento, optimizando los ciclos de ejecución cada 5 minutos del motor de automatización.
+* **Trazabilidad Garantizada:** El Alert Watcher nativo ahora procesa tanto los resúmenes de incidentes de Cortex como cada alerta forense individual que tenga ID de caso asociado.
+
+---
+
+### Caso 029 - Expansión del Filtro Quirúrgico Drop_FW_Passthrough_Benign_Telemetry
+* **Fecha:** 17/10/2026 08:30:00 (Hora Local GMT-3)
+* **Plataforma SIEM/XDR:** Stellar Cyber OpenXDR v7.0.0s
+* **Sensor / Perfil:** `profile-modular-sensor-technoma`
+* **Módulo:** Log Filters | Ingestion Control (Playbook 6.3)
+* **Analista:** Kevin Moraes
+* **ID de Filtro:** `6ad0f8dfaa734118df02d27e`
+* **Estado:** **Activo y Aplicado en Producción (DROP L7)**
+
+#### 1. Contexto Operativo y Diagnóstico
+Durante la auditoría matutina de cuota e ingesta, se identificó un remanente de tráfico `action: passthrough` originado por telemetría benigna y ráfagas periódicas de comprobación de conectividad de servicios corporativos y endpoints Windows (Microsoft Edge, Microsoft 365, endpoints de autenticación SSO y telemetría de nube).
+Aunque ya se contaba con la regla base de descarte passthrough (`Caso 024`), existían dominios transaccionales autorizados adicionales generando volumen de logs en el sensor modular sin aportar valor de detección de amenazas.
+
+#### 2. Tuning y Dominios Añadidos a la Lista Blanca Quirúrgica
+Se expandió el filtro `Drop_FW_Passthrough_Benign_Telemetry` incorporando nuevos destinos benignos verificados en tres fases progresivas:
+* **Autenticación y Nube Microsoft:** `cloud.microsoft`, `microsoftazuread-sso.com`, `mp.microsoft.com`, `data.microsoft.com`, `windows.net`, `windows.com`, `office365.com`, `sfx.ms`.
+* **Herramientas de Colaboración y Productividad:** `appsheet.com`, `whatsapp.com`, `whatsapp.net`, `office.net`, `slack.com`, `slackb.com`.
+* **Sistemas Operativos, Certificados, DNS y CDN:** `apple.com`, `icloud.com`, `devices.cloudflare.com`, `akamaized.net`, `digicert.com`, `dns.google`.
+* **Seguridad Perimetral y Endpoint (Telemetría de Agentes):** `fortinet.com`, `sophos.com`.
+* **Infraestructura DevOps, Repositorios Linux y PKI:** `docker.io`, `ubuntu.com`, `lencr.org` (Let's Encrypt CRL/OCSP), `flathub.org`, `pki.goog` (Google Root CA), `linuxmint.com`, `grafana.com`, `codeium.com`.
+* **Exclusiones Explícitas de Seguridad (100% Retención en SIEM):**
+  - `chatgpt.com` y `anthropic.com`: Retenidos para monitoreo de DLP, fuga de información confidencial y trazabilidad de prompts.
+  - `spotify.com`: Retenido para control de uso aceptable de red y tráfico no laboral.
+  - `tailscale.com`: Retenido para detección inmediata de redes superpuestas o túneles VPN no autorizados.
+* **Regla en Producción (52 Dominios Activos):**
+  - `dev_type`: `fw_fortigate`
+  - `action`: `passthrough`
+  - `url contains`: `[traps.paloaltonetworks.com, stellarcyber.cloud, technoma.com.py, sharepoint.com, data.microsoft.com, mp.microsoft.com, windowsupdate.com, msftconnecttest.com, microsoftonline.com, microsoftazuread-sso.com, cloud.microsoft, windows.net, msn.com, bing.com, skype.com, office.com, live.com, google.com, gstatic.com, googleusercontent.com, googleapis.com, gvt1.com, gvt2.com, nel.goog, firefox-portal-detection.com, nel.cloudflare.com, devices.cloudflare.com, akamaized.net, digicert.com, whatsapp.com, whatsapp.net, appsheet.com, apple.com, icloud.com, microsoft.com, office.net, docker.io, ubuntu.com, lencr.org, flathub.org, pki.goog, linuxmint.com, grafana.com, slack.com, slackb.com, office365.com, sfx.ms, windows.com, codeium.com, fortinet.com, sophos.com, dns.google]`
+
+#### 3. Impacto Medido en Ingesta
+* **Ahorro Estimado:** ~260.000 a 350.000 logs diarios suprimidos antes de su indexación en el Data Lake.
+* **Control de Licencia:** Contribución directa a mantener el consumo diario en **9.82 GB (98.2%)**, amortiguando el impacto del lunes cuando ingrese el tráfico laboral presencial.
+* **Cero Impacto en Seguridad:** Las inspecciones UTM, denegaciones de firewall (`deny`), eventos antivirus/IPS y flujos de tráfico sospechoso se mantienen 100% monitorizados sin filtros de descarte.
+
+---
+
+### Caso 030 - Auditoría Técnica de Regla ATH: THN FW Ataque Recurrente a DMZ
+* **Fecha:** 17/10/2026 11:50:00 (Hora Local GMT-3)
+* **Plataforma SIEM/XDR:** Stellar Cyber OpenXDR v7.0.0s
+* **Módulo:** Automated Threat Hunting (ATH) | Reglas Perimetrales
+* **Analista:** Kevin Moraes
+* **ID de Regla:** `6ac67debd733ce8586700670`
+* **Estado:** **Auditada y Operativa en Producción**
+
+#### 1. Diagnóstico y Parámetros Técnicos
+Se procedió a la auditoría técnica de la regla de detección de ataques recurrentes hacia la DMZ (`digitalcert.technoma.com.py` / `190.104.178.146`):
+* **Índice Auditado:** `aella-adr-*` (Tráfico procesado de firewall).
+* **Saved Query Asociada:** `QUsU233XXWIO1du07fg5cZvs99aNzV` (`msg_class == "firewall" AND action == "deny" AND dstip_host == "190.104.178.146"`).
+* **Umbral de Activación:** `Total Hits >= 50` en ventanas móviles de 5 minutos.
+* **Mecanismo Anti-Saturación:** Throttling activo configurado a 1 hora (`throttle_period: "1h"`) hacia `soc@technoma.com.py`.
+
+#### 2. Hallazgos y Evaluación en Data Lake
+* **Telemetría Activa:** Se confirmó la recepción de eventos de denegación perimetral en tiempo real (ej. atacante `45.90.163.37` denegado a las 11:45:43 GMT-3).
+* **Comportamiento Histórico:** La regla registró 210 ventanas de más de 50 hits durante el mes, con picos de hasta 3.666 intentos bloqueados por el firewall en 5 minutos.
+* **Veredicto Operativo:** La regla opera con óptima precisión; el umbral de 50 hits filtra los escaneos oportunistas de Internet y solo notifica ráfagas de persistencia o fuerza bruta sostenida, evitando la saturación del equipo SOC.
+
+---
+
+### Caso 031 - Automatización ATH para Eventos Críticos y Gobernanza de Google Workspace
+* **Fecha:** 17/10/2026 12:10:00 (Hora Local GMT-3)
+* **Plataforma SIEM/XDR:** Google Workspace Cloud Connector ➔ Stellar Cyber OpenXDR v7.0.0s
+* **Conector:** `gsuite_Workspace-THN` (Índice `Alerts` / `aella-ser-*`)
+* **Analista:** Kevin Moraes
+* **Módulo:** Automated Threat Hunting (ATH) | Cloud Identity & UBA
+* **Estado:** **Implementado y Activo en Producción (0% Ceguera)**
+
+#### 1. Diagnóstico de Causa Raíz
+El motor analítico nativo de Stellar Cyber solo generaba casos automáticos para anomalías masivas de volumen de descargas (`Cloud Drive Data Exfiltration Anomaly`), dejando aisladas en el Data Lake las alertas críticas de identidad, phishing y administración que requieren atención directa de la jefatura de TI/SOC.
+
+#### 2. Lógica Quirúrgica por Exclusión (0% Ceguera)
+Para garantizar la captura de cualquier amenaza presente o futura reportada por Google sin depender de una lista blanca restrictiva, se diseñó una regla de exclusión estricta que suprime el ruido masivo de Drive y logins de horario normal:
+```lucene
+engid_name:gsuite_Workspace-THN AND NOT xdr_event.display_name:("Cloud Drive Data Exfiltration Anomaly" OR "Login Time Anomaly")
+```
+
+#### 3. Configuración del Playbook de Automatización (ATH)
+* **Nombre:** `Google Workspace - Alertas Críticas y Gobernanza`
+* **Tipo de Alerta Generada:** `Google Workspace Security Alert`
+* **Táctica / Técnica:** `Initial Access / Phishing` (`Kill Chain: Initial Attempts`)
+* **Severidad y Fidelidad:** `85 / 85` (Garantiza elevación inmediata a Caso formal en la pestaña Cases de Stellar Cyber).
+* **Deduplicación Dual:** `srcip_username` y `gsuite.actor.email` con correlación de casos activa.
+* **Plantilla Dinámica de Instancia:**
+  ```text
+  {{xdr_event.display_name}} en cuenta {{username}}{{srcip_username}}: {{xdr_event.description}}
+  ```
+* **Metadatos Mapeados:** `xdr_event.display_name` (Tipo de evento) y `username` (Usuario objetivo).
+
+#### 4. Beneficios Operativos Inmediatos
+* **Filtrado de Ruido:** Se depuran más de 1.100 eventos rutinarios de sincronización de archivos (AppSheet, firmas).
+* **Visibilidad de Impacto:** Generación automática de tickets para eventos de alto perfil:
+  - Phishing y suplantación de identidad en Gmail (`Gmail potential employee spoofing`).
+  - Reseteo de contraseñas de administradores y acciones sensibles de consola.
+  - Cuentas de usuarios suspendidas.
+  - Inicios de sesión simultáneos imposibles (`Impossible Travel`) y ubicaciones anómalas en el exterior.
+
+---
+
+### Caso 032 - Log Filter Quirúrgico: Descarte de Telemetría de Cierre (TCP 7001 `action: close`)
+* **Fecha:** 17/10/2026 12:30:00 (Hora Local GMT-3)
+* **Plataforma SIEM/XDR:** Stellar Cyber OpenXDR v7.0.0s / Fortinet FortiGate Syslog
+* **Activo Objetivo:** Servidor de Aplicaciones / Middleware (`192.168.15.60`)
+* **Puerto / Servicio:** `TCP/7001` (Oracle WebLogic Server / Consola & Core Transaccional)
+* **Analista:** Kevin Moraes
+* **ID Log Filter:** `6ad394ab3a5c745b75a319be`
+* **Nombre de Regla:** `Drop_FW_Close_TCP_7001_192.168.15.60`
+* **Estado:** **Creado y Desplegado en Stellar Cyber (0% Ceguera)**
+
+#### 1. Diagnóstico de Causa Raíz
+Durante la auditoría de ingesta perimetral, se detectó un flujo continuo de tráfico interno originado desde subredes corporativas (`10.180.x.x` y `172.27.101.x`) hacia `192.168.15.60:7001`, generando más de 12.500 logs cada 6 horas. La mayor parte del peso correspondía a eventos de terminación de conexión (`action: close`), inflando la cuota sin valor analítico en tiempo real.
+
+#### 2. Evaluación de Riesgo de Ceguera (Matriz de Seguridad)
+* **Descarte Total del Puerto 7001 (Rechazado):** Ocultaría movimientos laterales de endpoints comprometidos, escaneos de puertos y posibles intentos de explotación RCE en WebLogic (ej. vulnerabilidades históricas de deserialización T3/IIOP).
+* **Descarte Quirúrgico de Cierre (Aprobado):** Descartar únicamente los mensajes `action: close` elimina el 100% de la telemetría redundante de fin de sesión mientras mantiene intacta la visibilidad esencial.
+
+#### 3. Especificación Técnica de la Regla Creada
+```json
+{
+  "dev_type": "fw_fortigate",
+  "dev_type_label": "Fortinet FortiGate",
+  "rules": {
+    "action": {
+      "type": "string",
+      "op": "==",
+      "value": ["close"]
+    },
+    "dstport": {
+      "type": "number",
+      "op": "==",
+      "value": [7001]
+    },
+    "dstip": {
+      "type": "ip",
+      "op": "matches",
+      "value": ["192.168.15.60/32"]
+    }
+  }
+}
+```
+
+#### 4. Garantías de Detección en el SOC (0% Puntos Ciegos)
+* ✅ **Inicios de Sesión (`action: accept`):** Se ingieren todos los accesos iniciales hacia el servidor, identificando quién y cuándo se conecta.
+* ✅ **Intentos Bloqueados (`action: deny`):** Se capturan escaneos no autorizados y bloqueos por política de firewall.
+* ✅ **Alertas de Inspección UTM/IPS:** Todo evento de firma de seguridad, IPS o antivirus sigue entrando al Data Lake con prioridad máxima.
+* 📉 **Impacto Estimado en Licencia:** Reducción esperada de ~25.000 a ~50.000 eventos de cierre por día.
+
+---
+
+### Caso 033 - Log Filter Quirúrgico: Descarte de Cierre DNS AD (Policy 74)
+* **Fecha:** 17/10/2026 13:24:00 (Hora Local GMT-3)
+* **Plataforma SIEM/XDR:** Stellar Cyber OpenXDR v7.0.0s / Fortinet FortiGate Syslog
+* **Activos Objetivo:** Controladores de Dominio AD (`10.11.1.1` - `ad.technoma.local`, `10.11.1.2` - `ad2`)
+* **Política Firewall:** `FG-Technoma_74` (Tráfico WiFi/LAN hacia Active Directory)
+* **Puerto / Protocolo:** `TCP/53` (Consultas DNS sobre TCP y sincronizaciones)
+* **Analista:** Kevin Moraes
+* **ID Log Filter:** `6ad3a133d7345ab3b6fe7b76`
+* **Nombre de Regla:** `Drop_FW_Close_DNS_AD_DCs_Policy74`
+* **Estado:** **Creado y Desplegado en Stellar Cyber (0% Ceguera)**
+
+#### 1. Diagnóstico de Causa Raíz
+La política `FG-Technoma_74` generaba más de 450.000 logs diarios, de los cuales más de 150.000 correspondían únicamente a eventos `action: close` sobre el puerto DNS de los controladores de dominio. Este volumen representa el mayor porcentaje de telemetría pasiva redundante del firewall.
+
+#### 2. Especificación Técnica de la Regla Creada
+```json
+{
+  "dev_type": "fw_fortigate",
+  "dev_type_label": "Fortinet FortiGate",
+  "rules": {
+    "fw_policy_id": {
+      "type": "string",
+      "op": "==",
+      "value": ["FG-Technoma_74"]
+    },
+    "action": {
+      "type": "string",
+      "op": "==",
+      "value": ["close"]
+    },
+    "dstport": {
+      "type": "number",
+      "op": "==",
+      "value": [53]
+    },
+    "dstip": {
+      "type": "ip",
+      "op": "matches",
+      "value": ["10.11.1.1/32", "10.11.1.2/32"]
+    }
+  }
+}
+```
+
+#### 3. Garantías de Seguridad (0% Ceguera)
+* ✅ **Inicios de Sesión (`action: accept`):** Cada consulta DNS que ingresa al controlador de dominio sigue indexándose en el Data Lake.
+* ✅ **Detección de DNS Tunneling y DGA:** Los motores de Machine Learning y Threat Intelligence analizan las consultas entrantes sin alteración.
+* 📉 **Impacto Directo:** Supresión estimada de **~150.000 eventos diarios (~700 MB/día)**.
+
+---
+
+### Caso 034 - Log Filter Quirúrgico: Descarte de Denegaciones DNS VLAN 16 y VLAN 5 hacia DCs
+* **Fecha:** 17/10/2026 13:24:30 (Hora Local GMT-3)
+* **Plataforma SIEM/XDR:** Stellar Cyber OpenXDR v7.0.0s / Fortinet FortiGate Syslog
+* **Activos Objetivo:** Controladores de Dominio AD (`10.11.1.1`, `10.11.1.2`)
+* **Política Firewall:** `FG-Technoma_0` (Bloqueo Implícito / Deny)
+* **Origen:** VLAN 16 (CCTV Dahua `192.168.16.0/24`) y VLAN 5 (`10.11.5.0/24`)
+* **Analista:** Kevin Moraes
+* **ID Log Filter:** `6ad3a13eaa734118df02d827`
+* **Nombre de Regla:** `Drop_FW_Denial_DNS_VLAN16_VLAN5_to_DCs`
+* **Estado:** **Creado y Desplegado en Stellar Cyber (0% Ceguera)**
+
+#### 1. Diagnóstico de Causa Raíz
+Dispositivos IoT y servidores aislados en la VLAN 16 (cámaras de seguridad) y VLAN 5 intentan constantemente resolver nombres contra los controladores de dominio corporativos. Al no tener permisos de resolución, la política `FG-Technoma_0` bloquea cada paquete generando más de 156.000 eventos `deny` por día de tráfico residual.
+
+#### 2. Especificación Técnica de la Regla Creada
+```json
+{
+  "dev_type": "fw_fortigate",
+  "dev_type_label": "Fortinet FortiGate",
+  "rules": {
+    "fw_policy_id": {
+      "type": "string",
+      "op": "==",
+      "value": ["FG-Technoma_0"]
+    },
+    "action": {
+      "type": "string",
+      "op": "==",
+      "value": ["deny"]
+    },
+    "dstport": {
+      "type": "number",
+      "op": "==",
+      "value": [53]
+    },
+    "dstip": {
+      "type": "ip",
+      "op": "matches",
+      "value": ["10.11.1.1/32", "10.11.1.2/32"]
+    },
+    "srcip": {
+      "type": "ip",
+      "op": "matches",
+      "value": ["10.11.5.0/24", "192.168.16.0/24"]
+    }
+  }
+}
+```
+
+#### 3. Garantías de Seguridad (0% Ceguera)
+* ✅ **Aislamiento Estricto:** Se descarta el flood de bloqueos DNS de cámaras/VLANs conocidas hacia los DCs.
+* ✅ **Protección Perimetral Intacta:** Cualquier intento de denegación perimetral desde Internet (WAN) o subredes no declaradas sigue alertando normalmente.
+* 📉 **Impacto Directo:** Supresión estimada de **~120.000 a ~150.000 eventos diarios (~650 MB/día)**.
+
+---
+
+### Caso 035 - Actualización Quirúrgica de Log Filter: Tráfico Stellar Cyber Receiver (`165.1.125.196:8889`) y CAJA ANDE
+* **Fecha:** 17/10/2026
+* **ID:** `THN-LOGFILT-RECEIVER-01`
+* **Plataforma:** Stellar Cyber OpenXDR / Modular Sensor (`Profile-CajaAnde` & `profile-modular-sensor-technoma`)
+* **Host / Activo:** Servidores Core `192.168.15.70` (Technoma) y `192.168.9.5` (Caja Ande Hyper-V)
+* **Destino:** `165.1.125.196:8889` (`receiver-technoma.stellarcyber.cloud` / Oracle Cloud Infrastructure)
+* **Veredicto:** **Tuning Quirúrgico / DROP (0% Ceguera)**
+* **Playbook:** `Playbook 6.3 - Log Filtering`
+
+#### 1. Justificación Técnica y Triaje Forense
+* **Contexto:** En la Threat Hunting Library se identificaron 2 hits en la tarjeta `Non-Standard Port Usage`. El análisis forense reveló sesiones TLS/HTTPS sobre el puerto alternativo `8889` hacia `165.1.125.196`.
+* **Identificación Oficial del Puerto 8889:** Según la documentación oficial de arquitectura de Stellar Cyber (*Firewall Requirements*), el puerto **TCP 8889 (HTTPS with TLS 1.2)** corresponde a la comunicación oficial entre los Sensores/Agentes (WAS, LAS, MS) y el **Data Processor / Data Analyzer (DP/DA)** hacia `receiver-<org>.stellarcyber.cloud`:
+  - **Función 1:** *Receiver ports for communicating with the DA* (envío de telemetría e Interflow hacia el Data Analyzer).
+  - **Función 2:** *Downloading software and files from the DP, including custom log parsers*.
+  - **Resolución DNS Confirmada:** `receiver-technoma.stellarcyber.cloud` resuelve exactamente a `165.1.125.196` (hosteado en el clúster SaaS de Stellar Cyber sobre OCI).
+* **Causa Raíz de los Hits:** El Sensor Modular de Caja Ande capturó su propio tráfico HTTPS de subida hacia el Data Processor (`receiver-technoma:8889`) y, al no ser el estándar 443, lo clasificó como `appid_stdport: "no"`.
+* **Mejora Aplicada:** 
+  1. Se agregó la IP `192.168.9.5` (Caja Ande) junto a `192.168.15.70` en el filtro existente `filter - 165.1.125.196` (ID `69ba96e97ce7a80ccca17cc4`).
+  2. Se generalizó `dev_type: ""` para que el descarte aplique a los flujos Interflow (`aella_flow`) del Sensor Modular, eliminando la auto-detección redundante del canal de telemetría de la propia plataforma.
+
+#### 2. Configuración del Filtro Desplegado
+* **Filtro ID:** `69ba96e97ce7a80ccca17cc4`
+* **Nombre:** `filter - 165.1.125.196`
+* **Tenant Scope:** `all-tenants` (Aplica a `Profile-CajaAnde` y `profile-modular-sensor-technoma`)
+* **Definición JSON (PUT API):**
+```json
+{
+  "name": "filter - 165.1.125.196",
+  "cust_id": "all-tenants",
+  "content": "{\"dev_type\": \"\", \"dev_type_label\": \"\", \"rules\": {\"srcip\": {\"type\": \"ip\", \"op\": \"matches\", \"value\": [\"192.168.15.70\", \"192.168.9.5\"]}, \"dstip\": {\"type\": \"ip\", \"op\": \"matches\", \"value\": [\"165.1.125.196\"]}}}"
+}
+```
+
+#### 3. Garantías de Seguridad (0% Ceguera)
+* ✅ **Destino Legítimo del SaaS:** Solo aplica a `165.1.125.196` (`receiver-technoma.stellarcyber.cloud`).
+* ✅ **Tráfico Exclusivo de Sensores/Agentes:** Aplica a los nodos que envían telemetría al clúster XDR.
+* ✅ **Cero Ceguera Operacional:** Si cualquier otra máquina o malware usa puertos no estándares hacia destinos externos no autorizados, el motor XDR lo detecta y alerta de inmediato.
+
+---
+
+### Caso 036 - Expansión Quirúrgica de Log Filter: WUDO Puerto 7680 (VLAN Servidores `192.168.15.0/24`)
+* **Fecha:** 18/10/2026
+* **ID:** `THN-LOGFILT-WUDO-02`
+* **Plataforma:** Stellar Cyber OpenXDR / Modular Sensor (`profile-modular-sensor-technoma`)
+* **Host / Activo:** Servidor Postventa `192.168.15.167` (`postventa-app.technoma.local`) hacia Endpoints (`192.168.169.x`)
+* **Veredicto:** **Tuning Quirúrgico / DROP (0% Ceguera)**
+* **Playbook:** `Playbook 6.3 - Log Filtering`
+
+#### 1. Justificación Técnica y Triaje Forense
+* **Contexto:** En la auditoría forense de los 1.29M logs de Firewall del 17/10 se detectaron **36.008 denegaciones repetitivas en TCP 7680** bajo la política `FG-Technoma_0`. El 88% de los intentos provenían del servidor `192.168.15.167` (`postventa-app.technoma.local`) intentando distribuir paquetes de Windows Update Delivery Optimization (WUDO P2P) hacia los endpoints corporativos.
+* **Solución Aplicada:** Se actualizó el filtro preexistente `Drop_FW_Denial_Internal_WUDO_7680` (ID `6ac785e01b7191d76a1b1d02`) incorporando la subred de servidores `192.168.15.0/24` en `srcip` y `dstip`.
+* **Configuración JSON (PUT API):**
+```json
+{
+  "name": "Drop_FW_Denial_Internal_WUDO_7680",
+  "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+  "content": "{\"dev_type\": \"fw_fortigate\", \"dev_type_label\": \"Fortinet FortiGate\", \"rules\": {\"action\": {\"type\": \"string\", \"op\": \"==\", \"value\": [\"deny\"]}, \"dstport\": {\"type\": \"number\", \"op\": \"==\", \"value\": [7680]}, \"srcip\": {\"type\": \"ip\", \"op\": \"matches\", \"value\": [\"192.168.169.0/24\", \"192.168.100.0/24\", \"192.168.15.0/24\"]}, \"dstip\": {\"type\": \"ip\", \"op\": \"matches\", \"value\": [\"192.168.169.0/24\", \"192.168.100.0/24\", \"192.168.15.0/24\"]}, \"proto\": {\"type\": \"number\", \"op\": \"==\", \"value\": [6]}}}"
+}
+```
+* **Garantías de Seguridad:** Restringido a 5 dimensiones estrictas (Action: deny, Dstport: 7680, Proto: TCP 6, Subredes internas declaradas). Si este servidor conecta por SMB, RDP o SSH, la auditoría y detección quedan 100% activas. Ahorro estimado: **~36.000 logs/día**.
+
+---
+
+### Caso 037 - Log Filter Quirúrgico: Descarte de Cierre TCP 8010 y 7001 (`action: close`)
+* **Fecha:** 18/10/2026
+* **ID:** `THN-LOGFILT-CLOSE8010-01`
+* **Plataforma:** Stellar Cyber OpenXDR / Modular Sensor (`profile-modular-sensor-technoma`)
+* **Host / Activo:** Servidores Internos `10.11.4.2` -> `10.11.5.4` (TCP 8010) y `192.168.15.60` (TCP 7001)
+* **Veredicto:** **Tuning Quirúrgico / DROP (0% Ceguera)**
+* **Playbook:** `Playbook 6.3 - Log Filtering`
+
+#### 1. Justificación Técnica y Triaje Forense
+* **Contexto:** Se identificaron **113.221 logs diarios** en el puerto TCP 8010 entre `10.11.4.2` y `10.11.5.4` bajo la política `FG-Technoma_150`. Cada sesión generaba inicio (`accept`) y cierre (`close`), duplicando telemetría transaccional interna.
+* **Solución Aplicada:** Se expandió el filtro activo en el perfil del sensor `Drop_FW_Close_TCP_7001_192.168.15.60` (ID `6ad394ab3a5c745b75a319be`) rebautizándolo como `Drop_FW_Close_TCP_7001_and_8010_Internal_Services`, agregando el puerto `8010` y el destino `10.11.5.4/32` para `action: close`.
+* **Configuración JSON (PUT API):**
+```json
+{
+  "name": "Drop_FW_Close_TCP_7001_and_8010_Internal_Services",
+  "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+  "content": "{\"dev_type\": \"fw_fortigate\", \"dev_type_label\": \"Fortinet FortiGate\", \"rules\": {\"action\": {\"type\": \"string\", \"op\": \"==\", \"value\": [\"close\"]}, \"dstport\": {\"type\": \"number\", \"op\": \"==\", \"value\": [7001, 8010]}, \"dstip\": {\"type\": \"ip\", \"op\": \"matches\", \"value\": [\"192.168.15.60/32\", \"10.11.5.4/32\"]}}}"
+}
+```
+* **Garantías de Seguridad:** **0% ceguera**. Todos los inicios de sesión (`action: accept`) se mantienen íntegros para auditoría forense y correlación de seguridad. Solo se descarta el paquete de término de sesión TCP. Ahorro estimado: **~16.000 a 25.000 logs/día**.
+
+---
+
+### Caso 038 - Auditoría Integral de los 54 Log Filters y Corrección Quirúrgica en Filtros `[06]` y `[13]`
+* **Fecha:** 18/10/2026
+* **ID:** `THN-LOGFILT-AUDIT54-01`
+* **Plataforma:** Stellar Cyber OpenXDR / Modular Sensor (`profile-modular-sensor-technoma`)
+* **Activos:** Inventario completo de 54 Log Filters (`technoma.stellarcyber.cloud`)
+* **Veredicto:** **Auditoría Empírica Firewall vs NDR / Corrección de Ceguera en `[06]` y `[13]` (0 MB impacto en cuota)**
+* **Playbook:** `Playbook 6.3 - Log Filtering`
+
+#### 1. Contexto y Verificación Empírica Pre-Cambio (48h)
+Antes de intervenir cualquier regla histórica, se realizó un cruce empírico de 48 horas comparando los eventos en `msg_class: firewall` contra los flujos reales de red en `msg_class: interflow_traffic` (NDR):
+* **Filtros Zabbix (`[01]`, `[02]`, `[32]`, `[42]` sobre `192.168.15.27` y `192.168.15.31`):** Autorizados expresamente por Jefatura SOC para contención crítica de cuota. No se intervienen.
+* **Filtro `[28]` (`Filter AD DNS out` - ID `691f50ebfd93619a950d1898`):** Registra `0 hits` en Firewall y **390.633 flujos** en NDR (`10.11.1.1 -> 8.8.8.8:53`). Se comprobó que **no existe ceguera** porque el motor NDR (*DNS Analysis*) ya inspecciona el 100% de las consultas DNS de los Domain Controllers, mientras el filtro evita duplicar ~195.000 logs diarios de FortiGate. **Se mantiene intacto.**
+* **Filtro `[07]` (`Filter NOC deny TCP 7001` - ID `691ccfab4ae91719cb3e49cb`):** Contiene `NTP`, `Google.Services`, `SNMP_GetRequest` y `STUN` que generan miles de sesiones con acción `accept`/`close`. Agregarle `action == deny` volcaría ese volumen de nuevo al SIEM. **Se mantiene intacto.**
+* **Filtro `[06]` (`Filter NOC deny TCP 7002 8000` - ID `691ccf38fd93619a950d179c`):** Registra `0 hits` en Firewall y solo `5 flujos` de escaneos externos fallidos (`HalfOpened` hacia `10.11.3.190:8000`) en 48h.
+* **Filtro `[13]` (`technoma NOC deny BGP` - ID `691dfc77fd93619a950d1813`):** Registra `0 hits` en Firewall y `0 flujos` en NDR en 48h.
+
+#### 2. Mejoras Aplicadas en Caliente (PUT API)
+Se agregó la restricción explícita `"action": {"type": "string", "op": "==", "value": ["deny", "close", "timeout", "client-rst", "server-rst"]}` en los filtros **`[06]`** y **`[13]`**:
+1. **`Filter NOC deny TCP 7002 8000` (`691ccf38fd93619a950d179c`):**
+```json
+{
+  "name": "Filter NOC deny TCP 7002 8000",
+  "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+  "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"dstport\":{\"type\":\"number\",\"op\":\"==\",\"value\":[7002,8000,38881]},\"action\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"deny\",\"close\",\"timeout\",\"client-rst\",\"server-rst\"]}}}"
+}
+```
+2. **`technoma NOC deny BGP` (`691dfc77fd93619a950d1813`):**
+```json
+{
+  "name": "technoma NOC deny BGP",
+  "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+  "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"appid_name\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"BGP\"]},\"action\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"deny\",\"close\",\"timeout\",\"client-rst\",\"server-rst\"]}}}"
+}
+```
+
+#### 3. Garantías de Seguridad y Cuota
+* ✅ **Costo de Cuota: 0 MB adicionales** (ambos mantienen el 100% de descarte sobre intentos rechazados y cierres).
+* ✅ **Visibilidad Recuperada:** Si en el futuro ocurre una conexión `accept` exitosa hacia los puertos `7002`, `8000`, `38881` o una sesión `BGP` establecida a través del FortiGate, el evento ya no será silenciado y generará telemetría inmediata en Stellar Cyber.
 
 
+### Caso 039 - Saneamiento y Reasignacion de Filtros Redundantes en Politica 214 (WiFi Corp)
+* **Fecha:** 2026-10-18
+* **Objetivo:** Saneamiento de reglas en Modular Sensor y eliminacion de solapamiento inutil en la politica de firewall FG-Technoma_214.
+* **Veredicto:** Reasignacion Quirurgica de Filtro Redundante a Descarte de NTP 123 Deny (+5.200 logs/dia ahorrados)
+* **Playbook:** Playbook 6.3 - Log Filtering
+
+#### 1. Diagnostico del Solapamiento
+El filtro DROP-FG-Technoma-Block_WIFI_Corp-Denials (6ad0ca89d7345ab3b6fe73aa) exigia una lista estricta de 8 IPs en puertos 53, 853 y 443. Sin embargo:
+* El filtro Drop_FW_Denial_WiFiCorp_DNS_53 (6ad0b91b472282b392d23504) ya descartaba el 100% de denegaciones del puerto 53 para cualquier IP.
+* El filtro Drop_FW_Denial_WiFiCorp_FortiGuard_214 (6aca44101b7191d76a1b2322) ya descartaba el 100% de denegaciones de FortiGuard.
+* Como resultado, DROP-FG-Technoma-Block_WIFI_Corp-Denials era 100% redundante.
+
+#### 2. Restriccion de Arquitectura y Solucion Aplicada
+La API de Stellar Cyber prohibe eliminar con DELETE filtros vinculados a perfiles de sensor activos (Cannot delete in use data). Para sanear la arquitectura sin desvincular el perfil:
+* Se reasigno el filtro en caliente via PUT /connect/api/v1/log_filters/6ad0ca89d7345ab3b6fe73aa para capturar el descarte del puerto 123 (NTP) con action == deny en la politica 214 (ntp.org-NTP, Cloudflare-NTP).
+
+#### 3. Resultado Tecnico
+* Se elimino la condicion redundante que no producia ningun match.
+* Se ahorran ~5.200 logs/dia adicionales de ruido de sincronizacion NTP denegado.
+* Se preserva al 100% la visibilidad de trafico HTTPS / web sospechoso (puerto 443).

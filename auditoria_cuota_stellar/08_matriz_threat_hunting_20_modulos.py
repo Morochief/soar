@@ -30,7 +30,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 HOST = os.environ.get("STELLAR_HOST", "technoma.stellarcyber.cloud")
 EMAIL = os.environ.get("STELLAR_EMAIL", "kevinmoraes@technoma.com.py")
-TOKEN = os.environ.get("STELLAR_TOKEN", "")
+TOKEN = os.environ.get("STELLAR_TOKEN", "rOnKd624_hTAvi5TyDDsPmfbiEOf3NThpGMkUL8sR6IrmkBEovOn41EvFdLtdWkTO6XuFSH6d16x0B1J3lJSBQ")
 CUST_ID = "e511c3fc54cd4d668bb67612c2ef4b04"
 
 # Definición exacta de los 20 módulos de la Threat Hunting Library

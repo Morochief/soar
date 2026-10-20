@@ -35,10 +35,20 @@ import urllib3
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+try:
+    from dotenv import load_dotenv
+    _env_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+    if os.path.exists(_env_file):
+        load_dotenv(_env_file)
+    else:
+        load_dotenv()
+except Exception:
+    pass
+
 # Configuración de conexión
 HOST = os.environ.get("STELLAR_HOST", "technoma.stellarcyber.cloud")
 EMAIL = os.environ.get("STELLAR_EMAIL", "kevinmoraes@technoma.com.py")
-TOKEN = os.environ.get("STELLAR_TOKEN", "796e625a6552636a4e326b54784a553868504f47514a387768636b4d32646f364375494d485050516b763131766a4f65")
+TOKEN = os.environ.get("STELLAR_TOKEN", "")
 MCP_URL = f"https://{HOST}/mcp"
 
 _CACHED_JWT: Optional[str] = None

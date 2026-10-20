@@ -21,7 +21,17 @@ import requests
 import urllib3
 from typing import Dict, Any, Optional, Tuple
 
-from PySide6.QtCore import QThread, Signal
+try:
+    from PySide6.QtCore import QThread, Signal
+except ImportError:
+    class QThread:  # type: ignore
+        def __init__(self, *args, **kwargs):
+            pass
+    def Signal(*args, **kwargs):  # type: ignore
+        class _DummySignal:
+            def emit(self, *a, **kw):
+                pass
+        return _DummySignal()
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -85,9 +95,16 @@ class FeedsAIOrchestrator:
     @classmethod
     def get_available_providers(cls) -> Dict[str, bool]:
         """Verifica qué credenciales están disponibles en el entorno."""
+        antigravity_ok = False
+        try:
+            from soar_ai_client import is_antigravity_available
+            antigravity_ok = is_antigravity_available()
+        except Exception:
+            pass
         return {
+            "antigravity": antigravity_ok,
             "nvidia": bool(os.environ.get("NVIDIA_API_KEY", "").strip()),
-            "gemini": bool(os.environ.get("GEMINI_API_KEY", "").strip()),
+            "gemini": antigravity_ok or bool(os.environ.get("GEMINI_API_KEY", "").strip()),
             "openai": bool(os.environ.get("OPENAI_API_KEY", "").strip())
         }
 
@@ -138,10 +155,24 @@ class FeedsAIOrchestrator:
 
     @classmethod
     def call_gemini(cls, content: str, api_key: Optional[str] = None) -> str:
-        """Invoca a Google Gemini 2.5 Flash mediante REST API segura."""
+        """Invoca prioritariamente Google Antigravity OAuth (Gemini 3.8 Flash High) con fallback a REST API."""
+        user_prompt = f"Analiza y estructura el siguiente boletín/noticia CTI:\n\n{content}"
+        if not api_key:
+            try:
+                from soar_ai_client import is_antigravity_available, call_antigravity
+                if is_antigravity_available():
+                    return call_antigravity(
+                        user_prompt=user_prompt,
+                        system_prompt=SYSTEM_PROMPT_VULN_REPORT,
+                        temperature=0.1,
+                        max_tokens=4096,
+                    )
+            except Exception as e_ag:
+                print(f"[FeedsAI] Antigravity OAuth fallback: {e_ag}")
+
         key = api_key.strip() if api_key is not None else os.environ.get("GEMINI_API_KEY", "").strip()
         if not key:
-            raise ValueError("GEMINI_API_KEY no encontrada en las variables de entorno.")
+            raise ValueError("Ni Antigravity OAuth ni GEMINI_API_KEY están disponibles en el entorno.")
 
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={key}"
         headers = {"Content-Type": "application/json"}
@@ -152,7 +183,7 @@ class FeedsAIOrchestrator:
             },
             "contents": [
                 {
-                    "parts": [{"text": f"Analiza y estructura el siguiente boletín/noticia CTI:\n\n{content}"}]
+                    "parts": [{"text": user_prompt}]
                 }
             ],
             "generationConfig": {

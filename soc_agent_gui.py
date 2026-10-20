@@ -28,14 +28,25 @@ from pathlib import Path
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
-from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QTextEdit, QPushButton, QTabWidget, QSplitter, QFrame,
-    QFileDialog, QMessageBox, QProgressBar, QStatusBar, QComboBox,
-    QSizePolicy
-)
-from PySide6.QtCore import Qt, QThread, Signal
-from PySide6.QtGui import QFont, QIcon, QColor, QPalette, QTextCursor
+try:
+    from PySide6.QtWidgets import (
+        QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
+        QLabel, QTextEdit, QPushButton, QTabWidget, QSplitter, QFrame,
+        QFileDialog, QMessageBox, QProgressBar, QStatusBar, QComboBox,
+        QSizePolicy
+    )
+    from PySide6.QtCore import Qt, QThread, Signal
+    from PySide6.QtGui import QFont, QIcon, QColor, QPalette, QTextCursor
+    from abuse_report_dialog import AbuseReportWidget, AbuseReportEngine
+except ImportError:
+    class QThread:  # type: ignore
+        def __init__(self, *a, **kw): pass
+    class QMainWindow:  # type: ignore
+        pass
+    def Signal(*a, **kw):  # type: ignore
+        class _Dummy:
+            def emit(self, *x, **y): pass
+        return _Dummy()
 
 # Cargar variables de entorno
 try:
@@ -50,11 +61,10 @@ from openai import OpenAI
 BASE_DIR = Path(__file__).resolve().parent
 import time
 from soc_agent import auto_enriquecer_contexto, ejecutar_herramienta_local, preparar_entrada
-from abuse_report_dialog import AbuseReportWidget, AbuseReportEngine
 
 # Configuración NVIDIA NIM
 NVIDIA_BASE_URL = os.environ.get("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1")
-NVIDIA_API_KEY = os.environ.get("NVIDIA_API_KEY", "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")
+NVIDIA_API_KEY = os.environ.get("NVIDIA_API_KEY", "")
 NVIDIA_MODEL_FAST = os.environ.get("NVIDIA_MODEL_FAST", "meta/llama-3.2-11b-vision-instruct")
 NVIDIA_MODEL_DEEP = os.environ.get("NVIDIA_MODEL_DEEP", "meta/llama-3.2-90b-vision-instruct")
 NVIDIA_MODEL = os.environ.get("NVIDIA_MODEL", NVIDIA_MODEL_FAST)
@@ -266,14 +276,20 @@ class AgentWorker(QThread):
                 {"role": "user", "content": prompt_final}
             ]
 
-            # Selección del modelo según el modo seleccionado
-            target_model = NVIDIA_MODEL_DEEP if self.mode == "deep" else NVIDIA_MODEL_FAST
-            self.tool_invoked.emit("NVIDIA NIM", f"Generando streaming en vivo con modelo {target_model}...")
+            from soar_ai_client import is_antigravity_available, SoarUnifiedOpenAIClient
 
-            if not NVIDIA_API_KEY:
-                raise RuntimeError("Falta NVIDIA_API_KEY. Defínela en el archivo .env junto al programa.")
+            antigravity_ok = is_antigravity_available()
+            if not antigravity_ok and not NVIDIA_API_KEY:
+                raise RuntimeError("Falta autenticación IA: ni Google Antigravity OAuth ni NVIDIA_API_KEY están disponibles.")
 
-            client = OpenAI(
+            if antigravity_ok:
+                target_model = os.environ.get("SOAR_AI_MODEL", "gemini-3.8-flash-high")
+                self.tool_invoked.emit("Google Antigravity OAuth", f"Generando dictamen forense con {target_model}...")
+            else:
+                target_model = NVIDIA_MODEL_DEEP if self.mode == "deep" else NVIDIA_MODEL_FAST
+                self.tool_invoked.emit("NVIDIA NIM", f"Generando streaming en vivo con modelo {target_model}...")
+
+            client = SoarUnifiedOpenAIClient(
                 base_url=NVIDIA_BASE_URL,
                 api_key=NVIDIA_API_KEY,
                 timeout=120.0,
@@ -292,8 +308,7 @@ class AgentWorker(QThread):
             try:
                 stream = client.chat.completions.create(**kwargs)
             except Exception as ex_init:
-                # Si falla el modelo profundo, reintentar de inmediato con el modelo rápido
-                if target_model != NVIDIA_MODEL_FAST:
+                if target_model != NVIDIA_MODEL_FAST and NVIDIA_API_KEY:
                     self.tool_invoked.emit("Fallback Automático", f"Cambiando a {NVIDIA_MODEL_FAST} por indisponibilidad de cola...")
                     kwargs["model"] = NVIDIA_MODEL_FAST
                     stream = client.chat.completions.create(**kwargs)

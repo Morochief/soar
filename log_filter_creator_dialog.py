@@ -32,6 +32,7 @@ class LogFilterCreatorDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("🛡️ Creador de Log Filters Quirúrgicos — Stellar Cyber OpenXDR")
+        self.setWindowFlags(Qt.Window | Qt.WindowMinMaxButtonsHint | Qt.WindowCloseButtonHint)
         self.resize(980, 680)
         self.mgr = StellarLogFilterManager()
 

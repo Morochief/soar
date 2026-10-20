@@ -28,8 +28,8 @@ class SecurityOnionEngine:
       3. Monitor pasivo de salud de cluster y nodos distribuidos (Grid Pulse).
     """
 
-    DEFAULT_URL = "https://172.17.10.25:9200"
-    DEFAULT_API_KEY = "SlcyYkk1OEJaZEtFR0l3ZTNNMGc6MktWaGRzV2VQTU9iZmNkRVZkT2E1dw=="
+    DEFAULT_URL = "https://127.0.0.1:9200"
+    DEFAULT_API_KEY = ""
 
     def __init__(
         self,
@@ -38,6 +38,16 @@ class SecurityOnionEngine:
         connect_timeout: float = 1.0,
         read_timeout: float = 5.0,
     ):
+        try:
+            from dotenv import load_dotenv
+            env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+            if os.path.exists(env_path):
+                load_dotenv(env_path)
+            else:
+                load_dotenv()
+        except Exception:
+            pass
+
         self.base_url = (
             base_url
             or os.environ.get("SO_ELASTIC_URL")

@@ -31,6 +31,8 @@ feeds_intel.db
 *.db
 *.sqlite
 *.sqlite3
+.rag_index_cache.pkl
+*.pkl
 
 # 4. ARCHIVOS TEMPORALES, BACKUPS Y SCRATCH
 *.bak
@@ -49,11 +51,27 @@ historial_caidas.log
 # 6. DATOS Y EXPORTACIONES CONFIDENCIALES DE CLIENTES
 *.tsv
 *.csv
+*.xlsx
 tickets_pdf/
 XDR_Cases_*.tsv
 XDR_Issues_*.tsv
 cases - *.csv
 bitacora_auto_export.tsv
+Auditoria_Forense_*.xlsx
+Dashboard_Timeline_*.html
+alerta_abuso_*.json
+interflow*.json
+caso_*_detail.json
+cajaande_*.json
+swagger_paths_full.json
+Analista SOC/Casos/
+Analista SOC/Reportes/
+Analista SOC/02_Base_de_Conocimiento/ad_users_inventory.md
+Analista SOC/computers_and_servers.md
+Analista SOC/markitdown/
+Analista SOC/graphify/
+Analista SOC/graphify-out/
+obscura/
 
 # 7. DOCUMENTOS PERSONALES Y BORRADORES
 CV*.pdf

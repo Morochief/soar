@@ -209,17 +209,23 @@ def _load_system_instructions() -> str:
         return "ERROR: Archivo prompt_stellar_python.md no encontrado."
 
 class StellarGeminiOrchestrator:
-    def __init__(self, api_key=None):
+    def __init__(self, api_key=None, enable_pii_masking=None):
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
         self.api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={self.api_key}"
+        self.mask_engine = SecurityMaskingEngine()
+        if enable_pii_masking is None:
+            env_mask = os.environ.get("SOAR_ENABLE_PII_MASKING", "false").strip().lower()
+            self.enable_pii_masking = env_mask in ("1", "true", "yes", "on")
+        else:
+            self.enable_pii_masking = bool(enable_pii_masking)
 
     def enviar_a_gemini(self, telemetria_cruda):
         """
-        Ejecuta el pipeline completo de ingesta, filtrado forense, ofuscación en RAM,
-        control de tamaño de contexto, llamada con backoff resiliente y desofuscación final.
+        Ejecuta el pipeline completo de ingesta, filtrado forense, ofuscación opcional en RAM,
+        control de tamaño de contexto, llamada prioritaria vía Google Antigravity OAuth
+        (Gemini 3.8 Flash High) con fallback resiliente y desofuscación final.
         """
-        if not self.api_key:
-            raise ValueError("Error crítico: GEMINI_API_KEY no configurada en las variables de entorno.")
+        self.mask_engine = SecurityMaskingEngine()
 
         # 1. Pipeline de Ingesta y Filtrado Forense
         datos_originales = None
@@ -229,14 +235,19 @@ class StellarGeminiOrchestrator:
             except json.JSONDecodeError:
                 # Si no es JSON, tratamos el texto directamente
                 pass
+        elif isinstance(telemetria_cruda, (dict, list)):
+            datos_originales = telemetria_cruda
 
         if datos_originales is not None:
             datos_filtrados = clean_forensic_data(datos_originales)
-            # Ofuscación deshabilitada intencionalmente para preservar el contexto Institucional (IPs/Dominios reales)
+            if self.enable_pii_masking:
+                datos_filtrados = self.mask_engine.procesar_diccionario(datos_filtrados)
             contexto_a_enviar = json.dumps(datos_filtrados, indent=4, ensure_ascii=False)
         else:
             # Fallback a texto crudo
-            contexto_a_enviar = telemetria_cruda
+            contexto_a_enviar = str(telemetria_cruda)
+            if self.enable_pii_masking:
+                contexto_a_enviar = self.mask_engine.enmascarar_contenido_string(contexto_a_enviar)
             
         # --- RAG INTEGRATION ---
         search_query = ""
@@ -295,10 +306,32 @@ class StellarGeminiOrchestrator:
             contexto_a_enviar = contexto_bytes[:MAX_CONTEXT_BYTES].decode('utf-8', errors='ignore')
             contexto_a_enviar += "\n\n[CONTEXTO TRUNCADO A 80KB — ANALIZAR HALLAZGOS PRIORITARIOS VISIBLES]"
 
-        # 4. Construcción del Payload structured según Módulo I
+        # 4. Invocación Prioritaria vía Google Antigravity OAuth (Gemini 3.8 Flash High)
+        system_instructions = _load_system_instructions()
+        try:
+            from soar_ai_client import is_antigravity_available, call_antigravity
+            if is_antigravity_available():
+                output_text = call_antigravity(
+                    user_prompt=contexto_a_enviar,
+                    system_prompt=system_instructions,
+                    temperature=0.3,
+                    max_tokens=8192,
+                )
+                if self.enable_pii_masking:
+                    output_text = self.mask_engine.desofuscar_texto(output_text)
+                return output_text
+        except Exception as e_ag:
+            print(f"[Antigravity OAuth] Fallback a API Key estándar tras excepción: {e_ag}")
+
+        if not self.api_key:
+            raise ValueError(
+                "Error crítico: Ni Google Antigravity OAuth ni GEMINI_API_KEY están disponibles."
+            )
+
+        # 5. Fallback: Construcción del Payload structured según Módulo I (Gemini REST API)
         payload = {
             "systemInstruction": {
-                "parts": [{"text": _load_system_instructions()}]
+                "parts": [{"text": system_instructions}]
             },
             "contents": [
                 {
@@ -312,7 +345,7 @@ class StellarGeminiOrchestrator:
             }
         }
 
-        # 5. Algoritmo de Resiliencia con Backoff Exponencial y Jitter
+        # 6. Algoritmo de Resiliencia con Backoff Exponencial y Jitter
         headers = {"Content-Type": "application/json"}
         max_reintentos = 3
         ultimo_error = None
@@ -331,7 +364,8 @@ class StellarGeminiOrchestrator:
                 if res.status_code == 200:
                     res_json = res.json()
                     output_text = res_json["candidates"][0]["content"]["parts"][0]["text"]
-                    
+                    if self.enable_pii_masking:
+                        output_text = self.mask_engine.desofuscar_texto(output_text)
                     return output_text
                 else:
                     res.raise_for_status()
@@ -346,6 +380,108 @@ class StellarGeminiOrchestrator:
                 continue
 
         raise RuntimeError(f"Fallo de conexión tras {max_reintentos} intentos. Último error: {ultimo_error}")
+
+    def enviar_a_gemini_stream(self, telemetria_cruda, on_chunk=None, on_status=None):
+        """
+        Versión con streaming en vivo (SSE) del pipeline forense.
+        Emite estado de RAG y cada fragmento de texto apenas Gemini 3.8 lo genera,
+        evitando que la pantalla quede congelada esperando el bloque entero.
+        """
+        self.mask_engine = SecurityMaskingEngine()
+
+        if on_status:
+            on_status("[AI] 1/3 Filtrando telemetría Interflow y consultando Cerebro RAG local (2.081 Markdowns)...")
+
+        datos_originales = None
+        if isinstance(telemetria_cruda, str):
+            try:
+                datos_originales = json.loads(telemetria_cruda)
+            except json.JSONDecodeError:
+                pass
+        elif isinstance(telemetria_cruda, (dict, list)):
+            datos_originales = telemetria_cruda
+
+        if datos_originales is not None:
+            datos_filtrados = clean_forensic_data(datos_originales)
+            if self.enable_pii_masking:
+                datos_filtrados = self.mask_engine.procesar_diccionario(datos_filtrados)
+            contexto_a_enviar = json.dumps(datos_filtrados, indent=4, ensure_ascii=False)
+        else:
+            contexto_a_enviar = str(telemetria_cruda)
+            if self.enable_pii_masking:
+                contexto_a_enviar = self.mask_engine.enmascarar_contenido_string(contexto_a_enviar)
+
+        # --- RAG INTEGRATION ---
+        search_query = ""
+        if datos_originales is not None:
+            def extract_name(d):
+                if not isinstance(d, dict): return ""
+                return (d.get("name") or d.get("msg_class") or d.get("event_name") or 
+                        d.get("xdr_event", {}).get("name") or d.get("title") or "")
+            if isinstance(datos_originales, dict):
+                search_query = extract_name(datos_originales)
+            elif isinstance(datos_originales, list) and len(datos_originales) > 0 and isinstance(datos_originales[0], dict):
+                first = datos_originales[0]
+                search_query = extract_name(first.get("_source", first))
+        if not search_query and isinstance(telemetria_cruda, str):
+            search_query = telemetria_cruda[:350]
+
+        rag_context_text = ""
+        rag_hits_summary = []
+        if search_query:
+            try:
+                from rag_engine import get_rag
+                rag = get_rag()
+                results = rag.query(str(search_query), top_k=3)
+                if results:
+                    rag_context_text = "\n\n--- MEMORIA SOC & DOCUMENTACIÓN OFICIAL (RAG 7 CAPAS) ---\n"
+                    for r in results:
+                        rag_hits_summary.append(f"  • {r['doc_name']} (Score: {r['score']:.1f})")
+                        rag_context_text += f"\n[Documento: {r['doc_name']}]\n{r['content']}\n"
+            except Exception as e:
+                print(f"[RAG] Error querying: {e}")
+
+        if on_status and rag_hits_summary:
+            on_status("[AI] 2/3 Memoria RAG inyectada en 8ms:\n" + "\n".join(rag_hits_summary) + "\n\n[AI] 3/3 Transmitiendo dictamen en vivo desde Gemini 3.8 Flash (Antigravity OAuth)...\n" + "-"*75 + "\n")
+        elif on_status:
+            on_status("[AI] 2/3 Transmitiendo dictamen en vivo desde Gemini 3.8 Flash (Antigravity OAuth)...\n" + "-"*75 + "\n")
+
+        if rag_context_text:
+            contexto_a_enviar = rag_context_text + "\n\n--- TELEMETRIA DEL CASO ---\n" + contexto_a_enviar
+
+        MAX_CONTEXT_BYTES = 80000
+        contexto_bytes = contexto_a_enviar.encode('utf-8')
+        if len(contexto_bytes) > MAX_CONTEXT_BYTES:
+            contexto_a_enviar = contexto_bytes[:MAX_CONTEXT_BYTES].decode('utf-8', errors='ignore')
+            contexto_a_enviar += "\n\n[CONTEXTO TRUNCADO A 80KB — ANALIZAR HALLAZGOS PRIORITARIOS VISIBLES]"
+
+        system_instructions = _load_system_instructions()
+        try:
+            from soar_ai_client import is_antigravity_available, stream_antigravity
+            if is_antigravity_available():
+                messages = [
+                    {"role": "system", "content": system_instructions},
+                    {"role": "user", "content": contexto_a_enviar},
+                ]
+                acumulado = []
+                for chunk in stream_antigravity(messages=messages, temperature=0.3, max_tokens=8192):
+                    if not chunk:
+                        continue
+                    if self.enable_pii_masking:
+                        chunk = self.mask_engine.desofuscar_texto(chunk)
+                    acumulado.append(chunk)
+                    if on_chunk:
+                        on_chunk(chunk)
+                texto_final = "".join(acumulado)
+                if texto_final.strip():
+                    return texto_final
+        except Exception as e_stream:
+            print(f"[Antigravity Stream] Fallback a enviar_a_gemini estándar: {e_stream}")
+
+        res_full = self.enviar_a_gemini(telemetria_cruda)
+        if on_chunk and res_full:
+            on_chunk(res_full)
+        return res_full
 
 
 # =============================================================================
