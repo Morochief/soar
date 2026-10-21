@@ -111,7 +111,10 @@ A continuación se indexan todos los contenedores oficiales de SO3, su función,
 ---
 
 ### 4. Motor de Búsqueda y Almacenamiento
-* [ ] **`so-elasticsearch` / `so-opensearch`**
+* [x] **`so-elasticsearch` / `so-opensearch`**
+  * **Imagen Upstream:** `elasticsearch` / `opensearch`. Repositorio local de documentación: `elastic-docs-content`.
+  * **Función:** Data Lake distribuido central donde residen todos los registros Interflow/ECS (`so-*`).
+  * **Ficha Técnica:** [`03_Contenedor_so-elasticsearch.md`](./contenedores/03_Contenedor_so-elasticsearch.md)
   * **Imagen Upstream:** `elasticsearch` / `opensearchproject/opensearch`.
   * **Puertos:** `9200/TCP` (REST API), `9300/TCP` (Transporte Clúster).
   * **Función:** Data Lake distribuido donde residen todos los registros Interflow/ECS.
