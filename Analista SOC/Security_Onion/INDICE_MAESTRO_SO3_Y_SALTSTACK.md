@@ -57,6 +57,13 @@ flowchart TD
 
 ---
 
+## ⚙️ 0. El Núcleo Orquestador: SaltStack
+* [x] **`salt-master` / `salt-minion`**
+  * **Proyecto Upstream:** `saltstack/salt`. Repositorio local de documentación: `G:\Hermes + Antigravity\salt\doc\`.
+  * **Puertos:** `4505/TCP` (ZeroMQ PUB), `4506/TCP` (ZeroMQ ROUTER).
+  * **Función:** Cerebro de orquestación, desired state (idempotencia), ejecución distribuida, Grains (hardware/red), Pillars (secretos) y Highstate.
+  * **Ficha Técnica Maestra:** [`00_Nucleo_Orquestador_SaltStack.md`](./contenedores/00_Nucleo_Orquestador_SaltStack.md)
+
 ## 📚 Matriz 100% Cubierta: Tus 23 Contenedores Activos vs Documentación Local
 
 A continuación tienes el mapeo exacto de los **23 contenedores que tienes corriendo en tu servidor SO3**, vinculados a sus fichas técnicas y sus repositorios de documentación oficial locales:
