@@ -122,6 +122,12 @@ A continuación se indexan todos los contenedores oficiales de SO3, su función,
 
 ---
 
+### 6. Motor Analítico y Correlación SIEM
+* [x] **`so-elastalert`**
+  * **Imagen Upstream:** `Yelp/ElastAlert` / `elastalert2`.
+  * **Función:** Motor de correlación y detección en tiempo real sobre Elasticsearch/OpenSearch; evalúa reglas YAML periódicas y escribe en `so-alerts`.
+  * **Ficha Técnica:** [`02_Contenedor_so-elastalert.md`](./contenedores/02_Contenedor_so-elastalert.md)
+
 ### 5. Interfaz de Usuario y Respuesta a Incidentes
 * [ ] **`so-soc` (Security Onion Console)**
   * **Tecnología:** Node.js / React.
