@@ -60,11 +60,17 @@ flowchart TD
 A continuación se indexan todos los contenedores oficiales de SO3, su función, imagen upstream y relación operativa con SaltStack:
 
 ### 1. Infraestructura y Repositorios
-* [ ] **`so-dockerregistry`**
+* [x] **`so-dockerregistry`**
   * **Imagen Upstream:** `registry:2` / `distribution/distribution` (OCI Distribution v2).
   * **Puerto:** `5000/TCP`.
   * **Función:** Registro privado local en el Manager para despliegues Airgap y distribución LAN de imágenes hacia los sensores minion.
   * **Ficha Técnica:** [`01_Contenedor_so-dockerregistry.md`](./contenedores/01_Contenedor_so-dockerregistry.md)
+
+* [x] **`so-influxdb` / `so-telegraf`**
+  * **Imagen Upstream:** `influxdb` / `telegraf`. Repositorio local de documentación: `influxdb-docs`.
+  * **Puerto:** `8086/TCP`.
+  * **Función:** Base de datos de series temporales (TSDB) y agente recolector de métricas de hardware, contenedores Docker y tasa de pérdida de paquetes (`drop_rate`) de Suricata/Zeek.
+  * **Ficha Técnica:** [`04_Contenedor_so-influxdb-telegraf.md`](./contenedores/04_Contenedor_so-influxdb-telegraf.md)
 
 * [ ] **`so-redis`**
   * **Imagen Upstream:** `redis:alpine`.
