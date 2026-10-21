@@ -1,13 +1,13 @@
 # 🧅 ÍNDICE MAESTRO: ARQUITECTURA, CONTENEDORES Y ORQUESTACIÓN SO3 & SALTSTACK
 
 > **Guía Técnica de Referencia y Desglose Arquitectural de Security Onion (SO2 / SO3)**
-> **Autor / Mantenimiento:** Security Operations Center (SOC) — Kevin Moraes
-> **Repositorio Salt Local:** `G:\Hermes + Antigravity\salt`
-> **Objetivo:** Desentrañar de cero todos los contenedores Docker, flujos de datos, estados de SaltStack y la orquestación distribuida de SO3.
+> **Autor / Mantenimiento:** Security Operations Center (SOC) — Kevin Moraes  
+> **Repositorio Salt Local:** `G:\Hermes + Antigravity\salt`  
+> **Objetivo:** Desentrañar de cero todos los contenedores Docker, flujos de datos, estados de SaltStack y la orquestación distribuida de SO3.  
 
 ---
 
-## 🗺️ Mapa Arquitectural de Security Onion 3 (SO3)
+## 🗺️ Mapa Arquitectural Completo de Security Onion 3 (SO3)
 
 ```mermaid
 flowchart TD
@@ -16,34 +16,36 @@ flowchart TD
         SM -->|Pillars / Grains| SLS["Salt States (.sls)"]
     end
 
-    subgraph InfraBase ["📦 CAPA 1: DISTRIBUCIÓN E INFRAESTRUCTURA BASE"]
-        REG["so-dockerregistry (Puerto 5000)"]
-        REDIS["so-redis (Broker / Cola de Ingesta)"]
-        TELE["so-telegraf / so-influxdb (Métricas Nodos)"]
+    subgraph InfraBase ["📦 CAPA 1: DISTRIBUCIÓN, IDENTIDAD Y PERSISTENCIA"]
+        REG["so-dockerregistry (Puerto 5000 OCI)"]
+        REDIS["so-redis (Broker / Cola en Memoria)"]
+        KRATOS["so-kratos (Auth / Sesiones Web)"]
+        PG["so-postgres (DB Relacional de Casos y UI)"]
+        TELE["so-telegraf / so-influxdb (Métricas de Nodos)"]
     end
 
-    subgraph CapturaDPI ["🌐 CAPA 2: SENSORES Y CAPTURA NDR"]
+    subgraph CapturaDPI ["🌐 CAPA 2: SENSORES NDR / EDR Y ANÁLISIS DE MALWARE"]
         SUR["so-suricata (NIDS / Firmas / AF_PACKET)"]
-        ZEEK["so-zeek (Metadata L7 / NSM)"]
-        STENO["so-stenographer (Full Packet Capture PCAP)"]
-        WIK["so-wazuh (HIDS / Agentes Endpoint)"]
+        ZEEK["so-zeek (Metadata L7 / Protocolos)"]
+        FLEET["so-elastic-fleet / package-registry (Gestión Agentes Host)"]
+        STRELKA["so-strelka (Suite Análisis de Archivos & YARA)"]
     end
 
     subgraph Procesamiento ["🔄 CAPA 3: NORMALIZACIÓN Y PARSEO"]
-        LOGS["so-logstash (Enriquecimiento ECS / GeoIP)"]
-        FILEB["so-filebeat (Shipper local de logs)"]
+        LOGS["so-logstash (Pipelines ECS / GeoIP / Grok)"]
     end
 
     subgraph Almacenamiento ["💾 CAPA 4: DATA LAKE / STORAGE"]
-        ELAS["so-elasticsearch / so-opensearch (Data Lake)"]
-        CURA["so-curator (Retención y Purga de Índices)"]
+        ELAS["so-elasticsearch / so-opensearch (Data Lake :9200)"]
+        EA["so-elastalert (Motor de Correlación SIEM)"]
     end
 
     subgraph Visualizacion ["🖥️ CAPA 5: INTERFAZ Y RESPUESTA (SOC)"]
-        SOC_UI["so-soc (Security Onion Console Web)"]
-        KIB["so-kibana (Dashboards / Hunting)"]
-        THEHIVE["so-thehive / so-cortex (Gestión de Incidentes)"]
-        CYBER["so-cyberchef (Análisis y Decodificación)"]
+        NGINX["so-nginx (Reverse Proxy HTTPS :443)"]
+        SOC_UI["so-soc / so-sensoroni (Security Onion Console Web)"]
+        KIB["so-kibana (Dashboards KQL / Dev Tools)"]
+        NGINX --> SOC_UI
+        NGINX --> KIB
     end
 
     REG -.->|Distribución de Imágenes| InfraBase
@@ -55,109 +57,35 @@ flowchart TD
 
 ---
 
-## 📚 Catálogo Detallado de Contenedores SO3
+## 📚 Matriz 100% Cubierta: Tus 23 Contenedores Activos vs Documentación Local
 
-A continuación se indexan todos los contenedores oficiales de SO3, su función, imagen upstream y relación operativa con SaltStack:
+A continuación tienes el mapeo exacto de los **23 contenedores que tienes corriendo en tu servidor SO3**, vinculados a sus fichas técnicas y sus repositorios de documentación oficial locales:
 
-### 1. Infraestructura y Repositorios
-* [x] **`so-kratos`**
-  * **Imagen Upstream:** `ory/kratos`. Documentación local: `ory-docs/docs/kratos/`.
-  * **Puertos:** `4433/TCP` (Public), `4434/TCP` (Admin).
-  * **Función:** Servidor de autenticación, gestión de identidades de analistas SOC, sesiones web y flujo de login de `so-soc`.
-  * **Ficha Técnica:** [`06_Contenedor_so-kratos.md`](./contenedores/06_Contenedor_so-kratos.md)
-
-* [x] **`so-dockerregistry`**
-  * **Imagen Upstream:** `registry:2` / `distribution/distribution` (OCI Distribution v2).
-  * **Puerto:** `5000/TCP`.
-  * **Función:** Registro privado local en el Manager para despliegues Airgap y distribución LAN de imágenes hacia los sensores minion.
-  * **Ficha Técnica:** [`01_Contenedor_so-dockerregistry.md`](./contenedores/01_Contenedor_so-dockerregistry.md)
-
-* [x] **`so-influxdb` / `so-telegraf`**
-  * **Imagen Upstream:** `influxdb` / `telegraf`. Repositorio local de documentación: `influxdb-docs`.
-  * **Puerto:** `8086/TCP`.
-  * **Función:** Base de datos de series temporales (TSDB) y agente recolector de métricas de hardware, contenedores Docker y tasa de pérdida de paquetes (`drop_rate`) de Suricata/Zeek.
-  * **Ficha Técnica:** [`04_Contenedor_so-influxdb-telegraf.md`](./contenedores/04_Contenedor_so-influxdb-telegraf.md)
-
-* [ ] **`so-redis`**
-  * **Imagen Upstream:** `redis:alpine`.
-  * **Puerto:** `6379/TCP`.
-  * **Función:** Buffer de memoria intermedia (Message Broker) que absorbe ráfagas de logs de Zeek y Suricata antes de Logstash.
-
-* [ ] **`so-nginx` / `so-reverseproxy`**
-  * **Imagen Upstream:** `nginx:alpine`.
-  * **Puertos:** `80/TCP`, `443/TCP`.
-  * **Función:** Punto de entrada único HTTPS, terminación SSL, autenticación y enrutamiento hacia la consola SO y herramientas internas.
-
----
-
-### 2. Detección, Inspección y Sensores (NDR / EDR)
-* [ ] **`so-suricata`**
-  * **Imagen Upstream:** `suricata`.
-  * **Función:** Motor NIDS multihilo (AF_PACKET) para detección de firmas ETPro/Emerging Threats, decodificación de protocolos y alertas en tiempo real.
-  * **Salt State:** Sincronizado mediante `so-rule-update` (`rules.sls`).
-
-* [ ] **`so-zeek`**
-  * **Imagen Upstream:** `zeek/zeek`.
-  * **Función:** Análisis de comportamiento y extracción de metadata transaccional de Capa 7 (`conn.log`, `dns.log`, `http.log`, `ssl.log`).
-
-* [ ] **`so-stenographer`**
-  * **Imagen Upstream:** `google/stenographer`.
-  * **Función:** Captura continua de paquetes completos (Full PCAP) a disco con indexación ultra rápida de microsegundos para extracciones forenses.
-
-* [ ] **`so-wazuh`**
-  * **Imagen Upstream:** `wazuh/wazuh-manager`.
-  * **Puertos:** `1514/UDP`, `1515/TCP`, `55000/TCP`.
-  * **Función:** Servidor HIDS/EDR para auditoría de integridad de archivos (FIM), eventos de seguridad de endpoints Windows y Linux.
-
----
-
-### 3. Pipeline de Datos y Normalización
-* [x] **`so-logstash`**
-  * **Imagen Upstream:** `elastic/logstash`. Documentación local: `logstash-docs/`.
-  * **Puerto:** `9600/TCP` (Monitoreo de Pipelines), `5044/TCP` (Beats).
-  * **Función:** Fábrica de parseo (Grok/KV), enriquecimiento en vuelo (GeoIP/ASN) y normalización ECS de toda la telemetría antes de indexarla en Elasticsearch.
-  * **Ficha Técnica:** [`07_Contenedor_so-logstash.md`](./contenedores/07_Contenedor_so-logstash.md)
-
-* [ ] **`so-filebeat`**
-  * **Imagen Upstream:** `filebeat:8.x`.
-  * **Función:** Recolección de logs locales de contenedores y del sistema operativo hacia Redis/Logstash.
-
----
-
-### 4. Motor de Búsqueda y Almacenamiento
-* [x] **`so-elasticsearch` / `so-opensearch`**
-  * **Imagen Upstream:** `elasticsearch` / `opensearch`. Repositorio local de documentación: `elastic-docs-content`.
-  * **Función:** Data Lake distribuido central donde residen todos los registros Interflow/ECS (`so-*`).
-  * **Ficha Técnica:** [`03_Contenedor_so-elasticsearch.md`](./contenedores/03_Contenedor_so-elasticsearch.md)
-  * **Imagen Upstream:** `elasticsearch` / `opensearchproject/opensearch`.
-  * **Puertos:** `9200/TCP` (REST API), `9300/TCP` (Transporte Clúster).
-  * **Función:** Data Lake distribuido donde residen todos los registros Interflow/ECS.
-
-* [ ] **`so-curator`**
-  * **Imagen Upstream:** `elasticsearch-curator`.
-  * **Función:** Tareas cron programadas para mantenimiento, rotación, compactación y purga de índices por tiempo o porcentaje de disco.
-
----
-
-### 6. Motor Analítico y Correlación SIEM
-* [x] **`so-elastalert`**
-  * **Imagen Upstream:** `Yelp/ElastAlert` / `elastalert2`.
-  * **Función:** Motor de correlación y detección en tiempo real sobre Elasticsearch/OpenSearch; evalúa reglas YAML periódicas y escribe en `so-alerts`.
-  * **Ficha Técnica:** [`02_Contenedor_so-elastalert.md`](./contenedores/02_Contenedor_so-elastalert.md)
-
-### 5. Interfaz de Usuario y Respuesta a Incidentes
-* [ ] **`so-soc` (Security Onion Console)**
-  * **Tecnología:** Node.js / React.
-  * **Función:** Consola central nativa de SO3 para Alerts, Hunting, PCAP extraction y Grid Management.
-
-* [x] **`so-kibana`**
-  * **Imagen Upstream:** `elastic/kibana`. Documentación local: `elastic-docs-content/explore-analyze/`.
-  * **Puerto:** `5601/TCP` (Proxy inverso `/kibana`).
-  * **Función:** Plataforma de visualización, creación de dashboards KQL, consultas Dev Tools y exploración forense avanzada.
-  * **Ficha Técnica:** [`05_Contenedor_so-kibana.md`](./contenedores/05_Contenedor_so-kibana.md)
-
-* [ ] **`so-cyberchef`**
-  * **Función:** Navaja suiza de análisis criptográfico y decodificación de payloads integrada a la interfaz con 1-clic.
+| # | Contenedor Activo en tu SO3 | Rol Técnico en la Arquitectura | Ficha Técnica Oficial Creada | Documentación Local Clonada |
+| :-: | :--- | :--- | :---: | :--- |
+| **1** | `so-dockerregistry` | Repositorio OCI local en Manager para despliegues Airgap. | [Ficha 01](./contenedores/01_Contenedor_so-dockerregistry.md) | `docs/` oficial OCI |
+| **2** | `so-elastalert` | Motor de correlación periódica de reglas YAML SIEM. | [Ficha 02](./contenedores/02_Contenedor_so-elastalert.md) | `G:\Hermes + Antigravity\elastalert` |
+| **3** | `so-elastic-fleet` | Orquestador y gestor de políticas para Elastic Agents. | [Ficha 13](./contenedores/13_Contenedor_so-elastic-fleet.md) | `G:\Hermes + Antigravity\elastic-docs-content` |
+| **4** | `so-elastic-fleet-package-registry` | Repositorio local de integraciones de Fleet sin salir a internet. | [Ficha 13](./contenedores/13_Contenedor_so-elastic-fleet.md) | `G:\Hermes + Antigravity\elastic-docs-content` |
+| **5** | `so-elasticsearch` | Data Lake distribuido central (índices `so-*`). | [Ficha 03](./contenedores/03_Contenedor_so-elasticsearch.md) | `G:\Hermes + Antigravity\elastic-docs-content` |
+| **6** | `so-influxdb` | Base de datos de series temporales (TSDB) de métricas de red y drop rate. | [Ficha 04](./contenedores/04_Contenedor_so-influxdb-telegraf.md) | `G:\Hermes + Antigravity\influxdb-docs` |
+| **7** | `so-kibana` | Plataforma de dashboards avanzados, queries KQL y Dev Tools. | [Ficha 05](./contenedores/05_Contenedor_so-kibana.md) | `G:\Hermes + Antigravity\elastic-docs-content` |
+| **8** | `so-kratos` | Servidor de identidades, sesiones y login web (Ory Kratos). | [Ficha 06](./contenedores/06_Contenedor_so-kratos.md) | `G:\Hermes + Antigravity\ory-docs` |
+| **9** | `so-logstash` | Fábrica de parseo de pipelines, normalización ECS y GeoIP. | [Ficha 07](./contenedores/07_Contenedor_so-logstash.md) | `G:\Hermes + Antigravity\logstash-docs` |
+| **10** | `so-nginx` | Reverse Proxy endurecido y terminación TLS HTTPS (:443). | [Ficha 12](./contenedores/12_Contenedor_so-soc-nginx-sensoroni.md) | `securityonion-docs` |
+| **11** | `so-postgres` | Base de datos relacional ACID para casos, notas y estado UI. | [Ficha 14](./contenedores/14_Contenedor_so-postgres.md) | PostgreSQL Core Docs |
+| **12** | `so-redis` | Cola y buffer ultrarrápido en memoria RAM anti-desbordes. | [Ficha 10](./contenedores/10_Contenedor_so-redis.md) | `G:\Hermes + Antigravity\redis-doc` |
+| **13** | `so-sensoroni` | Agente en Go para gestión de nodos y telemetría de Grid. | [Ficha 12](./contenedores/12_Contenedor_so-soc-nginx-sensoroni.md) | `G:\Hermes + Antigravity\sensoroni-docs` |
+| **14** | `so-soc` | Consola Web oficial (Alerts, Hunt, PCAP, Cases, Grid). | [Ficha 12](./contenedores/12_Contenedor_so-soc-nginx-sensoroni.md) | `securityonion-docs` |
+| **15** | `so-strelka-backend` | Worker ejecutor de escaneos estáticos YARA, OLE, PEfile. | [Ficha 11](./contenedores/11_Contenedor_so-strelka.md) | `G:\Hermes + Antigravity\strelka-docs` |
+| **16** | `so-strelka-coordinator` | Orquestador de tareas de análisis de archivos en cola. | [Ficha 11](./contenedores/11_Contenedor_so-strelka.md) | `G:\Hermes + Antigravity\strelka-docs` |
+| **17** | `so-strelka-filestream` | Shipper que vigila la carpeta de extracción de Zeek. | [Ficha 11](./contenedores/11_Contenedor_so-strelka.md) | `G:\Hermes + Antigravity\strelka-docs` |
+| **18** | `so-strelka-frontend` | API gRPC de recepción de solicitudes de análisis. | [Ficha 11](./contenedores/11_Contenedor_so-strelka.md) | `G:\Hermes + Antigravity\strelka-docs` |
+| **19** | `so-strelka-gatekeeper` | Filtro de entrada (descarta duplicados por hash previo). | [Ficha 11](./contenedores/11_Contenedor_so-strelka.md) | `G:\Hermes + Antigravity\strelka-docs` |
+| **20** | `so-strelka-manager` | Gestor del ciclo de vida y métricas de la suite Strelka. | [Ficha 11](./contenedores/11_Contenedor_so-strelka.md) | `G:\Hermes + Antigravity\strelka-docs` |
+| **21** | `so-suricata` | Motor NIDS multihilo AF_PACKET para firmas ETPro en el SPAN. | [Ficha 08](./contenedores/08_Contenedor_so-suricata.md) | `G:\Hermes + Antigravity\suricata-docs` |
+| **22** | `so-telegraf` | Agente recolector de métricas de hardware y drop_rate. | [Ficha 04](./contenedores/04_Contenedor_so-influxdb-telegraf.md) | `G:\Hermes + Antigravity\influxdb-docs` |
+| **23** | `so-zeek` | Analizador transaccional L7 de protocolos (conn, dns, tls). | [Ficha 09](./contenedores/09_Contenedor_so-zeek.md) | `G:\Hermes + Antigravity\zeek-docs` |
 
 ---
 
@@ -171,11 +99,15 @@ La estructura de configuración de SaltStack en un nodo SO3 se ubica en `/opt/so
 │   ├── common/             # Paquetes base, firewall ufw/iptables, usuarios
 │   ├── docker/             # Instalación y demonio Docker
 │   ├── docker-registry/    # Despliegue de so-dockerregistry
-│   ├── suricata/           # Configuración, af-packet, reglas
+│   ├── suricata/           # Configuración, af-packet, reglas ETPro
 │   ├── zeek/               # Scripts Zeek, local.zeek, bpf
+│   ├── strelka/            # Configuración de los 6 microservicios Strelka
 │   ├── elasticsearch/      # JVM heap, cluster settings, shards
-│   ├── logstash/           # Pipelines y filtros de parseo
-│   └── soc/                # Aplicación Web SOC
+│   ├── fleet/              # Configuración de Fleet y Package Registry
+│   ├── logstash/           # Pipelines y filtros de parseo ECS
+│   ├── kratos/             # Autenticación y esquema de usuarios
+│   ├── postgres/           # Base de datos relacional interna
+│   └── soc/                # Aplicación Web SOC y Nginx
 │
 ├── pillar/                 # PILLAR DATA (Variables y Secretos)
 │   ├── top.sls             # Mapeo de minions a configuraciones
@@ -189,10 +121,12 @@ La estructura de configuración de SaltStack en un nodo SO3 se ubica en `/opt/so
   ```bash
   sudo salt-call state.apply
   ```
-* **Aplicar solo un contenedor/módulo (ej. Suricata o Registro):**
+* **Aplicar solo un contenedor/módulo específico:**
   ```bash
   sudo salt-call state.apply suricata
-  sudo salt-call state.apply docker-registry
+  sudo salt-call state.apply zeek
+  sudo salt-call state.apply strelka
+  sudo salt-call state.apply logstash
   ```
 * **Ver variables Grains del nodo (Hardware/Interfaces):**
   ```bash
@@ -202,11 +136,3 @@ La estructura de configuración de SaltStack en un nodo SO3 se ubica en `/opt/so
   ```bash
   sudo salt-call pillar.items
   ```
-
----
-
-## 🔗 Referencias Cruzadas del Repositorio SOC
-* 📘 [Guía de Traducción de Filtros Stellar a SO3](./01_Guia_Traduccion_Filtros_Stellar_a_Security_Onion_SO3.md)
-* 🛠️ [Cheatsheet de Comandos Operativos SO3](./02_Cheatsheet_Comandos_Operativos_SO3.md)
-* 📖 [Caso de Estudio: Rescate de Infraestructura SO3](./03_Caso_Estudio_Rescate_Infraestructura_Security_Onion_SO3.md)
-* ⚙️ [Código Fuente Local de SaltStack](file:///G:/Hermes%20+%20Antigravity/salt)
