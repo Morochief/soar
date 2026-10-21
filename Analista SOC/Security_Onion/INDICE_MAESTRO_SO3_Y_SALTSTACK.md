@@ -112,9 +112,11 @@ A continuación se indexan todos los contenedores oficiales de SO3, su función,
 ---
 
 ### 3. Pipeline de Datos y Normalización
-* [ ] **`so-logstash`**
-  * **Imagen Upstream:** `logstash:8.x` / `opensearch-project/logstash-oss-with-opensearch-output-plugin`.
-  * **Función:** Ingesta desde Redis/Beats, enriquecimiento GeoIP/ASN, normalización a Elastic Common Schema (ECS) e indexación.
+* [x] **`so-logstash`**
+  * **Imagen Upstream:** `elastic/logstash`. Documentación local: `logstash-docs/`.
+  * **Puerto:** `9600/TCP` (Monitoreo de Pipelines), `5044/TCP` (Beats).
+  * **Función:** Fábrica de parseo (Grok/KV), enriquecimiento en vuelo (GeoIP/ASN) y normalización ECS de toda la telemetría antes de indexarla en Elasticsearch.
+  * **Ficha Técnica:** [`07_Contenedor_so-logstash.md`](./contenedores/07_Contenedor_so-logstash.md)
 
 * [ ] **`so-filebeat`**
   * **Imagen Upstream:** `filebeat:8.x`.
