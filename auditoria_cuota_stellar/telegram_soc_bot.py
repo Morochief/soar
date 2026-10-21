@@ -141,11 +141,36 @@ def get_case_detail_summary(jwt, ticket_id_str):
         ]
         for i, a in enumerate(alerts[:4], 1):
             src = a.get("_source", {})
-            en = src.get("event_name", "Desconocido")
-            es = src.get("event_score", 0)
-            s_ip = src.get("srcip", "N/A")
-            d_ip = src.get("dstip", "N/A")
-            lines.append(f"{i}. *{en}* (Score: {es})\n   `{s_ip}` ➔ `{d_ip}`")
+            en = (
+                src.get("xdr_event", {}).get("display_name")
+                or src.get("event_name")
+                or src.get("event", {}).get("threat", {}).get("name")
+                or "Alerta XDR"
+            )
+            es = src.get("fidelity") or src.get("severity") or src.get("event_score", 0)
+            
+            h_obj = src.get("host", {})
+            host_val = h_obj.get("name") if isinstance(h_obj, dict) else h_obj
+            u_list = src.get("user_list", [])
+            user_val = u_list[0].get("name") if u_list else (src.get("user", {}).get("name") if isinstance(src.get("user"), dict) else src.get("user"))
+            
+            s_ip = src.get("srcip")
+            d_ip = src.get("dstip")
+            
+            desc = src.get("xdr_event", {}).get("description", "")
+            detail_cause = ""
+            if "Analytics details:" in desc:
+                detail_cause = desc.split("Analytics details:")[-1].split(". In the past")[0].strip(' "')
+            elif desc:
+                detail_cause = (desc[:110] + "...") if len(desc) > 110 else desc
+                
+            lines.append(f"{i}. *{en}* `[Score: {es}]`")
+            if host_val or user_val:
+                lines.append(f"   💻 *Host:* `{host_val or 'N/A'}` | 👤 *User:* `{user_val or 'N/A'}`")
+            if s_ip and d_ip:
+                lines.append(f"   🌐 `{s_ip}` ➔ `{d_ip}`")
+            if detail_cause:
+                lines.append(f"   🔍 _{detail_cause}_")
             
         return "\n".join(lines)
     except Exception as e:
