@@ -60,6 +60,12 @@ flowchart TD
 A continuación se indexan todos los contenedores oficiales de SO3, su función, imagen upstream y relación operativa con SaltStack:
 
 ### 1. Infraestructura y Repositorios
+* [x] **`so-kratos`**
+  * **Imagen Upstream:** `ory/kratos`. Documentación local: `ory-docs/docs/kratos/`.
+  * **Puertos:** `4433/TCP` (Public), `4434/TCP` (Admin).
+  * **Función:** Servidor de autenticación, gestión de identidades de analistas SOC, sesiones web y flujo de login de `so-soc`.
+  * **Ficha Técnica:** [`06_Contenedor_so-kratos.md`](./contenedores/06_Contenedor_so-kratos.md)
+
 * [x] **`so-dockerregistry`**
   * **Imagen Upstream:** `registry:2` / `distribution/distribution` (OCI Distribution v2).
   * **Puerto:** `5000/TCP`.
