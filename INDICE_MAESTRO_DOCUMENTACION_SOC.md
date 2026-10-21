@@ -136,3 +136,15 @@ b-wgonzalez) y remediación preventiva. |
 | **Skill Triaje Forense** | [**`.agent/skills/analyze_stellar_alert/SKILL.md`**](file:///c:/Users/kevinmoraes/Documents/soc-env/.agent/skills/analyze_stellar_alert/SKILL.md) | Aplica triaje forense estructurado en 4 fases para volcados de alertas Stellar. |
 | **Skill Bitácora 18 Cols** | [**`.agent/skills/soc-bitacora/SKILL.md`**](file:///c:/Users/kevinmoraes/Documents/soc-env/.agent/skills/soc-bitacora/SKILL.md) | Generador de registros TSV de 1-clic para la planilla oficial de guardia. |
 | **Skill Formulario Incidentes**| [**`.agent/skills/soc-incidencias/SKILL.md`**](file:///c:/Users/kevinmoraes/Documents/soc-env/.agent/skills/soc-incidencias/SKILL.md) | Generador oficial de las 40 columnas del formulario FL-THN-POS-01 Rev. 03. |
+
+---
+
+## 🧅 8. Arquitectura Security Onion (SO3) & SaltStack
+
+| Documento | Ubicación | Contenido y Alcance |
+| :--- | :--- | :--- |
+| **Índice Maestro SO3 & SaltStack** | [**`INDICE_MAESTRO_SO3_Y_SALTSTACK.md`**](file:///g:/Hermes%20+%20Antigravity/soar/Analista%20SOC/Security_Onion/INDICE_MAESTRO_SO3_Y_SALTSTACK.md) | **Arquitectura completa de contenedores Docker, capas NDR/EDR/Storage y orquestación con SaltStack.** |
+| **Ficha Técnica: `so-dockerregistry`** | [**`01_Contenedor_so-dockerregistry.md`**](file:///g:/Hermes%20+%20Antigravity/soar/Analista%20SOC/Security_Onion/contenedores/01_Contenedor_so-dockerregistry.md) | **Disección profunda del registro privado OCI v2**: almacenamiento `/nsm/docker/registry`, Salt states, comandos curl de API y troubleshooting de disco. |
+| **Traducción Filtros Stellar a SO3** | [**`01_Guia_Traduccion_Filtros_Stellar_a_Security_Onion_SO3.md`**](file:///g:/Hermes%20+%20Antigravity/soar/Analista%20SOC/Security_Onion/01_Guia_Traduccion_Filtros_Stellar_a_Security_Onion_SO3.md) | Mapeo de reglas y filtros de Stellar Cyber hacia BPF, Zeek scripts y Suricata thresholds en SO3. |
+| **Cheatsheet Comandos SO3** | [**`02_Cheatsheet_Comandos_Operativos_SO3.md`**](file:///g:/Hermes%20+%20Antigravity/soar/Analista%20SOC/Security_Onion/02_Cheatsheet_Comandos_Operativos_SO3.md) | Comandos esenciales `so-...`, docker, salt-call y gestión de servicios. |
+| **Caso Estudio Rescate SO3** | [**`03_Caso_Estudio_Rescate_Infraestructura_Security_Onion_SO3.md`**](file:///g:/Hermes%20+%20Antigravity/soar/Analista%20SOC/Security_Onion/03_Caso_Estudio_Rescate_Infraestructura_Security_Onion_SO3.md) | Procedimiento de rescate ante fallas críticas de clúster y discos llenos. |
