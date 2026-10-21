@@ -142,8 +142,11 @@ A continuación se indexan todos los contenedores oficiales de SO3, su función,
   * **Tecnología:** Node.js / React.
   * **Función:** Consola central nativa de SO3 para Alerts, Hunting, PCAP extraction y Grid Management.
 
-* [ ] **`so-kibana`**
-  * **Función:** Visualizaciones avanzadas, dashboards y análisis de series temporales.
+* [x] **`so-kibana`**
+  * **Imagen Upstream:** `elastic/kibana`. Documentación local: `elastic-docs-content/explore-analyze/`.
+  * **Puerto:** `5601/TCP` (Proxy inverso `/kibana`).
+  * **Función:** Plataforma de visualización, creación de dashboards KQL, consultas Dev Tools y exploración forense avanzada.
+  * **Ficha Técnica:** [`05_Contenedor_so-kibana.md`](./contenedores/05_Contenedor_so-kibana.md)
 
 * [ ] **`so-cyberchef`**
   * **Función:** Navaja suiza de análisis criptográfico y decodificación de payloads integrada a la interfaz con 1-clic.
