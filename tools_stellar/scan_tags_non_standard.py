@@ -29,27 +29,18 @@ h = {"Authorization": f"Bearer {jwt}", "Content-Type": "application/json"}
 now_ms = int(time.time() * 1000)
 start_ms = now_ms - (24 * 3600 * 1000)
 
-queries_to_test = [
-    'appid_stdport:"no"',
-    'appid_stdport:no',
-    'appid_stdport:false',
-    'is_stdport:false',
-    'is_stdport:"no"',
-    'non_standard_port:true',
-    'tags:*port*',
-    'tags:*non_standard*',
-    'xdr_event.display_name:*Port*',
-    'xdr_event.display_name:*Non-Standard*',
-    'xdr_event.display_name:*Non-standard*',
-    'stellar_alert_type:*port*',
-    'msg_class:*port*'
-]
-
-print("=== BUSCANDO LA QUERY QUE DA EXACTAMENTE 2 HITS ===")
-for idx in ['*adr*', '*ser*']:
+for idx in ['*interim*', '*ade*', '*ser*', '*adr*']:
     url = f"https://{HOST}/connect/api/data/{idx}e511c3fc54cd4d668bb67612c2ef4b04*/_search"
-    for q_try in queries_to_test:
-        payload = {
+    for q_try in [
+        'tags:*port*',
+        'tags:*std*',
+        'tags:*non*',
+        'appid_stdport:"no"',
+        'xdr_event.display_name:*Port*',
+        'xdr_event.display_name:*port*',
+        'xdr_event.name:*port*'
+    ]:
+        p = {
             'track_total_hits': True,
             'size': 2,
             'query': {
@@ -62,12 +53,12 @@ for idx in ['*adr*', '*ser*']:
                 }
             }
         }
-        res = requests.get(url, headers=h, json=payload, verify=False).json()
+        res = requests.get(url, headers=h, json=p, verify=False).json()
         val = res.get('hits', {}).get('total', {}).get('value', 0)
         if val > 0:
             print(f"[{idx}] {q_try} -> {val} hits")
             if val == 2:
-                print(f"🎯 ¡MATCH EXACTO DE 2 HITS ENCONTRADO!: {q_try} en {idx}")
+                print(f"🎯 MATCH EXACTO 2 HITS EN {idx}: {q_try}")
                 for hit in res.get('hits', {}).get('hits', []):
                     s = hit['_source']
-                    print("  Detalle:", s.get('timestamp'), s.get('srcip'), '->', s.get('dstip'), 'port:', s.get('dstport'), 'app:', s.get('appid_name'), 'event:', s.get('xdr_event', {}).get('display_name'))
+                    print("  Hit:", s.get('timestamp'), s.get('srcip'), '->', s.get('dstip'), 'port:', s.get('dstport'), s.get('appid_name'), s.get('msg_class'))

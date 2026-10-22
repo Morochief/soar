@@ -1,0 +1,801 @@
+[
+  {
+    "_id": "691caf0998520e1b91eb3860",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"srcip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"192.168.15.27\"]}}}",
+    "created_at": 1763487497,
+    "created_by": "Joliva@stellarcyber.ai",
+    "cust_id": "all-tenants",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "modified_at": 1763487813,
+    "modified_by": "Joliva@stellarcyber.ai",
+    "name": "Filter NOC server OUT",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "691cb065fd93619a950d1787",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"dstip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"192.168.15.27\"]}}}",
+    "created_at": 1763487845,
+    "created_by": "Joliva@stellarcyber.ai",
+    "cust_id": "all-tenants",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "name": "Filter NOC Server IN",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "691cbd5398520e1b91eb3865",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"srcip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"192.168.20.15\"]},\"dstport\":{\"type\":\"number\",\"op\":\"==\",\"value\":[3000]}}}",
+    "created_at": 1763491155,
+    "created_by": "ilsongonzalez@technoma.com.py",
+    "cust_id": "all-tenants",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "modified_at": 1763491409,
+    "modified_by": "ilsongonzalez@technoma.com.py",
+    "name": "Filter NOC Monitoreo",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "691cbfc54ae91719cb3e49c0",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"appid_name\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"SYSLOG\"]}}}",
+    "created_at": 1763491781,
+    "created_by": "ilsongonzalez@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "name": "Filter NOC Monitoreo syslog",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "691cc89b4ae91719cb3e49c4",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"dstport\":{\"type\":\"number\",\"op\":\"==\",\"value\":[5247]}}}",
+    "created_at": 1763494043,
+    "created_by": "ivancenturion@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "name": "Filter Technoma AP Aprovisioning",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "691ccf38fd93619a950d179c",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"dstport\":{\"type\":\"number\",\"op\":\"==\",\"value\":[7002,8000,38881]},\"action\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"deny\",\"close\",\"timeout\",\"client-rst\",\"server-rst\"]}}}",
+    "created_at": 1763495736,
+    "created_by": "ivancenturion@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "modified_at": 1792318372,
+    "modified_by": "kevinmoraes@technoma.com.py",
+    "name": "Filter NOC deny TCP 7002 8000",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "691ccfab4ae91719cb3e49cb",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"appid_name\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"tcp/7001\",\"udp/5060\",\"SNMP_GetRequest\",\"tcp/7860\",\"Google.Services\",\"NTP\",\"icmp6/131/0\",\"tcp/631\",\"TCP_20443\",\"STUN\"]}}}",
+    "created_at": 1763495851,
+    "created_by": "ivancenturion@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "modified_at": 1763674422,
+    "modified_by": "ivancenturion@technoma.com.py",
+    "name": "Filter NOC deny TCP 7001",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "691ce1b5fd93619a950d17af",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"dstport\":{\"type\":\"number\",\"op\":\"==\",\"value\":[5246]}}}",
+    "created_at": 1763500469,
+    "created_by": "ivancenturion@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "name": "Filter Technoma AP Aprovisioning udp5246",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "691ce47bfd93619a950d17b4",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"fortinet.msg\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"BGP: %BGP-3-NOTIFICATION: sending to 10.163.100.6 2/2 (OPEN Message Error/Bad Peer AS.) 4 data-bytes [ff e6 00 00]\",\"progress IPsec phase 1\",\"negotiate IPsec phase 1\",\"IPsec tunnel statistics\"]}}}",
+    "created_at": 1763501179,
+    "created_by": "ivancenturion@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "name": "Filter Technoma SOC IPsec",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "691dab7a4ae91719cb3e49e2",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"fortinet.logdesc\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"IPsec phase 1 SA deleted\"]}}}",
+    "created_at": 1763552122,
+    "created_by": "ivancenturion@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "name": "filter technoma noc ipsec 2",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "691dad0998520e1b91eb3883",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"appid_name\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"SNMP\"]}}}",
+    "created_at": 1763552521,
+    "created_by": "ivancenturion@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "name": "filter technoma noc snmp 3",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "691daea14ae91719cb3e49e5",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"fortinet.logdesc\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"IPsec phase 1 error\"]},\"fortinet.subtype\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"vpn\"]}}}",
+    "created_at": 1763552929,
+    "created_by": "ivancenturion@technoma.com.py",
+    "cust_id": "all-tenants",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "name": "filter technoma noc filter ipsec 3",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "691dfc77fd93619a950d1813",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"appid_name\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"BGP\"]},\"action\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"deny\",\"close\",\"timeout\",\"client-rst\",\"server-rst\"]}}}",
+    "created_at": 1763572855,
+    "created_by": "ivancenturion@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "modified_at": 1792318373,
+    "modified_by": "kevinmoraes@technoma.com.py",
+    "name": "technoma NOC deny BGP",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "691dfec498520e1b91eb38a7",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"fortinet.locport\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"500\"]}}}",
+    "created_at": 1763573444,
+    "created_by": "ivancenturion@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "name": "filter technoma filter ipsec 4",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "691e019398520e1b91eb38ad",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"dstip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"ff02::16\"]}}}",
+    "created_at": 1763574163,
+    "created_by": "ivancenturion@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "name": "filter noc icmpv6",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "691e08314ae91719cb3e4a08",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"fortinet.applist\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"VISITAS\"]}}}",
+    "created_at": 1763575857,
+    "created_by": "ivancenturion@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "name": "filter technoma ssl vlan visitas",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "691e0987fd93619a950d1826",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"dstip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"142.251.128.67\",\"142.251.129.74\"]}}}",
+    "created_at": 1763576199,
+    "created_by": "ivancenturion@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "modified_at": 1763586402,
+    "modified_by": "ivancenturion@technoma.com.py",
+    "name": "technomafilterQUIC beaconshandoffgcpgvt2.com",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "691e0af5fd93619a950d1829",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"srcip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"192.168.16.4\"]},\"dstip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"192.168.1.111\"]},\"appid_name\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"udp/5080\"]}}}",
+    "created_at": 1763576565,
+    "created_by": "ivancenturion@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "name": "filter NOC technoma port 5060 udp",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "691e0c544ae91719cb3e4a0d",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"dstip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"10.60.35.50\"]},\"appid_name\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"tcp/40003\"]}}}",
+    "created_at": 1763576916,
+    "created_by": "ivancenturion@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "name": "technoma NOC filter dst 3550 40003",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "691e0de14ae91719cb3e4a0f",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"srcip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"192.168.15.34\"]},\"dstip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"10.190.70.5\"]},\"appid_name\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"HTTPS\"]}}}",
+    "created_at": 1763577313,
+    "created_by": "ivancenturion@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "name": "filter noc pantallas",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "691e0f4afd93619a950d182b",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"dstip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"142.251.128.65\"]},\"appid_name\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"HTTPS\"]}}}",
+    "created_at": 1763577674,
+    "created_by": "ivancenturion@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "name": "filter technoma web ygght",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "691e11d0fd93619a950d182d",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"srcip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"192.168.16.3\"]},\"dstip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"47.90.158.167\"]},\"appid_name\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"tcp/15301\"]}}}",
+    "created_at": 1763578320,
+    "created_by": "ivancenturion@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "name": "filter technoma NOC appid 15031",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "691e221a98520e1b91eb38b7",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"dstip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"142.251.134.74\",\"142.251.128.42\",\"142.251.133.234\",\"142.251.129.106\",\"142.251.128.74\",\"142.251.129.74\",\"142.251.129.42\",\"142.251.133.234\",\"142.251.128.42\",\"142.251.134.202\",\"142.251.129.170\",\"142.251.129.42\",\"172.217.28.10\",\"142.251.129.42\",\"142.251.128.138\",\"172.217.28.234\",\"142.251.128.42\",\"142.251.128.106\",\"142.251.129.74\",\"142.251.128.42\",\"142.251.129.42\",\"172.217.28.234\",\"216.239.36.181\",\"216.239.38.181\",\"216.239.34.181\",\"216.239.32.181\",\"150.171.22.12\",\"34.107.243.93\",\"172.217.28.3\",\"150.171.27.10\",\"150.171.28.10\",\"142.251.128.227\",\"142.251.128.234\",\"150.171.28.11\",\"150.171.27.11\",\"142.251.128.67\",\"142.251.128.225\",\"142.251.128.129\",\"52.108.9.12\",\"52.108.8.12\",\"52.123.129.14\",\"52.123.128.14\",\"142.251.128.129\",\"142.251.129.163\",\"142.251.128.99\",\"142.251.129.99\",\"142.251.128.131\",\"142.251.128.35\",\"142.251.129.67\",\"142.251.129.35\",\"142.251.129.10\",\"142.251.129.138\",\"157.240.12.13\",\"142.251.128.142\",\"142.251.128.78\"]},\"appid_name\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"HTTPS\",\"SSL\",\"QUIC\",\"HTTP\",\"HTTP.BROWSER\"]},\"srcip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"192.168.169.0/24\"]}}}",
+    "created_at": 1763582490,
+    "created_by": "ivancenturion@technoma.com.py",
+    "cust_id": "all-tenants",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "modified_at": 1763730012,
+    "modified_by": "ivancenturion@technoma.com.py",
+    "name": "technoma block QUIC HTTPS enterprise",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "691e42924ae91719cb3e4a21",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"dstip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"172.224.174.195\",\"172.224.174.196\",\"172.224.174.198\",\"172.224.174.197\"]}}}",
+    "created_at": 1763590802,
+    "created_by": "ivancenturion@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "name": "Filter Technoma Apple background",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "691e62c1fd93619a950d184f",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"dstip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"91.189.91.96\",\"185.125.190.96\",\"185.125.190.98\",\"91.189.91.48\",\"91.189.91.97\",\"185.125.190.48\",\"91.189.91.49\",\"185.125.190.18\",\"185.125.190.49\",\"185.125.190.17\",\"185.125.190.97\"]}}}",
+    "created_at": 1763599041,
+    "created_by": "ivancenturion@technoma.com.py",
+    "cust_id": "all-tenants",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "name": "Filter Technoma Linux Check host alive",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "691e68d698520e1b91eb38c3",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"appid_name\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"Cisco-Webex\"]}}}",
+    "created_at": 1763600598,
+    "created_by": "ivancenturion@technoma.com.py",
+    "cust_id": "all-tenants",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "name": "Filter Technoma Webex",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "691e6fef4ae91719cb3e4a29",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"srcip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"192.168.15.23\"]},\"dstip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"10.20.3.23\"]},\"appid_name\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"HTTP.BROWSER\"]}}}",
+    "created_at": 1763602415,
+    "created_by": "ivancenturion@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "name": "Filter NOC Technoma v11 pantalla grafana",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "691f50ebfd93619a950d1898",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"srcip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"10.11.1.1\",\"10.11.1.2\"]},\"appid_name\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"DNS\"]}}}",
+    "created_at": 1763660011,
+    "created_by": "Joliva@stellarcyber.ai",
+    "cust_id": "all-tenants",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "name": "Filter AD DNS out",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "69205a9afd93619a950d18f2",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"dstip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"13.107.213.33\"]},\"appid_name\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"HTTPS\"]}}}",
+    "created_at": 1763728026,
+    "created_by": "ivancenturion@technoma.com.py",
+    "cust_id": "all-tenants",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "name": "Block microsoft edge telemetry OUT",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "6967bbd3330fa1aa1ab4b11b",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet - FortiGate (CEF)\",\"rules\":{\"dstip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"57.144.0.0/14\",\"142.251.0.0/16\"]},\"appid_name\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"QUIC\"]}}}",
+    "created_at": 1768405971,
+    "created_by": "victorcarvallo@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "modified_at": 1768412496,
+    "modified_by": "claraortega@technoma.com.py",
+    "name": "Filter Technoma QUIC Deny",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "696a446a8b15127bd8aa3417",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet - FortiGate (CEF)\",\"rules\":{\"fw_policy_id\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"FG-Technoma_168\"]}}}",
+    "created_at": 1768572010,
+    "created_by": "claraortega@technoma.com.py",
+    "cust_id": "all-tenants",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "name": "Filter Technoma VDOLIVE Deny",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "69811d6ebdf8d2b79dd8832b",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet - FortiGate (CEF)\",\"rules\":{\"srcip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"192.168.15.31\"]},\"dstport\":{\"type\":\"number\",\"op\":\"==\",\"value\":[10050]}}}",
+    "created_at": 1770069358,
+    "created_by": "ivancenturion@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "name": "filtrar zbx",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "69811ec9113b034729269991",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"srcip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"192.168.15.0/24\",\"192.168.10.0/24\"]},\"proto\":{\"type\":\"number\",\"op\":\"==\",\"value\":[1]}}}",
+    "created_at": 1770069705,
+    "created_by": "ivancenturion@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "name": "filter ping new",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "69848fd48b15127bd8aa3460",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"srcip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"10.2.1.20\",\"10.2.1.1\"]},\"proto\":{\"type\":\"number\",\"op\":\"==\",\"value\":[17]}}}",
+    "created_at": 1770295252,
+    "created_by": "ivancenturion@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "modified_at": 1770296068,
+    "modified_by": "ivancenturion@technoma.com.py",
+    "name": "filter traffic sip",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "698f659c113b0347292699af",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"action\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"deny\"]},\"srcip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"192.168.16.16\",\"192.168.16.3\"]},\"dstip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"10.11.1.2\"]},\"dstport\":{\"type\":\"number\",\"op\":\"==\",\"value\":[53]},\"proto\":{\"type\":\"number\",\"op\":\"==\",\"value\":[17]}}}",
+    "created_at": 1771005340,
+    "created_by": "ivancenturion@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "modified_at": 1791976104,
+    "modified_by": "kevinmoraes@technoma.com.py",
+    "name": "filter dahua DNS to AD",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "69ba96e97ce7a80ccca17cc4",
+    "content": "{\"dev_type\": \"\", \"dev_type_label\": \"\", \"rules\": {\"srcip\": {\"type\": \"ip\", \"op\": \"matches\", \"value\": [\"192.168.15.70\", \"192.168.9.5\"]}, \"dstip\": {\"type\": \"ip\", \"op\": \"matches\", \"value\": [\"165.1.125.196\"]}}}",
+    "created_at": 1773836009,
+    "created_by": "ivancenturion@technoma.com.py",
+    "cust_id": "all-tenants",
+    "in_use": {
+      "sensor_profile": [
+        "Profile-CajaAnde",
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "modified_at": 1792256199,
+    "modified_by": "kevinmoraes@technoma.com.py",
+    "name": "filter - 165.1.125.196",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "69bda3da65e9b18c3281ae56",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"appid_name\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"QUIC\"]}}}",
+    "created_at": 1774035930,
+    "created_by": "ivancenturion@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "name": "filter QUIC",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "6a4f8db956ff9d98dbb05ef5",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"srcip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"192.168.169.44\"]},\"appid_name\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"PING\"]},\"dstip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"10.49.70.0/24\",\"10.49.71.0/24\"]}}}",
+    "created_at": 1783598521,
+    "created_by": "kevinmoraes@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "modified_at": 1783679090,
+    "modified_by": "kevinmoraes@technoma.com.py",
+    "name": "Ruido_servidor_helpdesk",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "6a4fb280665bdc8340600ec6",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"srcip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"192.168.15.31\",\"192.168.15.46\"]},\"dstip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"10.40.2.240\"]},\"dstport\":{\"type\":\"number\",\"op\":\"==\",\"value\":[5432]},\"appid_name\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"tcp/5432\"]},\"action\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"close\"]}}}",
+    "created_at": 1783607936,
+    "created_by": "ilsongonzalez@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "modified_at": 1783694940,
+    "modified_by": "ilsongonzalez@technoma.com.py",
+    "name": "Filter NOC Monitoreo - Odoo bd",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "6a5139be27ba4bd1fd69924c",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"srcip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"172.17.10.25\",\"172.17.10.71\"]}}}",
+    "created_at": 1783708094,
+    "created_by": "ivancenturion@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "modified_at": 1783709858,
+    "modified_by": "ivancenturion@technoma.com.py",
+    "name": "Filter-SecurityOnion",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "6a51481127326e7742c519f6",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"dstip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"172.17.10.25\",\"172.17.10.71\"]}}}",
+    "created_at": 1783711761,
+    "created_by": "ivancenturion@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "name": "block-security-onion",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "6a514eca27326e7742c51a03",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"srcip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"192.168.15.31\",\"10.2.1.4\",\"172.17.10.251\"]},\"appid_name\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"https\",\"HTTPS\"]}}}",
+    "created_at": 1783713482,
+    "created_by": "ivancenturion@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "name": "filtrar conexiones del zabbix",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "6abe7d941b7191d76a1b08ab",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"action\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"deny\"]},\"dstport\":{\"type\":\"number\",\"op\":\"==\",\"value\":[53]},\"srcip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"10.212.134.0/24\"]},\"dstip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"10.11.1.0/24\"]}}}",
+    "created_at": 1790868884,
+    "created_by": "kevinmoraes@technoma.com.py",
+    "cust_id": "all-tenants",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "name": "Drop_FW_Denial_SATI_VPN_DNS_DCs",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "6ac785e01b7191d76a1b1d02",
+    "content": "{\"dev_type\": \"fw_fortigate\", \"dev_type_label\": \"Fortinet FortiGate\", \"rules\": {\"action\": {\"type\": \"string\", \"op\": \"==\", \"value\": [\"deny\"]}, \"dstport\": {\"type\": \"number\", \"op\": \"==\", \"value\": [7680]}, \"srcip\": {\"type\": \"ip\", \"op\": \"matches\", \"value\": [\"192.168.169.0/24\", \"192.168.100.0/24\", \"192.168.15.0/24\"]}, \"dstip\": {\"type\": \"ip\", \"op\": \"matches\", \"value\": [\"192.168.169.0/24\", \"192.168.100.0/24\", \"192.168.15.0/24\"]}, \"proto\": {\"type\": \"number\", \"op\": \"==\", \"value\": [6]}}}",
+    "created_at": 1791460832,
+    "created_by": "kevinmoraes@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "modified_at": 1792316909,
+    "modified_by": "kevinmoraes@technoma.com.py",
+    "name": "Drop_FW_Denial_Internal_WUDO_7680",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "6aca44101b7191d76a1b2322",
+    "content": "{\"dev_type\":\"\",\"dev_type_label\":\"\",\"rules\":{\"fw_policy_id\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"FG-Technoma_214\"]},\"action\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"deny\"]},\"appid_name\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"Fortinet-FortiGuard\"]}}}",
+    "created_at": 1791640592,
+    "created_by": "kevinmoraes@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "name": "Drop_FW_Denial_WiFiCorp_FortiGuard_214",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "6acf7d033a5c745b75a31348",
+    "content": "{\"dev_type\":\"\",\"dev_type_label\":\"\",\"rules\":{\"srcip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"192.168.15.23\"]},\"dstport\":{\"type\":\"number\",\"op\":\"==\",\"value\":[53]}}}",
+    "created_at": 1791982851,
+    "created_by": "kevinmoraes@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "modified_at": 1791984378,
+    "modified_by": "kevinmoraes@technoma.com.py",
+    "name": "Drop_Traffic_DNS_Grafana_THN",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "6ad0b91b472282b392d23504",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"fw_policy_id\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"FG-Technoma_214\"]},\"dstport\":{\"type\":\"number\",\"op\":\"==\",\"value\":[53]},\"action\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"deny\"]}}}",
+    "created_at": 1792063771,
+    "created_by": "kevinmoraes@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "modified_at": 1792063877,
+    "modified_by": "kevinmoraes@technoma.com.py",
+    "name": "Drop_FW_Denial_WiFiCorp_DNS_53",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "6ad0ca89d7345ab3b6fe73aa",
+    "content": "{\"dev_type\": \"fw_fortigate\", \"dev_type_label\": \"Fortinet FortiGate\", \"rules\": {\"fw_policy_id\": {\"type\": \"string\", \"op\": \"==\", \"value\": [\"FG-Technoma_214\"]}, \"dstport\": {\"type\": \"number\", \"op\": \"==\", \"value\": [123]}, \"action\": {\"type\": \"string\", \"op\": \"==\", \"value\": [\"deny\"]}}}",
+    "created_at": 1792068233,
+    "created_by": "kevinmoraes@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "modified_at": 1792334349,
+    "modified_by": "kevinmoraes@technoma.com.py",
+    "name": "DROP-FG-Technoma-Block_WIFI_Corp-Denials",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "6ad0f8dfaa734118df02d27e",
+    "content": "{\"dev_type\": \"fw_fortigate\", \"dev_type_label\": \"Fortinet FortiGate\", \"rules\": {\"action\": {\"type\": \"string\", \"op\": \"==\", \"value\": [\"passthrough\"]}, \"url\": {\"type\": \"string\", \"op\": \"contains\", \"value\": [\"traps.paloaltonetworks.com\", \"stellarcyber.cloud\", \"technoma.com.py\", \"sharepoint.com\", \"data.microsoft.com\", \"mp.microsoft.com\", \"windowsupdate.com\", \"msftconnecttest.com\", \"microsoftonline.com\", \"microsoftazuread-sso.com\", \"cloud.microsoft\", \"windows.net\", \"msn.com\", \"bing.com\", \"skype.com\", \"office.com\", \"live.com\", \"google.com\", \"gstatic.com\", \"googleusercontent.com\", \"googleapis.com\", \"gvt1.com\", \"gvt2.com\", \"nel.goog\", \"firefox-portal-detection.com\", \"nel.cloudflare.com\", \"devices.cloudflare.com\", \"akamaized.net\", \"digicert.com\", \"whatsapp.com\", \"whatsapp.net\", \"appsheet.com\", \"apple.com\", \"icloud.com\", \"microsoft.com\", \"office.net\", \"docker.io\", \"ubuntu.com\", \"lencr.org\", \"flathub.org\", \"pki.goog\", \"linuxmint.com\", \"grafana.com\", \"slack.com\", \"slackb.com\", \"office365.com\", \"sfx.ms\", \"windows.com\", \"codeium.com\", \"fortinet.com\", \"sophos.com\", \"dns.google\"]}}}",
+    "created_at": 1792080095,
+    "created_by": "kevinmoraes@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "modified_at": 1792251660,
+    "modified_by": "kevinmoraes@technoma.com.py",
+    "name": "Drop_FW_Passthrough_Benign_Telemetry",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "6ad1558baa734118df02d348",
+    "content": "{\"dev_type\": \"fw_fortigate\", \"dev_type_label\": \"Fortinet FortiGate\", \"rules\": {\"dstip\": {\"type\": \"ip\", \"op\": \"matches\", \"value\": [\"34.98.77.231\", \"34.39.195.104\"]}, \"dstport\": {\"type\": \"number\", \"op\": \"==\", \"value\": [443]}}}",
+    "created_at": 1792103819,
+    "created_by": "kevinmoraes@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "name": "Drop_FW_PaloAlto_Traps_Heartbeats",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "6ad155a7472282b392d236bf",
+    "content": "{\"dev_type\": \"fw_fortigate\", \"dev_type_label\": \"Fortinet FortiGate\", \"rules\": {\"action\": {\"type\": \"string\", \"op\": \"==\", \"value\": [\"passthrough\"]}, \"dstip\": {\"type\": \"ip\", \"op\": \"matches\", \"value\": [\"4.0.0.0/8\", \"40.0.0.0/8\", \"51.0.0.0/8\"]}}}",
+    "created_at": 1792103847,
+    "created_by": "kevinmoraes@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "name": "Drop_FW_Windows_Diagnostics_Telemetry",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "6ad394ab3a5c745b75a319be",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"action\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"close\",\"accept\"]},\"dstport\":{\"type\":\"number\",\"op\":\"==\",\"value\":[7001,7002,8010]},\"dstip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"192.168.15.60/32\",\"192.168.15.50/32\",\"10.11.5.4/32\"]}}}",
+    "created_at": 1792251051,
+    "created_by": "kevinmoraes@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "modified_at": 1792578470,
+    "modified_by": "kevinmoraes@technoma.com.py",
+    "name": "Drop_FW_Accept_Close_TCP_7001_7002_and_8010_Internal_Services",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "6ad3a133d7345ab3b6fe7b76",
+    "content": "{\"dev_type\":\"fw_fortigate\",\"dev_type_label\":\"Fortinet FortiGate\",\"rules\":{\"fw_policy_id\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"FG-Technoma_74\"]},\"action\":{\"type\":\"string\",\"op\":\"==\",\"value\":[\"close\",\"accept\"]},\"dstport\":{\"type\":\"number\",\"op\":\"==\",\"value\":[53]},\"dstip\":{\"type\":\"ip\",\"op\":\"matches\",\"value\":[\"10.11.1.1/32\",\"10.11.1.2/32\"]}}}",
+    "created_at": 1792254259,
+    "created_by": "kevinmoraes@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "modified_at": 1792578470,
+    "modified_by": "kevinmoraes@technoma.com.py",
+    "name": "Drop_FW_Accept_Close_DNS_AD_DCs_Policy74",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  },
+  {
+    "_id": "6ad3a13eaa734118df02d827",
+    "content": "{\"dev_type\": \"fw_fortigate\", \"dev_type_label\": \"Fortinet FortiGate\", \"rules\": {\"fw_policy_id\": {\"type\": \"string\", \"op\": \"==\", \"value\": [\"FG-Technoma_0\"]}, \"action\": {\"type\": \"string\", \"op\": \"==\", \"value\": [\"deny\"]}, \"dstport\": {\"type\": \"number\", \"op\": \"==\", \"value\": [53]}, \"dstip\": {\"type\": \"ip\", \"op\": \"matches\", \"value\": [\"10.11.1.1/32\", \"10.11.1.2/32\"]}, \"srcip\": {\"type\": \"ip\", \"op\": \"matches\", \"value\": [\"10.11.5.0/24\", \"192.168.16.0/24\"]}}}",
+    "created_at": 1792254270,
+    "created_by": "kevinmoraes@technoma.com.py",
+    "cust_id": "e511c3fc54cd4d668bb67612c2ef4b04",
+    "in_use": {
+      "sensor_profile": [
+        "profile-modular-sensor-technoma"
+      ]
+    },
+    "name": "Drop_FW_Denial_DNS_VLAN16_VLAN5_to_DCs",
+    "org_id": "cf73a415c8794884a0c35b458b7c73ae"
+  }
+]

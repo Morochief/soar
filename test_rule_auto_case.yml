@@ -1,0 +1,15 @@
+detection_title: Alerta de Prueba Automatizada - Creacion de Caso por ElastAlert
+detection_public_id: test-auto-case-001
+sigma_product: securityonion
+sigma_service: test
+sigma_level: high
+alert:
+    - modules.so.securityonion-case.SecurityOnionCaseAlerter
+index: .ds-logs-*
+name: Test Auto Case Escalation -- test-auto-case-001
+realert:
+    seconds: 0
+type: any
+filter:
+    - query_string:
+        query: "tags:\"soar-trigger-test-case\""

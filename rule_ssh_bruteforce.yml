@@ -1,0 +1,23 @@
+﻿detection_title: Intento de Fuerza Bruta SSH contra Nodo SOC
+detection_public_id: host-ssh-bruteforce-soc-001
+sigma_level: high
+case_category: Credential Access
+
+alert:
+    - modules.so.securityonion-case.SecurityOnionCaseAlerter
+
+index: logs-detections.alerts-so
+name: SOC Grid Node SSH Brute Force Detection
+realert:
+    minutes: 15
+type: frequency
+num_events: 5
+timeframe:
+    minutes: 3
+query_key:
+    - event_data.source.ip
+
+filter:
+    - query_string:
+        query: "rule.name:\"Security Onion - Grid Node Login Failure (SSH)\""
+

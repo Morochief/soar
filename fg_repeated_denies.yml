@@ -1,0 +1,22 @@
+detection_title: Firewall FortiGate - Actividad Sospechosa Repetida (Correlacion)
+detection_public_id: fg-repeated-denies-001
+sigma_level: medium
+case_category: Network Threat
+
+alert:
+    - modules.so.securityonion-case.SecurityOnionCaseAlerter
+
+index: .ds-logs-fortinet_fortigate.log-*
+name: Multi-Event Firewall Deny Correlation -- fg-repeated-denies-001
+realert:
+    minutes: 10
+type: frequency
+num_events: 2
+timeframe:
+    minutes: 5
+query_key:
+    - source.ip
+
+filter:
+    - query_string:
+        query: "event.action:\"deny\" AND NOT source.ip:(10.* OR 192.168.* OR 172.16.* OR 172.17.* OR 127.0.0.1)"

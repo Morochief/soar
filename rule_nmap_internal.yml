@@ -1,0 +1,23 @@
+﻿detection_title: Deteccion de Escaneo Ofensivo Interno (Nmap / NSE)
+detection_public_id: nids-nmap-internal-scan-001
+sigma_level: high
+case_category: Discovery & Reconnaissance
+
+alert:
+    - modules.so.securityonion-case.SecurityOnionCaseAlerter
+
+index: .ds-logs-suricata.alerts-so-*
+name: Internal Nmap Scan Activity Detection
+realert:
+    minutes: 15
+type: frequency
+num_events: 3
+timeframe:
+    minutes: 5
+query_key:
+    - source.ip
+
+filter:
+    - query_string:
+        query: "rule.name:*Nmap*"
+
