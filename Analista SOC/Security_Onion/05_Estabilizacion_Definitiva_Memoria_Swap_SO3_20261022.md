@@ -33,9 +33,22 @@ Por diseño del kernel de Linux, cuando un proceso manda páginas "inactivas" a 
 
 ## 3. Acciones de Remediación Aplicadas
 
-### Paso 1: Configuración permanente de `vm.swappiness = 1`
-* **Acción:** Se creó el archivo `/etc/sysctl.d/99-soc-swap.conf` estableciendo `vm.swappiness = 1`.
-* **Efecto:** Le ordena al kernel de Linux que **bajo ninguna circunstancia envíe páginas a Swap**, a menos que la memoria física libre esté literalmente al borde del agotamiento absoluto (>99%). Esto evita que picos de tráfico muevan procesos a disco.
+### Paso 1: Configuración permanente de `vm.swappiness = 1` y Tuning de I/O Disk Caching
+Siguiendo las recomendaciones oficiales de la documentación de Security Onion (`performance.html#disk-memory`):
+* **Archivo:** `/etc/sysctl.d/99-soc-swap.conf`
+* **Parámetros aplicados y activos:**
+  ```ini
+  # Minimizar uso de Swap (actua solo como valvula de emergencia extrema)
+  vm.swappiness = 1
+
+  # Flush temprano y suave de paginas en disco para evitar I/O freezes
+  vm.dirty_background_ratio = 5
+  vm.dirty_ratio = 10
+  ```
+* **Efecto de Arquitectura:**
+  1. `vm.swappiness = 1`: El kernel protege la memoria física y solo recurre a swap ante peligro inminente de OOM.
+  2. `vm.dirty_background_ratio = 5` (antes en 10): El vaciado a disco en segundo plano (`pdflush`) comienza mucho antes (a los 1.3 GB de datos sucios), evitando avalanchas.
+  3. `vm.dirty_ratio = 10` (antes en 30): Reduce el límite máximo de retención de páginas sucias en RAM de 8.2 GB a 2.7 GB, eliminando los congelamientos (*I/O freezes*) de los procesos de captura de red.
 * **Persistencia:** Activo de inmediato (`sysctl -p`) y persistente ante reinicios del sistema operativo.
 
 ### Paso 2: Reciclado Quirúrgico en Caliente (Hot Recycle sin Reboot)
