@@ -5,10 +5,26 @@
 
 ---
 
-## 🧭 Índice de Búsqueda Rápida: De Contenedor SO3 a Carpeta Local
+## 🧅 1. Documentación Oficial de Security Onion (SO3 / SO2)
+
+* 📁 **Directorio Local:** [**`G:\Hermes + Antigravity\so3-docs\`**](file:///G:/Hermes%20+%20Antigravity/so3-docs)
+* **Contenido:** **154 capítulos técnicos oficiales** cubriendo desde la arquitectura física hasta la operación diaria:
+  * `architecture.rst`: Arquitectura de Grid (Manager, Search Nodes, Forward Nodes).
+  * `salt.rst`: Explicación de cómo SO usa SaltStack para orquestación.
+  * `alerts.rst` & `hunt.rst`: Uso de la interfaz de analista SOC.
+  * `suricata.rst` & `zeek.rst`: Configuración de motores de red.
+  * `elastic-fleet.rst`: Despliegue de agentes EDR en estaciones.
+  * `kratos.rst`: Gestión de identidades y autenticación.
+  * `airgap.rst`: Operación en redes desconectadas de internet.
+  * `troubleshooting.rst`: Procedimientos de rescate y diagnóstico.
+
+---
+
+## 🧭 2. Índice de Búsqueda Rápida: De Contenedor SO3 a Documentación Específica
 
 | Contenedor SO3 | Tecnología / Proyecto | Directorio Local de Documentación | ¿Qué buscar aquí? |
 | :--- | :--- | :--- | :--- |
+| **La Plataforma Completa** | **Security Onion (SO3)** | 📁 `G:\Hermes + Antigravity\so3-docs\` | Los 154 capítulos oficiales de SO (arquitectura, comandos `so-...`, instalación, tuning). |
 | **Orquestación Global** | **SaltStack** | 📁 `G:\Hermes + Antigravity\salt\doc\` | Sintaxis de Salt States (`.sls`), Jinja2, Grains, Pillars y comandos `salt-call`. |
 | **`so-dockerregistry`** | **Distribution Registry (OCI)** | 📁 `G:\Hermes + Antigravity\docker-registry-docs\` | Endpoints de la API v2, garbage collection y almacenamiento en disco. |
 | **`so-elastalert`** | **ElastAlert** | 📁 `G:\Hermes + Antigravity\elastalert\docs\` | Tipos de reglas YAML (frequency, spike, flatline, cardinality) y formatos de alerta. |
@@ -23,7 +39,7 @@
 | **`so-postgres`** | **PostgreSQL** | 📁 `G:\Hermes + Antigravity\postgres-docs\doc\` | Consultas SQL relacionales, esquema de base de datos de casos y utilidades `pg_isready`. |
 | **`so-redis`** | **Redis** | 📁 `G:\Hermes + Antigravity\redis-doc\` | Comandos de colas (`LPUSH`, `RPOP`, `LLEN`), optimización de memoria y persistencia RDB. |
 | **`so-sensoroni`** | **Sensoroni** | 📁 `G:\Hermes + Antigravity\sensoroni-docs\` | API del daemon de gestión remota de sensores en Go. |
-| **`so-soc`** | **Security Onion Console** | 📁 `G:\Hermes + Antigravity\securityonion-docs\` | Manual oficial de uso de la consola web (Alerts, Hunt, PCAP, Cases, Grid). |
+| **`so-soc`** | **Security Onion Console** | 📁 `G:\Hermes + Antigravity\so3-docs\alerts.rst` | Manual oficial de uso de la consola web (Alerts, Hunt, PCAP, Cases, Grid). |
 | **`so-strelka-*` (6 microservicios)**| **Target Strelka** | 📁 `G:\Hermes + Antigravity\strelka-docs\docs\` | Backend de escaneo estático de archivos, plugins YARA, OLE, PEfile y arquitectura de workers. |
 | **`so-suricata`** | **Suricata NIDS** | 📁 `G:\Hermes + Antigravity\suricata-docs\doc\` | Manual oficial de sintaxis de reglas, opciones de `suricata.yaml`, sockets AF_PACKET y `eve.json`. |
 | **`so-telegraf`** | **Telegraf** | 📁 `G:\Hermes + Antigravity\influxdb-docs\` | Plugins de recolección de métricas de Docker, CPU, RAM y contadores de red. |
@@ -33,15 +49,14 @@
 
 ## 🔍 Ejemplos de Búsqueda Rápida Local en PowerShell:
 
-Si alguna vez tienes una duda sobre cómo funciona un parámetro, directiva o comando, puedes buscarlo al instante en tu disco sin depender de conexión a internet:
-
 ```powershell
-# Ejemplo 1: Buscar opciones de reglas de Suricata (Threshold / Suppress)
+# Buscar cualquier concepto en la documentación oficial de Security Onion:
+Get-ChildItem -Path "G:\Hermes + Antigravity\so3-docs" -Filter "*.rst" | Select-String "airgap"
+Get-ChildItem -Path "G:\Hermes + Antigravity\so3-docs" -Filter "*.rst" | Select-String "so-rule-update"
+
+# Buscar directivas en Suricata:
 Get-ChildItem -Path "G:\Hermes + Antigravity\suricata-docs" -Filter "*.rst" -Recurse | Select-String "threshold"
 
-# Ejemplo 2: Buscar cómo funciona el enriquecimiento GeoIP en Logstash
+# Buscar pipelines en Logstash:
 Get-ChildItem -Path "G:\Hermes + Antigravity\logstash-docs" -Recurse | Select-String "filter-geoip"
-
-# Ejemplo 3: Buscar opciones de políticas de retención en InfluxDB
-Get-ChildItem -Path "G:\Hermes + Antigravity\influxdb-docs" -Recurse | Select-String "retention policy"
 ```
