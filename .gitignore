@@ -91,3 +91,23 @@ Documento sin título.pdf
 *~
 .DS_Store
 Thumbs.db
+
+# Archivos efímeros de investigación y análisis temporal
+cortex_cases_analysis.json
+stellar_all_filters_dump.json
+env
+check_*.py
+clean_*.py
+read_*.py
+diff_*.py
+find_*.py
+test_*.py
+cmp_*.py
+patch_*.py
+sample_*.py
+search_*.py
+quick_check.py
+group_by_day.py
+push_es.py
+run_prune.py
+set_godebug.py

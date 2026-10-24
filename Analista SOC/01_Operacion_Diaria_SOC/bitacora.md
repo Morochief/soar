@@ -190,3 +190,16 @@ e.compile() las expresiones de escape Lucene en Memoria.
       - `srcip`: `['192.168.169.0/24', '192.168.100.0/24']` (Subredes reales de usuarios)
       - `dstip`: `['192.168.169.0/24', '192.168.100.0/24']` (Destinos peer-to-peer de notebooks)
     * **Gobernanza:** 100% de visibilidad garantizada. Cualquier intento de conexión a Internet (WAN), Controladores de Dominio o servidores de producción en el puerto 7680 ingresa íntegro a Stellar Cyber para detección.
+
+
+---
+
+### 18. Sincronización Forense y Cierre Masivo de Incidentes Cortex XDR (24/10/2026)
+* **Autor:** Kevin Moraes (24/10/2026 10:30 GMT-3)
+* **El Problema:** Alertas de Palo Alto Cortex XDR en el Data Lake no contaban con casos creados en Stellar Cyber para octubre de 2026 debido a limitaciones en las reglas ATH de ingesta, impidiendo la trazabilidad centralizada de 21 incidentes.
+* **Acciones Ejecutadas:**
+  1. Se desarrolló el script de integración SOAR uto_create_cortex_cases.py, el cual consulta alertas con case_id / incident_id, valida contra la lista de casos existentes y emite llamadas POST /connect/api/v1/cases vinculando atómicamente el array forense de alertas.
+  2. Se generaron 21 casos en Stellar Cyber (Tickets #18169 hasta #18189).
+  3. Se realizó el triaje forense individual determinando actividades legítimas de desarrollo, investigación SOC, sincronización de herramientas y utilidades de productividad corporativa.
+  4. Se ejecutó el cierre masivo con close_cases_bulk.py asignando resolución False Positive y dictamen institucional oficial.
+* **Resultado Operativo:** 21 casos creados, vinculados forensemente y cerrados exitosamente. Cola de casos abiertos de Stellar Cyber normalizada en 0.

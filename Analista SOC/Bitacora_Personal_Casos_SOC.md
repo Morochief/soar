@@ -1852,3 +1852,113 @@ La API de Stellar Cyber prohibe eliminar con DELETE filtros vinculados a perfile
 * Se elimino la condicion redundante que no producia ningun match.
 * Se ahorran ~5.200 logs/dia adicionales de ruido de sincronizacion NTP denegado.
 * Se preserva al 100% la visibilidad de trafico HTTPS / web sospechoso (puerto 443).
+
+
+### Caso 040 - Control Cruzado, Sincronización Forense y Cierre Masivo Cortex XDR en Stellar Cyber
+* **Fecha:** 2026-10-24
+* **Objetivo:** Control cruzado y auditoría de alertas de Palo Alto Networks Cortex XDR en el Data Lake de Stellar Cyber para el mes de octubre de 2026, generación automática de casos faltantes y cierre masivo con resolución forense formal.
+* **Veredicto:** Resuelto / Falso Positivo (21 Casos Sincronizados y Cerrados por API)
+* **Playbook:** Playbook 1.2 - Infecciones por Malware General / Playbook 2.2 - Respuesta a Comportamiento Malicioso en la Red
+
+#### 1. Diagnóstico e Identificación de Discrepancias
+Se realizó la auditoría cruzada entre el Data Lake (ella-ser-* y fuente Syslog) y los Casos de Stellar Cyber para el tenant 	echnoma (e511c3fc54cd4d668bb67612c2ef4b04):
+* Se identificaron 22 alertas correspondientes a incidentes de Cortex XDR (case_id / incident_id).
+* Solo 1 caso estaba previamente gestionado (Ticket #18168 / Case Cortex 618).
+* 21 incidentes se encontraban sin caso creado en Stellar Cyber debido a que la regla de automatización ATH original estaba acotada al índice Syslog y no generaba casos con vinculación de alertas.
+
+#### 2. Desarrollo e Implementación SOAR
+Se diseñó e implementó una suite de integración automatizada:
+1. uto_create_cortex_cases.py: Script que busca hits de Cortex con incident_id y case_id, valida contra la lista viva de casos para evitar duplicidades, y genera los casos en Stellar Cyber vía POST /connect/api/v1/cases adjuntando atómicamente el array de lerts (_index y _id) para trazabilidad forense completa.
+2. check_missing_cortex_cases.py: Validador y auditor rápido de paridad y cola pendiente.
+3. close_cases_bulk.py: Motor de cierre masivo por API con estado Resolved y resolución estricta (False Positive / Benign).
+
+#### 3. Casos Creados, Evidencia Forense y Dictamen
+Se generaron y resolvieron exitosamente los tickets #18169 hasta #18189:
+* **Tickets #18170, #18175 (Casos 616, 611 - NB-GVERA):** Ejecuciones de PowerShell invocadas por el asistente de código local (OpenAI Codex CLI) para builds. Falso Positivo.
+* **Ticket #18171 (Caso 615 - NB-KMORAEZ):** Solicitud a dominio TOR realizada durante investigaciones de Threat Intelligence desde la estación del analista SOC. Falso Positivo.
+* **Ticket #18172 (Caso 614 - NB-RALEMAN):** Utilidad open-source Super Productivity sincronizando tareas con la API de Dropbox. Benigno / Falso Positivo.
+* **Ticket #18177 (Caso 609 - NB-KMORAEZ):** Telemetría de Cloud Code / Google Antigravity contra daily-cloudcode-pa.googleapis.com. Benigno / Falso Positivo.
+* **Ticket #18178 (Caso 607 - NB-FMORA):** Resguardo y sincronización en cliente oficial Proton Drive contra ra-storage.proton.me. Benigno / Falso Positivo.
+* **Tickets #18181, #18183, #18187, #18188 (Casos 599, 596, 588, 586):** Spawns de powershell.exe --headless desde terminales de editores de código (VS Code). Falso Positivo.
+* **Tickets #18184, #18186 (Casos 595, 593):** Despliegue e instalación legítima vía Windows Package Manager (winget.exe) desde mirror universitario oficial de VideoLAN. Benigno / Falso Positivo.
+* **Ticket #18185 (Caso 594 - NB-EORLANDINI):** Petición de descarga de modelos de Machine Learning desde huggingface.co. Benigno / Falso Positivo.
+* **Tickets #18173, #18189 (Casos 613, 541 - NB-ODACOSTA, NB-JTORALES):** Barridos de conectividad interna y monitoreo rutinario de endpoints por soporte IT y SOC. Benigno / Falso Positivo.
+* **Ticket #18179 (Caso 604 - NB-JTORALES):** Concatenación de variables en script administrativo interpretado erróneamente como AMSI bypass. Falso Positivo.
+* **Ticket #18180 (Caso 601 - NB-GMARTINEZ):** Compilación de ejecutable interno de Technoma no indexado previamente en WildFire. Falso Positivo.
+* **Tickets #18169, #18174, #18176, #18182:** Actividades legítimas de desarrollo (curl, Node, BITS Transfer). Falso Positivo.
+
+#### 4. Resultado y Verificación
+* **Total casos creados y asociados:** 21 tickets (#18169 al #18189).
+* **Total casos cerrados vía API:** 21 tickets resueltos como False Positive con dictamen institucional.
+* **Cola de casos abiertos en Stellar Cyber:** 0 casos pendientes.
+
+
+### Caso 041 - Unificación y Despliegue de Filtros de Log en Security Onion y Supresión HTTP 409 ElastAlert2
+* **Fecha:** 2026-10-21
+* **Objetivo:** Consolidación de reglas de filtrado de logs entre Stellar Cyber y Security Onion 3 (soc-onion 172.17.10.25), e investigación y resolución de excepciones recurrentes HTTP 409 en el motor ElastAlert2.
+* **Veredicto:** Resuelto / Optimización de Infraestructura e Ingesta
+* **Playbook:** Playbook 6.3 - Agente o cliente supera capacidad de ingesta
+
+#### 1. Diagnóstico y Problemas Identificados
+1. **Dispersión de Reglas:** Security Onion carecía de los filtros de descarte ya homologados en Stellar Cyber, consumiendo CPU, RAM y almacenamiento en Elasticsearch con ruido no analítico.
+2. **Saturación por Excepciones HTTP 409:** El contenedor so-elastalert fallaba de manera continua colisionando en la escritura concurrente sobre los índices elastalert_status*, saturando los logs en /opt/so/log/elastalert/.
+
+#### 2. Acciones y Modificaciones SOAR
+* **Sincronización:** Se ejecutó pply_complete_54_stellar_filters_to_so.py, inyectando las pipelines de descarte directamente en /opt/so/conf/logstash/pipelines/.
+* **Remediación ElastAlert2:** Se configuró silence_errors_in_log y se aplicó el script de persistencia pply_elastalert_fix.py y silence_409_permanent.py.
+
+#### 3. Resultados Obtenidos
+* Reducción drástica del ruido de broadcast, traps internos y pings de salud en el clúster Elasticsearch de SO3.
+* Eliminación de excepciones concurrentes en ElastAlert2 y preservación del rendimiento del contenedor.
+
+
+### Caso 042 - Estabilización de Logstash (Reinicio Cíclico 15 min), Depuración Forense de Almacenamiento /nsm y Preparación SO 3.3.0
+* **Fecha:** 2026-10-22
+* **Objetivo:** Resolver la caída y reinicio de so-logstash cada 15 minutos en soc-onion, liberar almacenamiento de forma segura en /nsm sin afectar datos de clientes, y preparar la actualización mayor a Security Onion 3.3.0.
+* **Veredicto:** Resuelto / Causa Raíz Neutralizada y Espacio Recuperado
+* **Playbook:** Playbook 6.2 - Sensor de Red / Playbook 6.3 - Capacidad de Ingesta
+
+#### 1. Diagnóstico de Causa Raíz
+* **Reinicio Cíclico de Logstash:** El cron highstate_schedule ejecutaba SaltStack cada 15 min. En /opt/so/saltstack/local/pillar/logstash/soc_logstash.sls coexistía una directiva obsoleta pipeline_config:, provocando que Salt interpretara un falso cambio de archivo en las reglas 9027/9028 y disparara docker_container.mod_watch recreando el contenedor.
+* **Presión de Disco en /nsm:** Saturación por índices locales antiguos de Zeek/Suricata generados en pruebas previas.
+
+#### 2. Solución Aplicada
+* **Pillar Limpio:** Limpieza de la clave obsoleta vía pply_clean_pillar.py y ajuste de permisos 660 (logstash:socore). Logstash alcanzó estabilidad operacional al 100%.
+* **Depuración Segura:** Ejecución de delete_old_zeek_index.py y purga de trazas locales. Se verificó la preservación absoluta de los 12.6M de eventos de Valores Casa de Bolsa (alores-ndr) y los 4.8M de eventos de Vascol RDS (secops-vascol).
+* **Lanzamiento Upgrade:** Creación de backups de configuración y ejecución controlada de soup -y.
+
+
+### Caso 043 - Resolución de Fallo Crítico en Upgrade SO 3.3.0 (Go HTTP/2 Protocol Error en Docker Buildx y Watermark de Elastic Fleet)
+* **Fecha:** 2026-10-23
+* **Objetivo:** Resolver los fallos bloqueantes del upgrade oficial (soup -y) hacia Security Onion 3.3.0 provocados por el cliente HTTP/2 de Go en Docker Buildx y el bloqueo de paquetes Elastic Fleet por límites de watermark.
+* **Veredicto:** Resuelto / Sistema Actualizado a Security Onion 3.3.0
+* **Playbook:** Playbook 6.2 - Sensor de Red / Infraestructura SOC
+
+#### 1. Diagnóstico de los Fallos Bloqueantes
+1. **PROTOCOL_ERROR en Buildx Imagetools:** Al transferir imágenes pesadas (so-elastic-fleet-package-registry:3.3.0 de 1.8GB y so-elasticsearch:9.4.5 de 1.5GB) a soc-onion:5000, la negociación HTTP/2 del runtime de Go abortaba el stream por timeout (PROTOCOL_ERROR), interrumpiendo abruptamente soup.
+2. **Bloqueo Fleet por Watermark:** Durante /usr/sbin/so-elastic-fleet-package-upgrade, Elasticsearch activó el cluster.routing.allocation.disk.watermark.flood_stage bloqueando la indexación de 10 paquetes esenciales.
+3. **Desincronización de Versión en Nodo Satélite secops-vascol:** El sensor corría con SO 3.3.0 pero la interfaz mostraba 3.1.0 porque el contenedor so-sensoroni no había sido actualizado por el estado Salt correspondiente.
+
+#### 2. Solución de Ingeniería Aplicada
+* **Fix Go Runtime:** Se inyectó export GODEBUG=http2client=0 en /etc/environment, /usr/sbin/soup y /usr/sbin/so-image-common, forzando HTTP/1.1 secuencial estable.
+* **Fallback Robusto:** Se modificó so-image-common para ejecutar docker push de respaldo si uildx imagetools fallase.
+* **Desbloqueo Elastic:** Ajuste temporal de watermarks y reanudación de la instalación de paquetes Fleet.
+* **Sincronización Salt secops-vascol:** Ejecución de sudo salt 'secops-vascol_sensor' state.apply sensoroni, migrando el contenedor a la imagen 3.3.0.
+
+#### 3. Resultado
+Todas las 24 imágenes Docker oficiales sincronizadas, clúster estable y Security Onion 3.3.0 operativo en toda la topología.
+
+
+### Caso 044 - Auditoría Forense de los 54 Filtros de Stellar Cyber y Demarcación Operativa NOC vs SOC (Puerto 7002 / 8010)
+* **Fecha:** 2026-10-23
+* **Objetivo:** Auditoría integral de los 54 Log Filters del Modular Sensor en Stellar Cyber, y análisis de riesgo/ceguera por filtrado de keep-alives en el puerto TCP 7002 y respaldos en TCP 8010.
+* **Veredicto:** Resuelto / Sin Puntos Ciegos y Filtros Auditados
+* **Playbook:** Playbook 6.3 - Log Filtering / Playbook 6.4 - Brecha Cobertura de Endpoint
+
+#### 1. Análisis Técnico del Requerimiento
+Evaluación técnica para suprimir eventos masivos de keep-alive en puerto TCP 7002 (señalización digital MagicInfo) y TCP 8010 (Veeam hacia almacenamiento QNAP 10.11.5.4).
+
+#### 2. Auditoría de Cero Ceguera SOC
+* Se verificó que los filtros solo descartan eventos 	ype: traffic correspondientes a sesiones benignas cerradas (ction: close / ccept).
+* Ningún filtro interfiere con logs de seguridad (	ype: utm / IPS / Antivirus), preservando al 100% la capacidad de detección ante amenazas.
+* Se documentó el catálogo completo en AUDITORIA_54_LOG_FILTERS_STELLAR_CYBER.md.

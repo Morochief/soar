@@ -47,7 +47,7 @@ DEFAULT_TENANT_ID = sync_cortex_cases.DEFAULT_TENANT_ID
 VALID_RESOLUTIONS = ["False Positive", "Benign", "True Positive"]
 
 
-def close_case_by_stellar_id(stellar_case_id: str, resolution: str, dry_run: bool = False) -> bool:
+def close_case_by_stellar_id(stellar_case_id: str, resolution: str, reason: Optional[str] = None, dry_run: bool = False) -> bool:
     """Cierra un caso en Stellar Cyber actualizando su estado a 'Resolved' y su resolución."""
     if dry_run:
         print(f"  [DRY-RUN] Se marcaría 'Resolved' con resolución '{resolution}' el Caso Stellar {stellar_case_id}")
@@ -62,6 +62,13 @@ def close_case_by_stellar_id(stellar_case_id: str, resolution: str, dry_run: boo
     r = requests.put(url, headers=headers, json=payload, verify=False, timeout=30)
     if r.status_code == 200:
         print(f"  [+] ÉXITO: Caso Stellar {stellar_case_id} cerrado como '{resolution}'.")
+        if reason:
+            c_url = f"https://{HOST}/connect/api/v1/cases/{stellar_case_id}/comments"
+            try:
+                requests.post(c_url, headers=headers, json={"comment": reason}, verify=False, timeout=15)
+                print(f"  [+] Comentario registrado en caso {stellar_case_id}.")
+            except Exception as e:
+                print(f"  [-] Error insertando comentario: {e}")
         return True
     else:
         print(f"  [-] ERROR cerrando Caso Stellar {stellar_case_id}: {r.status_code} - {r.text[:200]}")
