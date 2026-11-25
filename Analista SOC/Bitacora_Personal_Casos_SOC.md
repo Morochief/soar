@@ -1962,3 +1962,71 @@ Evaluación técnica para suprimir eventos masivos de keep-alive en puerto TCP 7
 * Se verificó que los filtros solo descartan eventos 	ype: traffic correspondientes a sesiones benignas cerradas (ction: close / ccept).
 * Ningún filtro interfiere con logs de seguridad (	ype: utm / IPS / Antivirus), preservando al 100% la capacidad de detección ante amenazas.
 * Se documentó el catálogo completo en AUDITORIA_54_LOG_FILTERS_STELLAR_CYBER.md.
+
+### Caso 045 - Triage Forense Cruzado Cortex-SO-Stellar por Detección de Escaneo Nmap/NSE Interno (NB-APAREDES)
+* **Fecha:** 2026-10-30
+* **Objetivo:** Investigar alerta de escaneo ofensivo interno (Nmap Scripting Engine) hacia el Controlador de Dominio 10.11.1.1 en puertos 443, 5985 y puertos UDP desde la IP 192.168.169.156.
+* **Veredicto:** Resuelto / Falso Positivo de Intrusión (Actividad Administrativa Interna Autorizada por José Paredes)
+* **Playbook:** Playbook 1.1 - Escaneo de Red / Playbook 2.4 - Actividad Sospechosa de Usuario Interno
+
+#### 1. Diagnóstico y Cronología Forense
+* **Identificación:** Usuario TECHNOMA\joseparedes en equipo NB-APAREDES (IP 192.168.169.156).
+* **Cronología de Ejecución:**
+  * 13:38:42: Sesión RDP legítima hacia el DC 10.11.1.1:3389 vía MobaXterm.
+  * 14:31:54: Sesión SSH/SFTP (TERM33039811).
+  * 14:36:42: Pop-up de Windows Defender Firewall (PickerHost.exe) por intento de apertura de sockets crudos.
+  * 14:37:24 - 14:53:12: Escaneo de sondeo contra 10.11.1.1 en puertos 111 (portmap), 5985 (WinRM), 161 (SNMP), 80 (HTTP) y 443 (HTTPS) con User-Agent de Nmap Scripting Engine.
+  * 14:47:22: Pruebas de conectividad ICMP (PING a 172.17.10.100 y 172.17.10.50).
+  * 14:49:40: Ejecución de utilitarios Unix y curl.exe desde el subsistema local MobaXterm.
+* **Evidencia Documental:** Apertura de imágenes de diagnóstico de vulnerabilidades (vul08-bcp-lb-on-vpx-rcf.jpeg) y capturas de pantalla consecutivas con Snipping Tool.
+
+#### 2. Resolución SOC
+* Los casos fab48ab8 y 60d7bb05 en Security Onion y Ticket 18469 en Stellar Cyber fueron cerrados como actividad autorizada de administración/auditoría interna sin compromiso de credenciales ni movimiento lateral malicioso.
+
+
+### Caso 046 - Remediación Crítica de Saturación en Security Onion 3.3.0: Auditoría de Duplicación Zeek-Syslog (20M logs) y Estabilización de Clúster
+* **Fecha:** 2026-10-30
+* **Objetivo:** Diagnosticar la causa de saturación del clúster soc-onion (84.6% disco, 99% RAM), investigar la hipótesis de duplicación entre Zeek y Elastic, purgar datos basura de forma segura bajo SOP y restaurar la salud del clúster a estado GREEN.
+* **Veredicto:** Resuelto / Causa Raíz Neutralizada, Clúster en GREEN al 100% y Espacio Recuperado
+* **Playbook:** Playbook 6.2 - Sensor de Red / Playbook 6.3 - Capacidad de Ingesta y Salud de Clúster
+
+#### 1. Diagnóstico de Causa Raíz de Duplicación
+* **Zeek vs Elastic:** Se confirmó que el analizador de protocolo Syslog de Zeek (zeek.syslog) estaba capturando en modo promiscuo en el puerto SPAN los paquetes UDP/514 emitidos por el Firewall FortiGate (10.99.99.1 hacia 192.168.15.70), generando 20,012,853 eventos redundantes en un solo día (22.1 GB en el índice .ds-logs-zeek-so-2026.10.28-000064).
+* **Confirmación de Regla BPF:** Se comprobó que el filtro BPF not ((src host 10.99.99.1) and (dst host 192.168.15.70) and (udp port 514)) frenó exitosamente el ingreso de nuevos logs de FortiGate a partir del 29/10 a las 19:28 hs.
+* **Tormenta en elastalert_error:** Se detectó un índice con 3,254,016 documentos (3.9 GB) acumulando trazas de error de Python en bucle continuo por reglas Sigma que consultaban campos inexistentes (.caseless, riskEventType), elevando la RAM al 99% y la CPU al 21%.
+
+#### 2. Acciones de Recuperación Aplicadas (Cumplimiento Estricto SOP)
+1. **Purga Segura de elastalert_error:** Eliminación controlada del índice independiente vía sudo so-elasticsearch-query "elastalert_error" -X DELETE. Espacio recuperado inmediato: 3.7 GB; la CPU cayó de 21% a 5%.
+2. **Rollover Preventivo de Zeek:** Ejecución de sudo so-elasticsearch-query "logs-zeek-so/_rollover" -X POST, trasladando la escritura a la Generación 69 (.ds-logs-zeek-so-2026.10.30-000069) y aislando el índice 000064 como solo lectura (sin riesgo de is_write_index: true).
+3. **Ajuste de Réplicas Standalone:** Al recrearse elastalert_error con réplicas por defecto en un clúster de un solo nodo, el estado pasó a Pending/Yellow. Se ejecutó sudo so-elasticsearch-query "elastalert_error/_settings" -X PUT -d '{"index":{"number_of_replicas":0}}', eliminando shards no asignados y llevando el clúster a estado GREEN al 100%.
+
+#### 3. Resultados Operativos
+* **Salud del Clúster:** 100.0% active shards, 0 unassigned shards, status: GREEN.
+* **Almacenamiento:** Espacio disponible incrementado a 22.8 GB de inmediato; el índice viejo 000064 (22.1 GB) programado para auto-purga por ILM en 2 días (01/11).
+* **Cero Ceguera de Seguridad:** Toda la telemetría de FortiGate permanece íntegra en .ds-logs-fortinet_fortigate.log-default-* y en Stellar Cyber.
+
+### Caso 049 - Fuga de Información Confidencial en Google Drive vía Integración No Autorizada de Read AI (leonardoarce@technoma.com.py)
+* **Fecha:** 2026-11-04 09:04:57
+* **Ticket ITSM:** THN-SOC-104
+* **Ticket Stellar Cyber:** #18672 (Caso 6aeb26cca9a3e2ee276a4b38, Score 60.8)
+* **Objetivo:** Investigar alerta crítica UEBA de exfiltración de archivos en Google Drive hacia IPs de AWS (18.235.48.234, 34.200.81.31, 54.210.77.49), determinar el vector de compromiso, cuantificar y extraer la totalidad de archivos expuestos y coordinar la mitigación de seguridad.
+* **Veredicto:** Resuelto / True Positive - Compromiso de Información Confidencial por Shadow AI (Read AI OAuth App ID: 766098389391)
+* **Playbook:** Playbook 4.1 - Respuesta a Fuga de Información (Data Leak) / Playbook 4.3 - Acceso Indebido / Cuentas
+
+#### 1. Diagnóstico y Causa Raíz
+* **Alerta:** Alerta UEBA cloud_drive_data_exfiltration_anomaly en Stellar Cyber sobre el usuario leonardoarce@technoma.com.py.
+* **Volumen:** Se identificaron **637 eventos brutos de descarga** correspondientes a **611 archivos únicos sincronizados** contra una línea base habitual de 4.5 archivos/día.
+* **Atribución Técnica:** Integración OAuth de la aplicación de IA 'Read AI' (Google Marketplace App ID: 766098389391), autorizada en la cuenta del usuario con permisos de lectura profunda sobre Google Drive corporativo.
+* **Sensibilidad de la Información Expuesta (Clasificación CONFIDENCIAL - TB-THN-CAL-04 Rev. 02):**
+  * **Credenciales y Contraseñas en Texto Plano:** Acceso Forti.txt, Accesos.txt, [BCP] Accesos BCP, [CAJA ANDE] Accesos, [DGIC] Accesos, [ITTI SAECA] Accesos, [Registro Civil] - Accesos, [SENACSA] Accesos, [SENAVE] Accesos, [SET] Accesos, [THN] Accesos Infra Technoma, [THN] Accesos Nutanix, TENANT_SIPAP, datos de conexion, vpn, rdp.txt, códigos de respaldo de cuenta google veeamalcogreen@gmail.com.
+  * **Propuestas Técnicas y Clientes:** Alcogreen, Valores Casa de Bolsa, Quimfa, BCP (Implementación XSOAR), ITTI, DGIC, LPNs públicas.
+  * **Perfil del Usuario:** Membresía en grupos privilegiados Tier-0 (Admins. del dominio, NTNX-admins, Center NX Admins).
+
+#### 2. Acciones de Contención y Mitigación
+1. **Revocación OAuth:** Revocación inmediata y efectiva del token OAuth de la aplicación Read AI en la cuenta del usuario, neutralizando el vector de sincronización continua (**Acción ejecutada por el SOC Manager**).
+2. **Emisión de RFA-THN-SOC-20261104-18672 a TI / Infraestructura:**
+   * Forzado obligatorio de cierre de todas las sesiones activas en Google Workspace para leonardoarce@technoma.com.py.
+   * Rotación mandatoria de todas las contraseñas de red, VPNs, firewalls y plataformas de clientes contenidas en los archivos expuestos.
+   * Restricción a nivel de Google Workspace Admin para bloquear la vinculación de aplicaciones de terceros sin aprobación previa del SOC.
+3. **Evidencia Forense:** Nómina completa de los 611 archivos y registros JSON compilada en evidencia_archivos_sincronizados_18672.txt.
+

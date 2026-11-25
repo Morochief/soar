@@ -1,0 +1,1644 @@
+{
+  "name": "TI · Descubrimiento de dominios + embudo de reputación + score",
+  "nodes": [
+    {
+      "name": "Inicio manual",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "parameters": {},
+      "id": "5ac45edb-cf1a-594e-a18b-53e3f2f0d6af",
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "Nombres de ejemplo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Entrada de ejemplo para ejecución manual (misma forma que el body del webhook).\nreturn [{\n  json: {\n    body: {\n      nombres: [\n        'Mercado Libre',\n        'Banco de la República Oriental del Uruguay',\n        'Empresa Inexistente XYZ 123'\n      ]\n    }\n  }\n}];\n"
+      },
+      "id": "4b725982-eb66-52b1-a4e4-47c69240e3f9",
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "name": "Webhook entrada",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "webhookId": "33136096-4d7e-56ed-9b3d-4c63673ebe79",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ti-dominios",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "CONFIGURAR_Webhook_TI_token",
+          "name": "Webhook TI token"
+        }
+      },
+      "id": "254cee03-928c-5ec0-a053-9df433d22f5e",
+      "position": [
+        0,
+        180
+      ]
+    },
+    {
+      "name": "Formulario Web CTI",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "parameters": {
+        "path": "ti-dominios",
+        "formTitle": "🛡️ CTI · Análisis de Dominios y Reputación",
+        "formDescription": "Ingresa nombres de empresas o personas a investigar (uno por línea). El flujo descubrirá sus dominios y consultará Shodan, AbuseIPDB, IP-API (Proxy/VPN/Hosting), Abuse.ch y MXToolbox.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Nombres de Empresas o Personas",
+              "fieldType": "textarea",
+              "placeholder": "Mercado Libre\nBanco de la República\nTechnoma",
+              "requiredField": true
+            }
+          ]
+        },
+        "responseMode": "onReceived",
+        "options": {
+          "customSubmittedText": "✅ Análisis completado con éxito. Los dominios y scores fueron procesados y archivados en el SOC."
+        }
+      },
+      "id": "b3e5702f-1052-51f3-942f-632ee2cff59f",
+      "position": [
+        0,
+        360
+      ]
+    },
+    {
+      "name": "Config",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// CONFIG CENTRAL DEL FLUJO\n// - Recibe la entrada (webhook: body.nombres | manual: nombres).\n// - Define umbrales, rutas y la REGLA EXPLÍCITA DE PONDERACIÓN del score.\n// - NO contiene claves de API: todas viven en n8n Credentials (cifradas con N8N_ENCRYPTION_KEY).\nconst entrada = $input.first().json;\nlet rawNombres = (entrada.body && entrada.body.nombres) || entrada.nombres || entrada['Nombres de Empresas o Personas'] || entrada['nombres_input'] || [];\n\nif (typeof rawNombres === 'string') {\n  rawNombres = rawNombres.split(/[\\r\\n,;]+/).map(s => s.trim()).filter(Boolean);\n} else if (!Array.isArray(rawNombres)) {\n  rawNombres = [];\n}\nconst nombres = rawNombres;\n\nreturn [{\n  json: {\n    nombres,\n    user_agent: 'SOC-TI-Dominios/1.0 (n8n; contacto: soc@example.com)',\n    max_ips_por_dominio: 3,\n    umbral_confianza_dominio: 0.35,\n    tlds_heuristica: [\n      'gov.py', 'gob.py', 'com.py', 'edu.py', 'org.py', 'py',\n      'gov', 'gob', 'com', 'com.ar', 'com.uy', 'com.br', 'cl', 'co', 'net', 'org', 'io', 'tech'\n    ],\n    dominios_excluidos: [\n      'wikipedia.org', 'wikidata.org', 'linkedin.com', 'facebook.com', 'instagram.com', 'x.com', 'twitter.com',\n      'youtube.com', 'tiktok.com', 'crunchbase.com', 'bloomberg.com', 'glassdoor.com', 'indeed.com',\n      'google.com', 'apple.com', 'amazon.com', 'github.com', 'medium.com', 'reddit.com', 'dnb.com',\n      'zoominfo.com', 'opencorporates.com', 'mercadolibre.com.ar', 'mercadolibre.com.uy', 'blogspot.com', 'wordpress.com'\n    ],\n    rutas_iso: ['/', '/certificaciones', '/calidad', '/iso', '/certifications'],\n\n    // Peso de cada técnica de coincidencia nombre -> dominio (se suman; tope 1.0)\n    pesos_descubrimiento: {\n      wikidata: 0.5,        // P856 \"sitio web oficial\" de la entidad encontrada\n      crtsh: 0.3,           // certificados OV/EV con O=<nombre> en Certificate Transparency\n      busqueda_top1: 0.35,  // 1er resultado orgánico del buscador\n      busqueda_top5: 0.2,   // resultados 2..5\n      heuristica: 0.35,     // slug(nombre) + TLD configurado (permite descubrir si resuelve por DNS)\n      bonus_token: 0.15     // un token significativo del nombre aparece en el label del dominio\n    },\n\n    // ================= REGLA DE PONDERACIÓN DEL SCORE (1-100) =================\n    // score = clamp( base + Σ puntos , 1 , 100 )\n    // - Cada fuente tiene un TOPE de puntos positivos (max). Los negativos (señales buenas) no tienen tope.\n    // - Fuentes por IP (Shodan, AbuseIPDB, IP-API, Feodo): se toma la PEOR IP del dominio.\n    // - IP de infraestructura compartida (CDN/cloud o IP-API Hosting): AbuseIPDB e IP-API x cdn_factor.\n    // - Fuente no disponible => 0 puntos + marca \"no_disponible\" (nunca se imputa un valor).\n    pesos: {\n      base: 10,\n      min: 1,\n      max: 100,\n      cdn_factor: 0.5,\n      abuseipdb: { max: 30, alto: { umbral: 75, pts: 30 }, medio: { umbral: 25, pts: 18 }, bajo: { umbral: 1, pts: 8 }, limpio: -3 },\n      abusech:   { max: 30, feodo_c2: 30, urlhaus_online: 20, urlhaus_historico: 8, threatfox_ioc: 15, limpio: -3 },\n      ipapi:     { max: 15, proxy: 15, hosting: 5, limpio: -2 },\n      shodan:    { max: 20, cves_1: 8, cves_5: 12, puerto_riesgo: 3, max_puertos: 8, solo_web: -2 },\n      mxtoolbox: { max: 15, blacklist: 8, sin_spf: 2, spf_permisivo: 3, sin_dmarc: 3, dmarc_none: 1, correo_ok: -3 },\n      iso:       { iso27001_declarado: -1 }\n    },\n    puertos_riesgo: [21, 23, 25, 110, 135, 139, 143, 445, 1433, 1521, 2375, 3306, 3389, 5432, 5900, 5985, 6379, 9200, 11211, 27017],\n    puertos_web: [80, 443, 8080, 8443],\n    regex_infra_compartida: 'cloudflare|akamai|fastly|cloudfront|incapsula|imperva|sucuri|amazon|google|microsoft|azure'\n  }\n}];\n"
+      },
+      "id": "aecfe60f-0126-5ed2-8edf-41bc952ac6f0",
+      "position": [
+        440,
+        100
+      ]
+    },
+    {
+      "name": "Normalizar nombres",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// ---- helpers comunes (inyectados por build.py) ----\n// Interpreta la salida de un nodo HTTP configurado con onError=continueRegularOutput.\n// Si la petición falló, n8n devuelve { error: <string|objeto> } en lugar de la respuesta.\nfunction estadoHttp(j) {\n  if (!j || j.error === undefined) return { ok: true, code: null, msg: '' };\n  const e = j.error;\n  const txt = typeof e === 'string' ? e : JSON.stringify(e);\n  let code = (e && typeof e === 'object') ? (e.httpCode || e.status || e.statusCode || (e.cause && e.cause.status) || null) : null;\n  if (!code) { const m = txt.match(/\\b([45]\\d\\d)\\b/); if (m) code = m[1]; }\n  return { ok: false, code: code ? String(code) : null, msg: txt.slice(0, 300) };\n}\nfunction motivoFallo(st) {\n  if (st.code === '429') return 'límite de tasa (429) tras reintentos';\n  if (st.code === '401' || st.code === '403') return `credencial inválida o sin permiso (${st.code})`;\n  return `${st.code ? st.code + ' ' : ''}${st.msg}`.trim() || 'sin respuesta';\n}\n// Dominio registrable aproximado (sin Public Suffix List completa).\nfunction registrable(h) {\n  h = String(h || '').trim().toLowerCase()\n    .replace(/^[a-z]+:\\/\\//, '').split(/[\\/?#:]/)[0]\n    .replace(/^\\*\\./, '').replace(/^www\\./, '').replace(/\\.$/, '');\n  if (!/^[a-z0-9.-]+\\.[a-z]{2,}$/.test(h)) return null;\n  const p = h.split('.');\n  if (p.length <= 2) return h;\n  const sld = p[p.length - 2], tld = p[p.length - 1];\n  const tres = tld.length === 2 && ['com', 'net', 'org', 'gov', 'gob', 'edu', 'co', 'ac', 'mil', 'nom', 'int'].includes(sld);\n  return p.slice(tres ? -3 : -2).join('.');\n}\n// ---- fin helpers ----\n\n// Normaliza y deduplica nombres; prepara tokens, slug, detección de dominio directo y consulta SPARQL de Wikidata.\nconst cfg = $('Config').first().json;\nconst STOP = new Set(['srl', 'ltda', 'inc', 'llc', 'corp', 'group', 'grupo', 'del', 'las', 'los', 'and', 'the', 'cia',\n  'company', 'sociedad', 'anonima', 'limitada', 'holding', 'internacional']);\nconst vistos = new Set();\nconst out = [];\nfor (const raw of cfg.nombres) {\n  const nombre = String(raw || '').trim().replace(/\\s+/g, ' ');\n  if (!nombre) continue;\n  const clave = nombre.toLowerCase();\n  if (vistos.has(clave)) continue;           // evita procesar dos veces el mismo nombre\n  vistos.add(clave);\n\n  // Detectar si el usuario ingresó directamente un dominio o URL (ej: technoma.com.py)\n  let dominioDirecto = null;\n  const mDom = nombre.toLowerCase().match(/(?:https?:\\/\\/)?([a-z0-9.-]+\\.[a-z]{2,})/i);\n  if (mDom) {\n    dominioDirecto = registrable(mDom[1]);\n  }\n\n  const base = nombre.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase();\n  const tokens = base.split(/[^a-z0-9]+/).filter(t => t.length >= 2 && !STOP.has(t));\n  const slug = tokens.join('');\n  const acronimo = tokens.length >= 2 && tokens.length <= 5 ? tokens.map(t => t[0]).join('') : null;\n  const slugPrimeroUltimo = tokens.length >= 2 ? (tokens[0] + tokens[tokens.length - 1]) : null;\n  const esc = nombre.replace(/\\\\/g, '\\\\\\\\').replace(/\"/g, '\\\\\"');\n  const sparql = `SELECT ?item ?itemLabel ?website WHERE { SERVICE wikibase:mwapi { bd:serviceParam wikibase:endpoint \"www.wikidata.org\"; wikibase:api \"EntitySearch\"; mwapi:search \"${esc}\"; mwapi:language \"es\". ?item wikibase:apiOutputItem mwapi:item. } ?item wdt:P856 ?website. SERVICE wikibase:label { bd:serviceParam wikibase:language \"es,en\". } } LIMIT 5`;\n  out.push({ json: { nombre, tokens, slug, acronimo, slug_primero_ultimo: slugPrimeroUltimo, sparql, dominio_directo: dominioDirecto } });\n}\nreturn out;\n"
+      },
+      "id": "1bd52abc-2680-5f03-a493-3c44d4500ac4",
+      "position": [
+        660,
+        100
+      ]
+    },
+    {
+      "name": "Wikidata SPARQL",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "GET",
+        "url": "https://query.wikidata.org/sparql",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $json.sparql }}"
+            },
+            {
+              "name": "format",
+              "value": "json"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "User-Agent",
+              "value": "={{ $('Config').first().json.user_agent }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 20000,
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 1000
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": false,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "id": "aeeb3d9e-bd9d-508f-86f4-e57b391a23d9",
+      "position": [
+        880,
+        100
+      ]
+    },
+    {
+      "name": "Norm Wikidata",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ---- helpers comunes (inyectados por build.py) ----\n// Interpreta la salida de un nodo HTTP configurado con onError=continueRegularOutput.\n// Si la petición falló, n8n devuelve { error: <string|objeto> } en lugar de la respuesta.\nfunction estadoHttp(j) {\n  if (!j || j.error === undefined) return { ok: true, code: null, msg: '' };\n  const e = j.error;\n  const txt = typeof e === 'string' ? e : JSON.stringify(e);\n  let code = (e && typeof e === 'object') ? (e.httpCode || e.status || e.statusCode || (e.cause && e.cause.status) || null) : null;\n  if (!code) { const m = txt.match(/\\b([45]\\d\\d)\\b/); if (m) code = m[1]; }\n  return { ok: false, code: code ? String(code) : null, msg: txt.slice(0, 300) };\n}\nfunction motivoFallo(st) {\n  if (st.code === '429') return 'límite de tasa (429) tras reintentos';\n  if (st.code === '401' || st.code === '403') return `credencial inválida o sin permiso (${st.code})`;\n  return `${st.code ? st.code + ' ' : ''}${st.msg}`.trim() || 'sin respuesta';\n}\n// Dominio registrable aproximado (sin Public Suffix List completa).\nfunction registrable(h) {\n  h = String(h || '').trim().toLowerCase()\n    .replace(/^[a-z]+:\\/\\//, '').split(/[\\/?#:]/)[0]\n    .replace(/^\\*\\./, '').replace(/^www\\./, '').replace(/\\.$/, '');\n  if (!/^[a-z0-9.-]+\\.[a-z]{2,}$/.test(h)) return null;\n  const p = h.split('.');\n  if (p.length <= 2) return h;\n  const sld = p[p.length - 2], tld = p[p.length - 1];\n  const tres = tld.length === 2 && ['com', 'net', 'org', 'gov', 'gob', 'edu', 'co', 'ac', 'mil', 'nom', 'int'].includes(sld);\n  return p.slice(tres ? -3 : -2).join('.');\n}\n// ---- fin helpers ----\n\n// Modo: una vez por ítem. Contexto = ítem de \"Normalizar nombres\".\nconst ctx = $('Normalizar nombres').item.json;\nconst st = estadoHttp($json);\nlet wikidata;\nif (!st.ok) {\n  wikidata = { estado: 'no_disponible', motivo: motivoFallo(st), dominios: [] };\n} else {\n  const rows = ($json.results && $json.results.bindings) || [];\n  const dominios = [...new Set(rows.map(r => registrable(r.website && r.website.value)).filter(Boolean))];\n  wikidata = {\n    estado: 'ok',\n    dominios,\n    entidades: rows.map(r => ({ id: r.item && r.item.value, etiqueta: r.itemLabel && r.itemLabel.value, web: r.website && r.website.value }))\n  };\n}\nreturn { json: { ...ctx, descubrimiento: { wikidata } } };\n"
+      },
+      "id": "f895647f-e3b3-56a3-84aa-1c1e0457e823",
+      "position": [
+        1100,
+        100
+      ]
+    },
+    {
+      "name": "crt.sh Organización",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "GET",
+        "url": "https://crt.sh/",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "O",
+              "value": "={{ $json.nombre }}"
+            },
+            {
+              "name": "output",
+              "value": "json"
+            },
+            {
+              "name": "exclude",
+              "value": "expired"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "User-Agent",
+              "value": "={{ $('Config').first().json.user_agent }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 45000,
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 2000
+            }
+          },
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "outputPropertyName": "data"
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": false,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "id": "9a077ea6-26e2-5e86-a9a8-cae551e37859",
+      "position": [
+        1320,
+        100
+      ]
+    },
+    {
+      "name": "Norm crt.sh",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ---- helpers comunes (inyectados por build.py) ----\n// Interpreta la salida de un nodo HTTP configurado con onError=continueRegularOutput.\n// Si la petición falló, n8n devuelve { error: <string|objeto> } en lugar de la respuesta.\nfunction estadoHttp(j) {\n  if (!j || j.error === undefined) return { ok: true, code: null, msg: '' };\n  const e = j.error;\n  const txt = typeof e === 'string' ? e : JSON.stringify(e);\n  let code = (e && typeof e === 'object') ? (e.httpCode || e.status || e.statusCode || (e.cause && e.cause.status) || null) : null;\n  if (!code) { const m = txt.match(/\\b([45]\\d\\d)\\b/); if (m) code = m[1]; }\n  return { ok: false, code: code ? String(code) : null, msg: txt.slice(0, 300) };\n}\nfunction motivoFallo(st) {\n  if (st.code === '429') return 'límite de tasa (429) tras reintentos';\n  if (st.code === '401' || st.code === '403') return `credencial inválida o sin permiso (${st.code})`;\n  return `${st.code ? st.code + ' ' : ''}${st.msg}`.trim() || 'sin respuesta';\n}\n// Dominio registrable aproximado (sin Public Suffix List completa).\nfunction registrable(h) {\n  h = String(h || '').trim().toLowerCase()\n    .replace(/^[a-z]+:\\/\\//, '').split(/[\\/?#:]/)[0]\n    .replace(/^\\*\\./, '').replace(/^www\\./, '').replace(/\\.$/, '');\n  if (!/^[a-z0-9.-]+\\.[a-z]{2,}$/.test(h)) return null;\n  const p = h.split('.');\n  if (p.length <= 2) return h;\n  const sld = p[p.length - 2], tld = p[p.length - 1];\n  const tres = tld.length === 2 && ['com', 'net', 'org', 'gov', 'gob', 'edu', 'co', 'ac', 'mil', 'nom', 'int'].includes(sld);\n  return p.slice(tres ? -3 : -2).join('.');\n}\n// ---- fin helpers ----\n\n// Modo: una vez por ítem. crt.sh devuelve un array JSON (se pidió como texto para que n8n no lo divida).\n// Agrega también los candidatos heurísticos (slugs + acrónimos + TLDs) y dominios directos.\nconst cfg = $('Config').first().json;\nconst ctx = $('Norm Wikidata').item.json;\nconst st = estadoHttp($json);\nlet crtsh;\nif (!st.ok) {\n  crtsh = { estado: 'no_disponible', motivo: motivoFallo(st), dominios: [] };\n} else {\n  let arr;\n  try { arr = JSON.parse($json.data || '[]'); } catch (e) { arr = null; }\n  if (!Array.isArray(arr)) {\n    crtsh = { estado: 'no_disponible', motivo: 'respuesta no JSON (crt.sh saturado)', dominios: [] };\n  } else {\n    const cuenta = {};\n    for (const c of arr) {\n      for (const n of String(c.name_value || '').split('\\n')) {\n        const d = registrable(n);\n        if (d) cuenta[d] = (cuenta[d] || 0) + 1;\n      }\n    }\n    const dominios = Object.entries(cuenta).sort((a, b) => b[1] - a[1]).slice(0, 10).map(x => x[0]);\n    crtsh = { estado: 'ok', certificados: arr.length, dominios };\n  }\n}\n\n// Generación heurística (slugs + acrónimos) y dominios directos\n// Si el usuario ya ingresó explícitamente un dominio/URL (ej: pechugon.com.py), evitar 50+ permutaciones heurísticas\nconst esDominioExplicito = Boolean(ctx.dominio_directo) && !/\\s/.test(ctx.nombre || '');\nconst heuristicaDominios = [];\nif (!esDominioExplicito) {\n  const slugs = [];\n  if (ctx.slug && ctx.slug.length >= 3) slugs.push(ctx.slug);\n  if (ctx.acronimo && ctx.acronimo.length >= 2 && ctx.acronimo !== ctx.slug) slugs.push(ctx.acronimo);\n  if (ctx.slug_primero_ultimo && ctx.slug_primero_ultimo.length >= 3 && !slugs.includes(ctx.slug_primero_ultimo)) {\n    slugs.push(ctx.slug_primero_ultimo);\n  }\n  for (const s of slugs) {\n    for (const t of cfg.tlds_heuristica) {\n      heuristicaDominios.push(`${s}.${t}`);\n    }\n  }\n}\n\nconst heuristica = {\n  estado: 'ok',\n  dominios: heuristicaDominios\n};\nconst directo = {\n  estado: 'ok',\n  dominios: ctx.dominio_directo ? [ctx.dominio_directo] : []\n};\n\nreturn { json: { ...ctx, descubrimiento: { ...ctx.descubrimiento, crtsh, heuristica, directo } } };\n"
+      },
+      "id": "c660bcbe-48eb-505d-a737-a725e6cac9c1",
+      "position": [
+        1540,
+        100
+      ]
+    },
+    {
+      "name": "Expandir candidatos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Modo: una vez para todos. Lista ÚNICA de dominios candidatos (de todos los nombres) para resolver DNS.\n// Emite tanto el dominio raíz como www.<dominio> para no descartar portales que solo configuran www.\nconst set = new Set();\nfor (const it of $input.all()) {\n  const d = it.json.descubrimiento;\n  (d.directo && d.directo.dominios || []).forEach(x => set.add(x));\n  (d.wikidata.dominios || []).forEach(x => set.add(x));\n  (d.crtsh.dominios || []).forEach(x => set.add(x));\n  (d.heuristica.dominios || []).forEach(x => set.add(x));\n}\nconst out = [];\nfor (const dom of set) {\n  out.push({ json: { dominio: dom, host_dns: dom, es_www: false }, pairedItem: { item: 0 } });\n  out.push({ json: { dominio: dom, host_dns: `www.${dom}`, es_www: true }, pairedItem: { item: 0 } });\n}\nreturn out.length ? out : [{ json: { sin_candidatos: true }, pairedItem: { item: 0 } }];\n"
+      },
+      "id": "7fe6909e-bf2c-5234-9604-ca7c8f10f977",
+      "position": [
+        1760,
+        100
+      ]
+    },
+    {
+      "name": "¿Hay candidatos?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a902a643-0fc5-4c38-a503-8c4213458ed0",
+              "leftValue": "={{ $json.sin_candidatos !== true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "28d645b4-d32e-53bf-b4b0-18ed4efd3de3",
+      "position": [
+        1980,
+        100
+      ]
+    },
+    {
+      "name": "DoH Candidatos",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "GET",
+        "url": "https://dns.google/resolve",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "={{ $json.host_dns || $json.dominio }}"
+            },
+            {
+              "name": "type",
+              "value": "A"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000,
+          "batching": {
+            "batch": {
+              "batchSize": 10,
+              "batchInterval": 500
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": false,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "id": "6201b230-a862-5302-9c83-c9cefca775e7",
+      "position": [
+        2200,
+        0
+      ]
+    },
+    {
+      "name": "Validar candidatos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// ---- helpers comunes (inyectados por build.py) ----\n// Interpreta la salida de un nodo HTTP configurado con onError=continueRegularOutput.\n// Si la petición falló, n8n devuelve { error: <string|objeto> } en lugar de la respuesta.\nfunction estadoHttp(j) {\n  if (!j || j.error === undefined) return { ok: true, code: null, msg: '' };\n  const e = j.error;\n  const txt = typeof e === 'string' ? e : JSON.stringify(e);\n  let code = (e && typeof e === 'object') ? (e.httpCode || e.status || e.statusCode || (e.cause && e.cause.status) || null) : null;\n  if (!code) { const m = txt.match(/\\b([45]\\d\\d)\\b/); if (m) code = m[1]; }\n  return { ok: false, code: code ? String(code) : null, msg: txt.slice(0, 300) };\n}\nfunction motivoFallo(st) {\n  if (st.code === '429') return 'límite de tasa (429) tras reintentos';\n  if (st.code === '401' || st.code === '403') return `credencial inválida o sin permiso (${st.code})`;\n  return `${st.code ? st.code + ' ' : ''}${st.msg}`.trim() || 'sin respuesta';\n}\n// Dominio registrable aproximado (sin Public Suffix List completa).\nfunction registrable(h) {\n  h = String(h || '').trim().toLowerCase()\n    .replace(/^[a-z]+:\\/\\//, '').split(/[\\/?#:]/)[0]\n    .replace(/^\\*\\./, '').replace(/^www\\./, '').replace(/\\.$/, '');\n  if (!/^[a-z0-9.-]+\\.[a-z]{2,}$/.test(h)) return null;\n  const p = h.split('.');\n  if (p.length <= 2) return h;\n  const sld = p[p.length - 2], tld = p[p.length - 1];\n  const tres = tld.length === 2 && ['com', 'net', 'org', 'gov', 'gob', 'edu', 'co', 'ac', 'mil', 'nom', 'int'].includes(sld);\n  return p.slice(tres ? -3 : -2).join('.');\n}\n// ---- fin helpers ----\n\n// Modo: una vez para todos. Cruza candidatos + DNS, calcula confianza de coincidencia por nombre,\n// separa aceptados / posibles / descartados y REGISTRA los nombres sin dominio (el flujo continúa).\nconst cfg = $('Config').first().json;\nconst W = cfg.pesos_descubrimiento;\nconst esPrivada = ip => /^(10\\.|127\\.|0\\.|169\\.254\\.|192\\.168\\.|172\\.(1[6-9]|2\\d|3[01])\\.|100\\.(6[4-9]|[7-9]\\d|1[01]\\d|12[0-7])\\.)/.test(ip);\n\n// 1) Resultado DNS por dominio (agrega respuestas del dominio raíz y de www.)\nconst dns = {};\nlet resol = [];\ntry { resol = $('DoH Candidatos').all(); } catch (e) { resol = []; }\nconst cands = $('Expandir candidatos').all();\nresol.forEach((r, i) => {\n  const itemCand = cands[i] && cands[i].json;\n  if (!itemCand || !itemCand.dominio) return;\n  const dom = itemCand.dominio;\n  dns[dom] = dns[dom] || { estado: 'no_disponible', ips: [], usa_www: false };\n  const st = estadoHttp(r.json);\n  if (!st.ok) return;\n  const ips = [...new Set((r.json.Answer || []).filter(a => a.type === 1).map(a => a.data))];\n  const publicas = ips.filter(ip => !esPrivada(ip));\n  if (publicas.length > 0) {\n    dns[dom].estado = 'ok';\n    publicas.forEach(ip => {\n      if (!dns[dom].ips.includes(ip)) dns[dom].ips.push(ip);\n    });\n    if (itemCand.es_www && dns[dom].ips.length === publicas.length) {\n      dns[dom].usa_www = true;\n    }\n  } else if (dns[dom].estado !== 'ok') {\n    dns[dom].estado = r.json.Status === 0 ? (ips.length ? 'solo_ip_privada' : 'sin_registro_a') : 'nxdomain';\n  }\n});\n\n// 2) Evaluación por nombre\nconst nombres = $('Norm crt.sh').all().map(i => i.json);\nconst resumenNombres = [], sinDominio = [], globales = new Map();\nfor (const n of nombres) {\n  const d = n.descubrimiento;\n  const cand = new Map();\n  const sumar = (dom, fuente, pts) => {\n    if (!dom) return;\n    const c = cand.get(dom) || { dominio: dom, fuentes: [], confianza: 0 };\n    if (!c.fuentes.includes(fuente)) { c.fuentes.push(fuente); c.confianza += pts; }\n    cand.set(dom, c);\n  };\n  (d.directo && d.directo.dominios || []).forEach(x => sumar(x, 'directo', 1.0));\n  (d.wikidata.dominios || []).forEach(x => sumar(x, 'wikidata', W.wikidata));\n  (d.crtsh.dominios || []).forEach(x => sumar(x, 'crt.sh', W.crtsh));\n  if (d.busqueda && d.busqueda.dominios) {\n    d.busqueda.dominios.forEach(x => sumar(x.dominio, `busqueda#${x.posicion}`, x.posicion === 1 ? W.busqueda_top1 : W.busqueda_top5));\n  }\n  (d.heuristica.dominios || []).forEach(x => sumar(x, 'heuristica', W.heuristica));\n\n  const aceptados = [], posibles = [], descartados = [];\n  for (const c of cand.values()) {\n    const label = c.dominio.split('.')[0];\n    const matchToken = (n.acronimo && label === n.acronimo) || (n.slug_primero_ultimo && label === n.slug_primero_ultimo) || n.tokens.some(t => (t.length >= 3 && label.includes(t)) || (label.length >= 3 && t.includes(label)));\n    if (matchToken) { c.confianza += W.bonus_token; c.fuentes.push('token_en_dominio'); }\n    c.confianza = Math.min(1, Math.round(c.confianza * 100) / 100);\n    const r = dns[c.dominio] || { estado: 'no_resuelto', ips: [], usa_www: false };\n    c.dns = r.estado;\n    c.ips = r.ips.slice(0, cfg.max_ips_por_dominio);\n    c.url = r.usa_www ? `https://www.${c.dominio}` : `https://${c.dominio}`;\n    const soloHeur = c.fuentes.every(f => f === 'heuristica' || f === 'token_en_dominio');\n    if (!r.ips.length) {\n      if (!soloHeur) descartados.push({ ...c, motivo: r.estado === 'no_disponible' ? 'DNS no disponible' : `no resuelve a IP pública (${r.estado})` });\n    } else if (c.confianza >= cfg.umbral_confianza_dominio) {\n      aceptados.push(c);\n    } else {\n      posibles.push({ ...c, motivo: 'confianza de coincidencia insuficiente (revisión manual)' });\n    }\n  }\n  aceptados.sort((a, b) => b.confianza - a.confianza);\n\n  const estadoFuentes = { wikidata: d.wikidata.estado, crtsh: d.crtsh.estado };\n  const motivosFuentes = {};\n  for (const k of ['wikidata', 'crtsh']) if (d[k] && d[k].motivo) motivosFuentes[k] = d[k].motivo;\n\n  const reg = { nombre: n.nombre, estado: aceptados.length ? 'con_dominio' : 'sin_dominio', dominios_aceptados: aceptados, posibles, descartados, estado_fuentes: estadoFuentes, motivos_fuentes: motivosFuentes };\n  resumenNombres.push(reg);\n\n  if (!aceptados.length) {\n    const todasCaidas = Object.values(estadoFuentes).every(e => e === 'no_disponible');\n    sinDominio.push({\n      nombre: n.nombre,\n      motivo: todasCaidas ? 'todas las fuentes de descubrimiento no disponibles (reintentar)' : 'sin coincidencias verificadas',\n      posibles_para_revision: posibles.map(p => ({ dominio: p.dominio, confianza: p.confianza, fuentes: p.fuentes })),\n      estado_fuentes: estadoFuentes,\n      registrado_en: new Date().toISOString()\n    });\n  }\n\n  // 3) Deduplicación global: un dominio compartido por varios nombres se consulta UNA vez\n  for (const a of aceptados) {\n    const g = globales.get(a.dominio);\n    if (g) {\n      if (!g.nombres_origen.includes(n.nombre)) g.nombres_origen.push(n.nombre);\n      g.confianza = Math.max(g.confianza, a.confianza);\n      g.fuentes = [...new Set([...g.fuentes, ...a.fuentes])];\n    } else {\n      globales.set(a.dominio, { dominio: a.dominio, url: a.url, nombres_origen: [n.nombre], confianza: a.confianza, fuentes: [...a.fuentes], ips: a.ips });\n    }\n  }\n}\n\nconst dominios = [...globales.values()];\nreturn [{\n  json: {\n    nombres: resumenNombres,\n    dominios,\n    sin_dominio: sinDominio,\n    lista_urls: dominios.map(x => x.url)\n  },\n  pairedItem: { item: 0 }\n}];\n"
+      },
+      "id": "a8501a0a-eb60-5c14-aa3a-7668ce26c76a",
+      "position": [
+        2420,
+        100
+      ]
+    },
+    {
+      "name": "¿Hay dominios?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4c838e5b-361e-40b9-be15-48aae301994e",
+              "leftValue": "={{ $json.dominios.length > 0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "707563b2-b3b3-5cb0-823c-219f87b119df",
+      "position": [
+        2640,
+        100
+      ]
+    },
+    {
+      "name": "Dominios únicos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Modo: una vez para todos. Un ítem por dominio aceptado (ya deduplicado).\nreturn $input.first().json.dominios.map(d => ({ json: d, pairedItem: { item: 0 } }));\n"
+      },
+      "id": "d59be072-ed73-5fec-adb6-8c67977de02a",
+      "position": [
+        0,
+        450
+      ]
+    },
+    {
+      "name": "IPs únicas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Modo: una vez para todos. Deduplica IPs entre dominios (p.ej. hosting compartido):\n// cada IP se consulta UNA sola vez en Shodan / AbuseIPDB / IP-API.\nconst m = new Map();\n$input.all().forEach((it, idx) => {\n  for (const ip of it.json.ips || []) {\n    if (!m.has(ip)) m.set(ip, { dominios: [], idx });\n    m.get(ip).dominios.push(it.json.dominio);\n  }\n});\nreturn [...m].map(([ip, v]) => ({ json: { ip, dominios: v.dominios }, pairedItem: { item: v.idx } }));\n"
+      },
+      "id": "7c9a2587-6c74-542d-9553-c9bf88cef4b8",
+      "position": [
+        220,
+        450
+      ]
+    },
+    {
+      "name": "Shodan Host",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://internetdb.shodan.io/' + $json.ip }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000,
+          "batching": {
+            "batch": {
+              "batchSize": 5,
+              "batchInterval": 500
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": false,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "notes": "1/5 Shodan InternetDB · Rápido y sin cuotas",
+      "notesInFlow": true,
+      "id": "7bad1ff3-28b9-58ec-8918-271fafbec5eb",
+      "position": [
+        440,
+        450
+      ]
+    },
+    {
+      "name": "Norm Shodan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ---- helpers comunes (inyectados por build.py) ----\n// Interpreta la salida de un nodo HTTP configurado con onError=continueRegularOutput.\n// Si la petición falló, n8n devuelve { error: <string|objeto> } en lugar de la respuesta.\nfunction estadoHttp(j) {\n  if (!j || j.error === undefined) return { ok: true, code: null, msg: '' };\n  const e = j.error;\n  const txt = typeof e === 'string' ? e : JSON.stringify(e);\n  let code = (e && typeof e === 'object') ? (e.httpCode || e.status || e.statusCode || (e.cause && e.cause.status) || null) : null;\n  if (!code) { const m = txt.match(/\\b([45]\\d\\d)\\b/); if (m) code = m[1]; }\n  return { ok: false, code: code ? String(code) : null, msg: txt.slice(0, 300) };\n}\nfunction motivoFallo(st) {\n  if (st.code === '429') return 'límite de tasa (429) tras reintentos';\n  if (st.code === '401' || st.code === '403') return `credencial inválida o sin permiso (${st.code})`;\n  return `${st.code ? st.code + ' ' : ''}${st.msg}`.trim() || 'sin respuesta';\n}\n// Dominio registrable aproximado (sin Public Suffix List completa).\nfunction registrable(h) {\n  h = String(h || '').trim().toLowerCase()\n    .replace(/^[a-z]+:\\/\\//, '').split(/[\\/?#:]/)[0]\n    .replace(/^\\*\\./, '').replace(/^www\\./, '').replace(/\\.$/, '');\n  if (!/^[a-z0-9.-]+\\.[a-z]{2,}$/.test(h)) return null;\n  const p = h.split('.');\n  if (p.length <= 2) return h;\n  const sld = p[p.length - 2], tld = p[p.length - 1];\n  const tres = tld.length === 2 && ['com', 'net', 'org', 'gov', 'gob', 'edu', 'co', 'ac', 'mil', 'nom', 'int'].includes(sld);\n  return p.slice(tres ? -3 : -2).join('.');\n}\n// ---- fin helpers ----\n\n// Modo: una vez por ítem. 1/5 del embudo: Shodan (servicios, puertos, CPEs, vulnerabilidades CVE).\nconst ctx = $('IPs únicas').item.json;\nconst st = estadoHttp($json);\nlet shodan;\nif (!st.ok) {\n  shodan = st.code === '404'\n    ? { estado: 'ok_sin_datos', nota: 'Shodan no tiene información indexada de la IP', puertos: [], vulns: [], cpes: [], tags: [], hostnames: [] }\n    : { estado: 'no_disponible', motivo: motivoFallo(st), puertos: [], vulns: [], cpes: [], tags: [], hostnames: [] };\n} else {\n  const vulns = Array.isArray($json.vulns) ? $json.vulns : Object.keys($json.vulns || {});\n  const cpes = Array.isArray($json.cpes) ? $json.cpes : [];\n  const hostnames = Array.isArray($json.hostnames) ? $json.hostnames : [];\n  const tags = Array.isArray($json.tags) ? $json.tags : [];\n  shodan = {\n    estado: 'ok',\n    org: $json.org || (cpes.length ? cpes.join(', ') : null) || 'Shodan InternetDB',\n    isp: $json.isp || hostnames.join(', ') || null,\n    asn: $json.asn || null,\n    pais: $json.country_code || null,\n    puertos: ($json.ports || []).slice().sort((a, b) => a - b),\n    vulns,\n    cpes,\n    tags,\n    servicios: ($json.data || []).slice(0, 20).map(s => ({ puerto: s.port, transporte: s.transport, producto: s.product || null, version: s.version || null })),\n    hostnames,\n    ultima_actualizacion: $json.last_update || null\n  };\n}\nreturn { json: { ...ctx, shodan } };\n"
+      },
+      "id": "aacfd262-d0ca-5fb8-8e55-30abd325c467",
+      "position": [
+        660,
+        450
+      ]
+    },
+    {
+      "name": "AbuseIPDB Check",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.abuseipdb.com/api/v2/check",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "ipAddress",
+              "value": "={{ $json.ip }}"
+            },
+            {
+              "name": "maxAgeInDays",
+              "value": "90"
+            },
+            {
+              "name": "verbose",
+              "value": "true"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 20000,
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 1000
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": false,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "CONFIGURAR_AbuseIPDB_API",
+          "name": "AbuseIPDB API"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "notes": "2/5 AbuseIPDB (con reportes recientes)",
+      "notesInFlow": true,
+      "id": "88371cf3-1513-5f84-992f-5e55a08a8e89",
+      "position": [
+        880,
+        450
+      ]
+    },
+    {
+      "name": "Norm AbuseIPDB",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ---- helpers comunes (inyectados por build.py) ----\n// Interpreta la salida de un nodo HTTP configurado con onError=continueRegularOutput.\n// Si la petición falló, n8n devuelve { error: <string|objeto> } en lugar de la respuesta.\nfunction estadoHttp(j) {\n  if (!j || j.error === undefined) return { ok: true, code: null, msg: '' };\n  const e = j.error;\n  const txt = typeof e === 'string' ? e : JSON.stringify(e);\n  let code = (e && typeof e === 'object') ? (e.httpCode || e.status || e.statusCode || (e.cause && e.cause.status) || null) : null;\n  if (!code) { const m = txt.match(/\\b([45]\\d\\d)\\b/); if (m) code = m[1]; }\n  return { ok: false, code: code ? String(code) : null, msg: txt.slice(0, 300) };\n}\nfunction motivoFallo(st) {\n  if (st.code === '429') return 'límite de tasa (429) tras reintentos';\n  if (st.code === '401' || st.code === '403') return `credencial inválida o sin permiso (${st.code})`;\n  return `${st.code ? st.code + ' ' : ''}${st.msg}`.trim() || 'sin respuesta';\n}\n// Dominio registrable aproximado (sin Public Suffix List completa).\nfunction registrable(h) {\n  h = String(h || '').trim().toLowerCase()\n    .replace(/^[a-z]+:\\/\\//, '').split(/[\\/?#:]/)[0]\n    .replace(/^\\*\\./, '').replace(/^www\\./, '').replace(/\\.$/, '');\n  if (!/^[a-z0-9.-]+\\.[a-z]{2,}$/.test(h)) return null;\n  const p = h.split('.');\n  if (p.length <= 2) return h;\n  const sld = p[p.length - 2], tld = p[p.length - 1];\n  const tres = tld.length === 2 && ['com', 'net', 'org', 'gov', 'gob', 'edu', 'co', 'ac', 'mil', 'nom', 'int'].includes(sld);\n  return p.slice(tres ? -3 : -2).join('.');\n}\n// ---- fin helpers ----\n\n// Modo: una vez por ítem. 2/5 del embudo: AbuseIPDB (reportes de abuso y categorías de ataque, últimos 90 días).\nconst ctx = $('Norm Shodan').item.json;\nconst st = estadoHttp($json);\nconst CAT_MAP = {\n  3: 'Fraud', 4: 'DDoS', 5: 'FTP Brute-Force', 6: 'Ping of Death', 7: 'Phishing',\n  9: 'Open Proxy', 10: 'Web Spam', 11: 'Email Spam', 14: 'Port Scan', 15: 'Hacking',\n  16: 'SQL Injection', 18: 'Brute-Force', 19: 'Bad Web Bot', 20: 'Exploited Host',\n  21: 'Web App Attack', 22: 'SSH Attack', 23: 'IoT Targeted'\n};\n\nlet abuseipdb;\nif (!st.ok) {\n  abuseipdb = { estado: 'no_disponible', motivo: motivoFallo(st) };\n} else if (!$json.data) {\n  abuseipdb = { estado: 'no_disponible', motivo: 'respuesta inesperada (sin campo data)' };\n} else {\n  const d = $json.data;\n  const reportes = Array.isArray(d.reports) ? d.reports.slice(0, 8).map(r => ({\n    fecha: r.reportedAt,\n    comentario: (r.comment || '').slice(0, 140),\n    categorias: (r.categories || []).map(c => CAT_MAP[c] || `Cat-${c}`),\n    pais_reportante: r.reporterCountryCode || null\n  })) : [];\n  abuseipdb = {\n    estado: 'ok',\n    confianza_abuso: d.abuseConfidenceScore,\n    total_reportes: d.totalReports,\n    usuarios_distintos: d.numDistinctUsers,\n    ultimo_reporte: d.lastReportedAt || null,\n    whitelisted: d.isWhitelisted,\n    tipo_uso: d.usageType || null,\n    isp: d.isp || null,\n    dominio: d.domain || null,\n    pais: d.countryName || d.countryCode || null,\n    es_tor: Boolean(d.isTor),\n    hostnames: d.hostnames || [],\n    reportes_recientes: reportes\n  };\n}\nreturn { json: { ...ctx, abuseipdb } };\n"
+      },
+      "id": "a57ff337-4b38-5f8c-a47b-4fd408cce83b",
+      "position": [
+        1100,
+        450
+      ]
+    },
+    {
+      "name": "IP-API Proxy & Hosting",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'http://ip-api.com/json/' + $json.ip + '?fields=status,message,continent,country,countryCode,regionName,city,timezone,isp,org,as,asname,reverse,mobile,proxy,hosting,query' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000,
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 1400
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": false,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "notes": "3/5 IP-API Red, Geo, PTR, Proxy & Hosting (Sin API Key)",
+      "notesInFlow": true,
+      "id": "0352431c-d6a3-52cc-910e-01110aff4836",
+      "position": [
+        1320,
+        450
+      ]
+    },
+    {
+      "name": "Norm IP-API",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ---- helpers comunes (inyectados por build.py) ----\n// Interpreta la salida de un nodo HTTP configurado con onError=continueRegularOutput.\n// Si la petición falló, n8n devuelve { error: <string|objeto> } en lugar de la respuesta.\nfunction estadoHttp(j) {\n  if (!j || j.error === undefined) return { ok: true, code: null, msg: '' };\n  const e = j.error;\n  const txt = typeof e === 'string' ? e : JSON.stringify(e);\n  let code = (e && typeof e === 'object') ? (e.httpCode || e.status || e.statusCode || (e.cause && e.cause.status) || null) : null;\n  if (!code) { const m = txt.match(/\\b([45]\\d\\d)\\b/); if (m) code = m[1]; }\n  return { ok: false, code: code ? String(code) : null, msg: txt.slice(0, 300) };\n}\nfunction motivoFallo(st) {\n  if (st.code === '429') return 'límite de tasa (429) tras reintentos';\n  if (st.code === '401' || st.code === '403') return `credencial inválida o sin permiso (${st.code})`;\n  return `${st.code ? st.code + ' ' : ''}${st.msg}`.trim() || 'sin respuesta';\n}\n// Dominio registrable aproximado (sin Public Suffix List completa).\nfunction registrable(h) {\n  h = String(h || '').trim().toLowerCase()\n    .replace(/^[a-z]+:\\/\\//, '').split(/[\\/?#:]/)[0]\n    .replace(/^\\*\\./, '').replace(/^www\\./, '').replace(/\\.$/, '');\n  if (!/^[a-z0-9.-]+\\.[a-z]{2,}$/.test(h)) return null;\n  const p = h.split('.');\n  if (p.length <= 2) return h;\n  const sld = p[p.length - 2], tld = p[p.length - 1];\n  const tres = tld.length === 2 && ['com', 'net', 'org', 'gov', 'gob', 'edu', 'co', 'ac', 'mil', 'nom', 'int'].includes(sld);\n  return p.slice(tres ? -3 : -2).join('.');\n}\n// ---- fin helpers ----\n\n// Modo: una vez por ítem. 3/5 del embudo: IP-API (Detección de Proxy, VPN, Tor, Mobile, Reverse DNS y Hosting).\n// Sin API key ni cuota mensual.\nconst ctx = $('Norm AbuseIPDB').item.json;\nconst st = estadoHttp($json);\nlet ipapi;\nif (!st.ok || $json.status === 'fail') {\n  ipapi = { estado: 'no_disponible', motivo: $json.message || motivoFallo(st) };\n} else {\n  ipapi = {\n    estado: 'ok',\n    pais: $json.country || null,\n    pais_codigo: $json.countryCode || null,\n    region: $json.regionName || null,\n    ciudad: $json.city || null,\n    zona_horaria: $json.timezone || null,\n    isp: $json.isp || null,\n    org: $json.org || null,\n    as: $json.as || null,\n    asname: $json.asname || null,\n    reverse: $json.reverse || null,\n    mobile: Boolean($json.mobile),\n    proxy: Boolean($json.proxy),\n    hosting: Boolean($json.hosting)\n  };\n}\nreturn { json: { ...ctx, ipapi } };\n"
+      },
+      "id": "ff2b16aa-e847-5ed2-933b-7ff3d6579063",
+      "position": [
+        1540,
+        450
+      ]
+    },
+    {
+      "name": "Feodo Blocklist",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "GET",
+        "url": "https://feodotracker.abuse.ch/downloads/ipblocklist.json",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "outputPropertyName": "data"
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": false,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "executeOnce": true,
+      "notes": "4/5 abuse.ch Feodo (1 descarga)",
+      "notesInFlow": true,
+      "id": "acf4d7ba-ee50-5d68-8e89-c0a97fc9107d",
+      "position": [
+        1760,
+        450
+      ]
+    },
+    {
+      "name": "Agrupar por dominio",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Modo: una vez para todos. Reagrupa resultados por IP en cada dominio y cruza con Feodo Tracker\n// (abuse.ch, botnets C2) descargado UNA sola vez por ejecución.\nlet feodo = { estado: 'no_disponible', motivo: 'sin respuesta', mapa: new Map() };\ntry {\n  const f = $('Feodo Blocklist').first().json;\n  if (f.error === undefined) {\n    const arr = JSON.parse(f.data || '[]');\n    const m = new Map();\n    arr.forEach(e => m.set(e.ip_address, { malware: e.malware, puerto: e.port, estado: e.status, ultimo_online: e.last_online }));\n    feodo = { estado: 'ok', mapa: m };\n  } else {\n    feodo.motivo = (typeof f.error === 'string' ? f.error : JSON.stringify(f.error)).slice(0, 200);\n  }\n} catch (e) { feodo.motivo = 'blocklist ilegible'; }\n\nconst porIp = new Map($('Norm IP-API').all().map(i => [i.json.ip, i.json]));\nconst sinRes = { estado: 'no_disponible', motivo: 'sin resultado para la IP' };\n\nreturn $('Dominios únicos').all().map((it, idx) => {\n  const d = it.json;\n  const ips = (d.ips || []).map(ip => {\n    const r = porIp.get(ip) || {};\n    return {\n      ip,\n      shodan: r.shodan || sinRes,\n      abuseipdb: r.abuseipdb || sinRes,\n      ipapi: r.ipapi || sinRes,\n      feodo: feodo.estado === 'ok'\n        ? { estado: 'ok', listada: feodo.mapa.has(ip), detalle: feodo.mapa.get(ip) || null }\n        : { estado: 'no_disponible', motivo: feodo.motivo }\n    };\n  });\n  return {\n    json: { dominio: d.dominio, url: d.url, nombres_origen: d.nombres_origen, confianza_match: d.confianza, fuentes_match: d.fuentes, ips },\n    pairedItem: { item: 0 }\n  };\n});\n"
+      },
+      "id": "f75b009c-0801-5c01-9e54-b3d579e53d4b",
+      "position": [
+        1980,
+        450
+      ]
+    },
+    {
+      "name": "URLhaus Host",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "https://urlhaus-api.abuse.ch/v1/host/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "host",
+              "value": "={{ $json.dominio }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 20000,
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 1000
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": false,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "CONFIGURAR_abusech_Auth-Key",
+          "name": "abuse.ch Auth-Key"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "notes": "4/5 abuse.ch URLhaus",
+      "notesInFlow": true,
+      "id": "e511583d-c7aa-5d74-aeff-5f084f93ab45",
+      "position": [
+        2200,
+        450
+      ]
+    },
+    {
+      "name": "Norm URLhaus",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ---- helpers comunes (inyectados por build.py) ----\n// Interpreta la salida de un nodo HTTP configurado con onError=continueRegularOutput.\n// Si la petición falló, n8n devuelve { error: <string|objeto> } en lugar de la respuesta.\nfunction estadoHttp(j) {\n  if (!j || j.error === undefined) return { ok: true, code: null, msg: '' };\n  const e = j.error;\n  const txt = typeof e === 'string' ? e : JSON.stringify(e);\n  let code = (e && typeof e === 'object') ? (e.httpCode || e.status || e.statusCode || (e.cause && e.cause.status) || null) : null;\n  if (!code) { const m = txt.match(/\\b([45]\\d\\d)\\b/); if (m) code = m[1]; }\n  return { ok: false, code: code ? String(code) : null, msg: txt.slice(0, 300) };\n}\nfunction motivoFallo(st) {\n  if (st.code === '429') return 'límite de tasa (429) tras reintentos';\n  if (st.code === '401' || st.code === '403') return `credencial inválida o sin permiso (${st.code})`;\n  return `${st.code ? st.code + ' ' : ''}${st.msg}`.trim() || 'sin respuesta';\n}\n// Dominio registrable aproximado (sin Public Suffix List completa).\nfunction registrable(h) {\n  h = String(h || '').trim().toLowerCase()\n    .replace(/^[a-z]+:\\/\\//, '').split(/[\\/?#:]/)[0]\n    .replace(/^\\*\\./, '').replace(/^www\\./, '').replace(/\\.$/, '');\n  if (!/^[a-z0-9.-]+\\.[a-z]{2,}$/.test(h)) return null;\n  const p = h.split('.');\n  if (p.length <= 2) return h;\n  const sld = p[p.length - 2], tld = p[p.length - 1];\n  const tres = tld.length === 2 && ['com', 'net', 'org', 'gov', 'gob', 'edu', 'co', 'ac', 'mil', 'nom', 'int'].includes(sld);\n  return p.slice(tres ? -3 : -2).join('.');\n}\n// ---- fin helpers ----\n\n// Modo: una vez por ítem. 4/5 del embudo (a): abuse.ch URLhaus (URLs de malware alojadas en el host).\nconst ctx = $('Agrupar por dominio').item.json;\nconst st = estadoHttp($json);\nlet urlhaus;\nif (!st.ok) {\n  urlhaus = { estado: 'no_disponible', motivo: motivoFallo(st) };\n} else if ($json.query_status === 'no_results') {\n  urlhaus = { estado: 'ok', listado: false };\n} else if ($json.query_status === 'ok') {\n  const urls = $json.urls || [];\n  urlhaus = {\n    estado: 'ok',\n    listado: true,\n    urls_total: Number($json.url_count || urls.length),\n    urls_online: urls.filter(u => u.url_status === 'online').length,\n    amenazas: [...new Set(urls.map(u => u.threat).filter(Boolean))],\n    blacklists: $json.blacklists || null,\n    muestras: urls.slice(0, 5).map(u => ({ url: u.url, estado: u.url_status, amenaza: u.threat, tags: u.tags, alta: u.date_added })),\n    referencia: $json.urlhaus_reference || null\n  };\n} else {\n  urlhaus = { estado: 'no_disponible', motivo: `query_status=${$json.query_status}` };\n}\nreturn { json: { ...ctx, abusech: { urlhaus } } };\n"
+      },
+      "id": "c95fac98-20d2-5368-bcf8-4ec831309ef9",
+      "position": [
+        2420,
+        450
+      ]
+    },
+    {
+      "name": "ThreatFox IOC",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "https://threatfox-api.abuse.ch/api/v1/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ query: 'search_ioc', search_term: $json.dominio, exact_match: true }) }}",
+        "options": {
+          "timeout": 20000,
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 1000
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": false,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "CONFIGURAR_abusech_Auth-Key",
+          "name": "abuse.ch Auth-Key"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "notes": "4/5 abuse.ch ThreatFox",
+      "notesInFlow": true,
+      "id": "7b1db9c7-e6c1-5e34-a0fd-4578ca4daa60",
+      "position": [
+        2640,
+        450
+      ]
+    },
+    {
+      "name": "Norm ThreatFox",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ---- helpers comunes (inyectados por build.py) ----\n// Interpreta la salida de un nodo HTTP configurado con onError=continueRegularOutput.\n// Si la petición falló, n8n devuelve { error: <string|objeto> } en lugar de la respuesta.\nfunction estadoHttp(j) {\n  if (!j || j.error === undefined) return { ok: true, code: null, msg: '' };\n  const e = j.error;\n  const txt = typeof e === 'string' ? e : JSON.stringify(e);\n  let code = (e && typeof e === 'object') ? (e.httpCode || e.status || e.statusCode || (e.cause && e.cause.status) || null) : null;\n  if (!code) { const m = txt.match(/\\b([45]\\d\\d)\\b/); if (m) code = m[1]; }\n  return { ok: false, code: code ? String(code) : null, msg: txt.slice(0, 300) };\n}\nfunction motivoFallo(st) {\n  if (st.code === '429') return 'límite de tasa (429) tras reintentos';\n  if (st.code === '401' || st.code === '403') return `credencial inválida o sin permiso (${st.code})`;\n  return `${st.code ? st.code + ' ' : ''}${st.msg}`.trim() || 'sin respuesta';\n}\n// Dominio registrable aproximado (sin Public Suffix List completa).\nfunction registrable(h) {\n  h = String(h || '').trim().toLowerCase()\n    .replace(/^[a-z]+:\\/\\//, '').split(/[\\/?#:]/)[0]\n    .replace(/^\\*\\./, '').replace(/^www\\./, '').replace(/\\.$/, '');\n  if (!/^[a-z0-9.-]+\\.[a-z]{2,}$/.test(h)) return null;\n  const p = h.split('.');\n  if (p.length <= 2) return h;\n  const sld = p[p.length - 2], tld = p[p.length - 1];\n  const tres = tld.length === 2 && ['com', 'net', 'org', 'gov', 'gob', 'edu', 'co', 'ac', 'mil', 'nom', 'int'].includes(sld);\n  return p.slice(tres ? -3 : -2).join('.');\n}\n// ---- fin helpers ----\n\n// Modo: una vez por ítem. 4/5 del embudo (b): abuse.ch ThreatFox (IOCs de malware / botnets).\nconst ctx = $('Norm URLhaus').item.json;\nconst st = estadoHttp($json);\nlet threatfox;\nif (!st.ok) {\n  threatfox = { estado: 'no_disponible', motivo: motivoFallo(st) };\n} else if ($json.query_status === 'no_result') {\n  threatfox = { estado: 'ok', listado: false };\n} else if ($json.query_status === 'ok') {\n  const data = Array.isArray($json.data) ? $json.data : [];\n  threatfox = {\n    estado: 'ok',\n    listado: data.length > 0,\n    iocs: data.slice(0, 10).map(x => ({ ioc: x.ioc, tipo: x.threat_type, malware: x.malware_printable, confianza: x.confidence_level, primera_vez: x.first_seen }))\n  };\n} else {\n  threatfox = { estado: 'no_disponible', motivo: `query_status=${$json.query_status}` };\n}\nreturn { json: { ...ctx, abusech: { ...ctx.abusech, threatfox } } };\n"
+      },
+      "id": "48ba4a16-c5be-5f4e-9ac3-be0347a76ebe",
+      "position": [
+        2860,
+        450
+      ]
+    },
+    {
+      "name": "Expandir MX",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Modo: una vez para todos. 5/5 del embudo: un ítem por (dominio, comando MXToolbox).\nconst CMDS = ['mx', 'spf', 'dmarc', 'blacklist'];\nconst out = [];\n$input.all().forEach((it, i) => {\n  for (const cmd of CMDS) out.push({ json: { dominio: it.json.dominio, cmd }, pairedItem: { item: i } });\n});\nreturn out;\n"
+      },
+      "id": "52e67f7d-a72a-53ce-a6e7-307b10c0bce4",
+      "position": [
+        0,
+        750
+      ]
+    },
+    {
+      "name": "MXToolbox Lookup",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://mxtoolbox.com/api/v1/Lookup/' + $json.cmd + '/' + $json.dominio }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000,
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 1500
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": false,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "CONFIGURAR_MXToolbox_API",
+          "name": "MXToolbox API"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "notes": "5/5 MXToolbox mx/spf/dmarc/blacklist",
+      "notesInFlow": true,
+      "id": "d53b8395-52e5-52f2-bed9-4c2caf5302bf",
+      "position": [
+        220,
+        750
+      ]
+    },
+    {
+      "name": "Norm MXToolbox",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// ---- helpers comunes (inyectados por build.py) ----\n// Interpreta la salida de un nodo HTTP configurado con onError=continueRegularOutput.\n// Si la petición falló, n8n devuelve { error: <string|objeto> } en lugar de la respuesta.\nfunction estadoHttp(j) {\n  if (!j || j.error === undefined) return { ok: true, code: null, msg: '' };\n  const e = j.error;\n  const txt = typeof e === 'string' ? e : JSON.stringify(e);\n  let code = (e && typeof e === 'object') ? (e.httpCode || e.status || e.statusCode || (e.cause && e.cause.status) || null) : null;\n  if (!code) { const m = txt.match(/\\b([45]\\d\\d)\\b/); if (m) code = m[1]; }\n  return { ok: false, code: code ? String(code) : null, msg: txt.slice(0, 300) };\n}\nfunction motivoFallo(st) {\n  if (st.code === '429') return 'límite de tasa (429) tras reintentos';\n  if (st.code === '401' || st.code === '403') return `credencial inválida o sin permiso (${st.code})`;\n  return `${st.code ? st.code + ' ' : ''}${st.msg}`.trim() || 'sin respuesta';\n}\n// Dominio registrable aproximado (sin Public Suffix List completa).\nfunction registrable(h) {\n  h = String(h || '').trim().toLowerCase()\n    .replace(/^[a-z]+:\\/\\//, '').split(/[\\/?#:]/)[0]\n    .replace(/^\\*\\./, '').replace(/^www\\./, '').replace(/\\.$/, '');\n  if (!/^[a-z0-9.-]+\\.[a-z]{2,}$/.test(h)) return null;\n  const p = h.split('.');\n  if (p.length <= 2) return h;\n  const sld = p[p.length - 2], tld = p[p.length - 1];\n  const tres = tld.length === 2 && ['com', 'net', 'org', 'gov', 'gob', 'edu', 'co', 'ac', 'mil', 'nom', 'int'].includes(sld);\n  return p.slice(tres ? -3 : -2).join('.');\n}\n// ---- fin helpers ----\n\n// Modo: una vez para todos. Normaliza las 4 consultas MXToolbox y las reagrupa por dominio.\nconst exp = $('Expandir MX').all();\nconst res = $input.all();\nconst porDominio = {};\nres.forEach((r, i) => {\n  const { dominio, cmd } = exp[i].json;\n  const st = estadoHttp(r.json);\n  let v;\n  if (!st.ok) {\n    v = { estado: 'no_disponible', motivo: motivoFallo(st), failed: [], warnings: [], passed: 0, registros: [] };\n  } else if (!r.json.Command && !Array.isArray(r.json.Failed)) {\n    v = { estado: 'no_disponible', motivo: 'respuesta inesperada (¿cuota agotada?)', failed: [], warnings: [], passed: 0, registros: [] };\n  } else {\n    const nombres = arr => (arr || []).map(x => `${x.Name || ''}${x.Info ? ': ' + x.Info : ''}`);\n    let registros = [];\n    if (Array.isArray(r.json.Information)) {\n      registros = r.json.Information.map(x => ({\n        clave: x.Name || x.Hostname || x.Type || x.Prefix || '',\n        valor: x.Value || x.IP_Address || x.Info || '',\n        desc: x.Description || ''\n      })).filter(x => x.clave || x.valor);\n    }\n    v = {\n      estado: 'ok',\n      failed: nombres(r.json.Failed),\n      warnings: nombres(r.json.Warnings),\n      passed: (r.json.Passed || []).length,\n      registros: registros.slice(0, 15),\n      info: JSON.stringify(r.json.Information || []).slice(0, 2000)\n    };\n  }\n  (porDominio[dominio] = porDominio[dominio] || {})[cmd] = v;\n});\n\nreturn $('Norm ThreatFox').all().map((it, idx) => {\n  const m = porDominio[it.json.dominio] || {};\n  const cmds = ['mx', 'spf', 'dmarc', 'blacklist'];\n  cmds.forEach(c => { if (!m[c]) m[c] = { estado: 'no_disponible', motivo: 'sin resultado', failed: [], warnings: [], passed: 0, registros: [] }; });\n  const ok = cmds.filter(c => m[c].estado === 'ok').length;\n  m.estado = ok === 4 ? 'ok' : ok === 0 ? 'no_disponible' : 'parcial';\n  return { json: { ...it.json, mxtoolbox: m }, pairedItem: { item: idx } };\n});\n"
+      },
+      "id": "9649eae5-b849-51c6-bd66-592db0b3cfd3",
+      "position": [
+        440,
+        750
+      ]
+    },
+    {
+      "name": "Expandir DNS DoH",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Modo: una vez para todos. Expande consultas DNS gratuitas vía Google DoH (MX, SPF/TXT, DMARC, NS) por cada dominio.\nconst out = [];\n$input.all().forEach((it, i) => {\n  const dom = it.json.dominio;\n  out.push({ json: { dominio: dom, tipo: 'MX', query: dom, dnsType: 'MX' }, pairedItem: { item: i } });\n  out.push({ json: { dominio: dom, tipo: 'SPF', query: dom, dnsType: 'TXT' }, pairedItem: { item: i } });\n  out.push({ json: { dominio: dom, tipo: 'DMARC', query: '_dmarc.' + dom, dnsType: 'TXT' }, pairedItem: { item: i } });\n  out.push({ json: { dominio: dom, tipo: 'NS', query: dom, dnsType: 'NS' }, pairedItem: { item: i } });\n});\nreturn out;\n"
+      },
+      "id": "4e1f5a61-5422-54b5-a0d2-2cc961efc4b0",
+      "position": [
+        660,
+        750
+      ]
+    },
+    {
+      "name": "DoH DNS Registros",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "GET",
+        "url": "https://dns.google/resolve",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "={{ $json.query }}"
+            },
+            {
+              "name": "type",
+              "value": "={{ $json.dnsType }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 8000,
+          "batching": {
+            "batch": {
+              "batchSize": 10,
+              "batchInterval": 300
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": false,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000,
+      "notes": "DNS MX/SPF/DMARC/NS sin cuotas",
+      "notesInFlow": true,
+      "id": "c115f403-c120-58b9-bcf3-60b2a9ab5fe9",
+      "position": [
+        880,
+        750
+      ]
+    },
+    {
+      "name": "Norm DNS DoH",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// ---- helpers comunes (inyectados por build.py) ----\n// Interpreta la salida de un nodo HTTP configurado con onError=continueRegularOutput.\n// Si la petición falló, n8n devuelve { error: <string|objeto> } en lugar de la respuesta.\nfunction estadoHttp(j) {\n  if (!j || j.error === undefined) return { ok: true, code: null, msg: '' };\n  const e = j.error;\n  const txt = typeof e === 'string' ? e : JSON.stringify(e);\n  let code = (e && typeof e === 'object') ? (e.httpCode || e.status || e.statusCode || (e.cause && e.cause.status) || null) : null;\n  if (!code) { const m = txt.match(/\\b([45]\\d\\d)\\b/); if (m) code = m[1]; }\n  return { ok: false, code: code ? String(code) : null, msg: txt.slice(0, 300) };\n}\nfunction motivoFallo(st) {\n  if (st.code === '429') return 'límite de tasa (429) tras reintentos';\n  if (st.code === '401' || st.code === '403') return `credencial inválida o sin permiso (${st.code})`;\n  return `${st.code ? st.code + ' ' : ''}${st.msg}`.trim() || 'sin respuesta';\n}\n// Dominio registrable aproximado (sin Public Suffix List completa).\nfunction registrable(h) {\n  h = String(h || '').trim().toLowerCase()\n    .replace(/^[a-z]+:\\/\\//, '').split(/[\\/?#:]/)[0]\n    .replace(/^\\*\\./, '').replace(/^www\\./, '').replace(/\\.$/, '');\n  if (!/^[a-z0-9.-]+\\.[a-z]{2,}$/.test(h)) return null;\n  const p = h.split('.');\n  if (p.length <= 2) return h;\n  const sld = p[p.length - 2], tld = p[p.length - 1];\n  const tres = tld.length === 2 && ['com', 'net', 'org', 'gov', 'gob', 'edu', 'co', 'ac', 'mil', 'nom', 'int'].includes(sld);\n  return p.slice(tres ? -3 : -2).join('.');\n}\n// ---- fin helpers ----\n\n// Modo: una vez para todos. Normaliza registros DNS directos vía Google DoH y enriquece MXToolbox (fallback sin cuotas).\nconst exp = $('Expandir DNS DoH').all();\nconst res = $input.all();\nconst porDom = {};\n\nres.forEach((r, i) => {\n  const { dominio, tipo } = exp[i].json;\n  const st = estadoHttp(r.json);\n  const d = (porDom[dominio] = porDom[dominio] || { mx: [], spf: [], dmarc: [], ns: [], txt_extra: [] });\n  if (!st.ok || !Array.isArray(r.json.Answer)) return;\n\n  const ans = r.json.Answer;\n  if (tipo === 'MX') {\n    d.mx = ans.filter(a => a.type === 15).map(a => String(a.data || '').replace(/\\.$/, '').trim()).filter(Boolean);\n  } else if (tipo === 'SPF') {\n    const txts = ans.filter(a => a.type === 16).map(a => String(a.data || '').replace(/^\"|\"$/g, '').replace(/\"\\s+\"/g, '').trim()).filter(Boolean);\n    d.spf = txts.filter(t => /^v=spf1\\b/i.test(t));\n    d.txt_extra = txts.filter(t => !/^v=spf1\\b/i.test(t)).slice(0, 8);\n  } else if (tipo === 'DMARC') {\n    const txts = ans.filter(a => a.type === 16).map(a => String(a.data || '').replace(/^\"|\"$/g, '').replace(/\"\\s+\"/g, '').trim()).filter(Boolean);\n    d.dmarc = txts.filter(t => /^v=DMARC1\\b/i.test(t));\n  } else if (tipo === 'NS') {\n    d.ns = ans.filter(a => a.type === 2).map(a => String(a.data || '').replace(/\\.$/, '').trim()).filter(Boolean);\n  }\n});\n\nreturn $('Norm MXToolbox').all().map((it, idx) => {\n  const dom = it.json.dominio;\n  const mx = JSON.parse(JSON.stringify(it.json.mxtoolbox || {}));\n  const dns = porDom[dom] || { mx: [], spf: [], dmarc: [], ns: [], txt_extra: [] };\n\n  // Enriquecer MX con registros directos DoH\n  if (dns.mx.length) {\n    if (!mx.mx || mx.mx.estado !== 'ok') {\n      mx.mx = { estado: 'ok', fuente: 'Google DoH', failed: [], warnings: [], passed: dns.mx.length, registros: dns.mx.map(v => ({ clave: 'MX', valor: v })) };\n    } else if (!mx.mx.registros || !mx.mx.registros.length) {\n      mx.mx.registros = dns.mx.map(v => ({ clave: 'MX', valor: v }));\n    }\n  }\n\n  // Enriquecer SPF con registros directos DoH\n  if (dns.spf.length || !mx.spf || mx.spf.estado !== 'ok') {\n    const spfVal = dns.spf[0] || null;\n    if (!mx.spf || mx.spf.estado !== 'ok') {\n      const failed = [];\n      if (!spfVal) failed.push('SPF Record Not Found');\n      else if (/\\+all\\b/i.test(spfVal)) failed.push('SPF Syntax/Permissive (+all)');\n      mx.spf = { estado: 'ok', fuente: 'Google DoH', failed, warnings: [], passed: spfVal ? 1 : 0, registros: spfVal ? [{ clave: 'SPF', valor: spfVal }] : [] };\n    } else if ((!mx.spf.registros || !mx.spf.registros.length) && spfVal) {\n      mx.spf.registros = [{ clave: 'SPF', valor: spfVal }];\n    }\n  }\n\n  // Enriquecer DMARC con registros directos DoH\n  if (dns.dmarc.length || !mx.dmarc || mx.dmarc.estado !== 'ok') {\n    const dmVal = dns.dmarc[0] || null;\n    if (!mx.dmarc || mx.dmarc.estado !== 'ok') {\n      const failed = [];\n      const warnings = [];\n      if (!dmVal) failed.push('DMARC Record Not Found');\n      else if (/p=none\\b/i.test(dmVal)) warnings.push('DMARC Policy Not Enabled (p=none)');\n      mx.dmarc = { estado: 'ok', fuente: 'Google DoH', failed, warnings, passed: dmVal ? 1 : 0, registros: dmVal ? [{ clave: 'DMARC', valor: dmVal }] : [] };\n    } else if ((!mx.dmarc.registros || !mx.dmarc.registros.length) && dmVal) {\n      mx.dmarc.registros = [{ clave: 'DMARC', valor: dmVal }];\n    }\n  }\n\n  const cmds = ['mx', 'spf', 'dmarc', 'blacklist'];\n  const ok = cmds.filter(c => mx[c] && mx[c].estado === 'ok').length;\n  mx.estado = ok === 4 ? 'ok' : ok === 0 ? 'no_disponible' : 'parcial';\n\n  return { json: { ...it.json, mxtoolbox: mx, dns_detalle: dns }, pairedItem: { item: idx } };\n});\n"
+      },
+      "id": "4fdc452a-5615-56d4-a6f8-64ea5831d9a1",
+      "position": [
+        1100,
+        750
+      ]
+    },
+    {
+      "name": "RDAP Whois",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://rdap.org/domain/' + $json.dominio }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 8000,
+          "batching": {
+            "batch": {
+              "batchSize": 3,
+              "batchInterval": 500
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": false,
+      "notes": "Antigüedad y Registrador RDAP (sin clave)",
+      "notesInFlow": true,
+      "id": "4d71769f-14f5-5fe8-8c2a-f67976f5df91",
+      "position": [
+        1320,
+        750
+      ]
+    },
+    {
+      "name": "Norm RDAP",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ---- helpers comunes (inyectados por build.py) ----\n// Interpreta la salida de un nodo HTTP configurado con onError=continueRegularOutput.\n// Si la petición falló, n8n devuelve { error: <string|objeto> } en lugar de la respuesta.\nfunction estadoHttp(j) {\n  if (!j || j.error === undefined) return { ok: true, code: null, msg: '' };\n  const e = j.error;\n  const txt = typeof e === 'string' ? e : JSON.stringify(e);\n  let code = (e && typeof e === 'object') ? (e.httpCode || e.status || e.statusCode || (e.cause && e.cause.status) || null) : null;\n  if (!code) { const m = txt.match(/\\b([45]\\d\\d)\\b/); if (m) code = m[1]; }\n  return { ok: false, code: code ? String(code) : null, msg: txt.slice(0, 300) };\n}\nfunction motivoFallo(st) {\n  if (st.code === '429') return 'límite de tasa (429) tras reintentos';\n  if (st.code === '401' || st.code === '403') return `credencial inválida o sin permiso (${st.code})`;\n  return `${st.code ? st.code + ' ' : ''}${st.msg}`.trim() || 'sin respuesta';\n}\n// Dominio registrable aproximado (sin Public Suffix List completa).\nfunction registrable(h) {\n  h = String(h || '').trim().toLowerCase()\n    .replace(/^[a-z]+:\\/\\//, '').split(/[\\/?#:]/)[0]\n    .replace(/^\\*\\./, '').replace(/^www\\./, '').replace(/\\.$/, '');\n  if (!/^[a-z0-9.-]+\\.[a-z]{2,}$/.test(h)) return null;\n  const p = h.split('.');\n  if (p.length <= 2) return h;\n  const sld = p[p.length - 2], tld = p[p.length - 1];\n  const tres = tld.length === 2 && ['com', 'net', 'org', 'gov', 'gob', 'edu', 'co', 'ac', 'mil', 'nom', 'int'].includes(sld);\n  return p.slice(tres ? -3 : -2).join('.');\n}\n// ---- fin helpers ----\n\n// Modo: una vez por ítem. Extrae datos de registro WHOIS/RDAP (antigüedad, registrador, expiración, bloqueos).\nconst ctx = $('Norm DNS DoH').item.json;\nconst st = estadoHttp($json);\nlet rdap;\n\nif (!st.ok) {\n  rdap = { estado: 'no_disponible', motivo: st.code === '404' ? 'TLD sin servidor RDAP público (ej. .py)' : motivoFallo(st) };\n} else {\n  const events = Array.isArray($json.events) ? $json.events : [];\n  const getEvent = act => (events.find(e => e.eventAction === act) || {}).eventDate || null;\n  let registrador = null;\n  const ents = Array.isArray($json.entities) ? $json.entities : [];\n  const regEnt = ents.find(e => Array.isArray(e.roles) && e.roles.includes('registrar'));\n  if (regEnt && Array.isArray(regEnt.vcardArray) && Array.isArray(regEnt.vcardArray[1])) {\n    const fn = regEnt.vcardArray[1].find(v => v[0] === 'fn');\n    if (fn && fn[3]) registrador = fn[3];\n  }\n  const creacion = getEvent('registration');\n  let antiguedad_anios = null;\n  if (creacion) {\n    const diff = Date.now() - new Date(creacion).getTime();\n    if (!isNaN(diff) && diff > 0) antiguedad_anios = Math.round((diff / (1000 * 60 * 60 * 24 * 365.25)) * 10) / 10;\n  }\n  rdap = {\n    estado: 'ok',\n    registrador: registrador || 'No especificado',\n    creacion,\n    expiracion: getEvent('expiration'),\n    actualizacion: getEvent('last changed'),\n    antiguedad_anios,\n    estados: Array.isArray($json.status) ? $json.status : [],\n    dnssec: Boolean($json.secureDNS && $json.secureDNS.delegationSigned)\n  };\n}\nreturn { json: { ...ctx, rdap } };\n"
+      },
+      "id": "89f2153a-7cd7-5fc1-96c8-9204028136c8",
+      "position": [
+        1540,
+        750
+      ]
+    },
+    {
+      "name": "Expandir URLs ISO",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Modo: una vez para todos. Un ítem por (dominio, ruta) donde suelen publicarse certificaciones.\nconst cfg = $('Config').first().json;\nconst out = [];\n$input.all().forEach((it, i) => {\n  const host = it.json.host_dns || it.json.dominio;\n  for (const ruta of cfg.rutas_iso) out.push({ json: { dominio: it.json.dominio, host_dns: host, url: `https://${host}${ruta}` }, pairedItem: { item: i } });\n});\nreturn out;\n"
+      },
+      "id": "0861a95b-bea4-519a-8358-0a5385cfba53",
+      "position": [
+        0,
+        1050
+      ]
+    },
+    {
+      "name": "Web ISO",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "User-Agent",
+              "value": "={{ $('Config').first().json.user_agent }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000,
+          "batching": {
+            "batch": {
+              "batchSize": 5,
+              "batchInterval": 1000
+            }
+          },
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "outputPropertyName": "html"
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": false,
+      "notes": "Certificados ISO declarados",
+      "notesInFlow": true,
+      "id": "5500d5d2-72af-5ec4-8b86-44efc95960b9",
+      "position": [
+        220,
+        1050
+      ]
+    },
+    {
+      "name": "Norm ISO",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// ---- helpers comunes (inyectados por build.py) ----\n// Interpreta la salida de un nodo HTTP configurado con onError=continueRegularOutput.\n// Si la petición falló, n8n devuelve { error: <string|objeto> } en lugar de la respuesta.\nfunction estadoHttp(j) {\n  if (!j || j.error === undefined) return { ok: true, code: null, msg: '' };\n  const e = j.error;\n  const txt = typeof e === 'string' ? e : JSON.stringify(e);\n  let code = (e && typeof e === 'object') ? (e.httpCode || e.status || e.statusCode || (e.cause && e.cause.status) || null) : null;\n  if (!code) { const m = txt.match(/\\b([45]\\d\\d)\\b/); if (m) code = m[1]; }\n  return { ok: false, code: code ? String(code) : null, msg: txt.slice(0, 300) };\n}\nfunction motivoFallo(st) {\n  if (st.code === '429') return 'límite de tasa (429) tras reintentos';\n  if (st.code === '401' || st.code === '403') return `credencial inválida o sin permiso (${st.code})`;\n  return `${st.code ? st.code + ' ' : ''}${st.msg}`.trim() || 'sin respuesta';\n}\n// Dominio registrable aproximado (sin Public Suffix List completa).\nfunction registrable(h) {\n  h = String(h || '').trim().toLowerCase()\n    .replace(/^[a-z]+:\\/\\//, '').split(/[\\/?#:]/)[0]\n    .replace(/^\\*\\./, '').replace(/^www\\./, '').replace(/\\.$/, '');\n  if (!/^[a-z0-9.-]+\\.[a-z]{2,}$/.test(h)) return null;\n  const p = h.split('.');\n  if (p.length <= 2) return h;\n  const sld = p[p.length - 2], tld = p[p.length - 1];\n  const tres = tld.length === 2 && ['com', 'net', 'org', 'gov', 'gob', 'edu', 'co', 'ac', 'mil', 'nom', 'int'].includes(sld);\n  return p.slice(tres ? -3 : -2).join('.');\n}\n// ---- fin helpers ----\n\n// Modo: una vez para todos. Detecta certificaciones ISO DECLARADAS en el sitio web del dominio.\n// Nota: declaración pública != certificación verificada. Se marca verificado=false y se recomienda\n// contrastar en IAF CertSearch / organismo certificador (ver README, extensión opcional).\nconst exp = $('Expandir URLs ISO').all();\nconst res = $input.all();\nconst RE = /ISO\\s*(?:\\/\\s*IEC\\s*)?[-\\s]?(9001|14001|27001|27017|27018|27701|45001|22301|20000(?:-1)?|50001|22000|13485|37001|28000)(?:\\s*[:\\-]\\s*((?:19|20)\\d\\d))?/gi;\nconst NOMBRES = {\n  '9001': 'Gestión de calidad', '14001': 'Gestión ambiental', '27001': 'Seguridad de la información',\n  '27017': 'Seguridad en cloud', '27018': 'Protección PII en cloud', '27701': 'Gestión de privacidad',\n  '45001': 'Seguridad y salud laboral', '22301': 'Continuidad de negocio', '20000': 'Gestión de servicios TI',\n  '20000-1': 'Gestión de servicios TI', '50001': 'Gestión energética', '22000': 'Inocuidad alimentaria',\n  '13485': 'Dispositivos médicos', '37001': 'Antisoborno', '28000': 'Seguridad cadena de suministro'\n};\nconst porDom = {};\nres.forEach((r, i) => {\n  const { dominio, url } = exp[i].json;\n  const p = (porDom[dominio] = porDom[dominio] || { paginas_ok: 0, paginas_fallidas: 0, normas: {} });\n  const st = estadoHttp(r.json);\n  if (!st.ok || typeof r.json.html !== 'string') { p.paginas_fallidas++; return; }\n  p.paginas_ok++;\n  const texto = r.json.html.replace(/<script[\\s\\S]*?<\\/script>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/\\s+/g, ' ');\n  let m;\n  RE.lastIndex = 0;\n  while ((m = RE.exec(texto)) !== null) {\n    const clave = `ISO ${m[1]}`;\n    const n = p.normas[clave] || (p.normas[clave] = { norma: clave, descripcion: NOMBRES[m[1]] || null, versiones: [], evidencias: [] });\n    if (m[2] && !n.versiones.includes(m[2])) n.versiones.push(m[2]);\n    if (n.evidencias.length < 2 && !n.evidencias.some(e => e.url === url)) {\n      n.evidencias.push({ url, fragmento: texto.slice(Math.max(0, m.index - 60), m.index + 80).trim() });\n    }\n  }\n});\n\nreturn $('Norm RDAP').all().map((it, idx) => {\n  const p = porDom[it.json.dominio] || { paginas_ok: 0, paginas_fallidas: 0, normas: {} };\n  const normas = Object.values(p.normas);\n  const certificados_iso = {\n    estado: p.paginas_ok > 0 ? 'ok' : 'no_disponible',\n    metodo: 'declaracion_en_sitio_web',\n    verificado: false,\n    encontrados: normas.length > 0,\n    normas,\n    paginas_revisadas: p.paginas_ok,\n    paginas_fallidas: p.paginas_fallidas,\n    nota: normas.length ? 'Declarado en el sitio; verificar vigencia en IAF CertSearch u organismo certificador.' : (p.paginas_ok ? 'Sin menciones a normas ISO en las páginas revisadas.' : 'Sitio web no accesible.')\n  };\n  return { json: { ...it.json, certificados_iso }, pairedItem: { item: idx } };\n});\n"
+      },
+      "id": "5f34c831-fcc6-5b8a-83b6-d4c5211fa4db",
+      "position": [
+        440,
+        1050
+      ]
+    },
+    {
+      "name": "Score",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Modo: una vez por ítem. CONSOLIDACIÓN Y SCORE 1-100 por dominio.\n// Aplica la regla de ponderación definida en el nodo Config y deja un \"libro mayor\" (score_detalle)\n// con cada consulta que aportó puntos. Fuentes no disponibles aportan 0 y quedan marcadas.\nconst cfg = $('Config').first().json;\nconst P = cfg.pesos;\nconst d = $json;\nconst reIC = new RegExp(cfg.regex_infra_compartida, 'i');\nconst detalle = [];\nconst r1 = x => Math.round(x * 10) / 10;\n\nconst okE = e => e === 'ok' || e === 'ok_sin_datos';\nconst agregado = estados => {\n  const ok = estados.filter(okE).length;\n  return estados.length && ok === estados.length ? 'ok' : ok === 0 ? 'no_disponible' : 'parcial';\n};\n// Suma entradas de una fuente aplicando el tope de puntos positivos y las registra en el detalle.\nfunction registrar(fuente, entradas, max) {\n  let pos = 0;\n  for (const e of entradas) {\n    detalle.push({ fuente, ...e, puntos: r1(e.puntos) });\n    if (e.puntos > 0) pos += e.puntos;\n  }\n  if (max !== undefined && pos > max) {\n    detalle.push({ fuente, consulta: 'tope_de_fuente', evidencia: `positivos ${r1(pos)} > tope ${max}`, puntos: r1(max - pos) });\n  }\n}\nfunction noDisponible(fuente, motivo) {\n  detalle.push({ fuente, consulta: '-', evidencia: `FUENTE NO DISPONIBLE: ${motivo}. No aporta puntos (no se imputa valor).`, puntos: 0 });\n}\n// Para fuentes por IP: evalúa cada IP y se queda con la PEOR (mayor suma positiva).\nfunction peorIp(fn) {\n  let mejor = null;\n  for (const ipr of d.ips) {\n    const ent = fn(ipr);\n    if (!ent) continue;\n    const s = ent.reduce((a, e) => a + e.puntos, 0);\n    if (!mejor || s > mejor.s) mejor = { s, ent };\n  }\n  return mejor ? mejor.ent : [];\n}\nconst infraCompartida = ipr =>\n  reIC.test(`${ipr.shodan.org || ''} ${ipr.shodan.isp || ''} ${ipr.abuseipdb.isp || ''} ${ipr.ipapi.org || ''} ${ipr.ipapi.isp || ''}`) || ipr.ipapi.hosting === true;\n\ndetalle.push({ fuente: 'base', consulta: '-', evidencia: 'Punto de partida neutral', puntos: P.base });\n\n// ---------- 1. SHODAN ----------\nconst estShodan = agregado(d.ips.map(i => i.shodan.estado));\nif (estShodan === 'no_disponible') noDisponible('shodan', d.ips[0] ? d.ips[0].shodan.motivo : 'sin IPs');\nelse registrar('shodan', peorIp(ipr => {\n  const s = ipr.shodan; if (s.estado !== 'ok') return null;\n  const e = [];\n  const nv = s.vulns.length;\n  if (nv >= 5) e.push({ consulta: `host/${ipr.ip}`, evidencia: `${nv} CVEs asociadas (${s.vulns.slice(0, 5).join(', ')}...)`, puntos: P.shodan.cves_5 });\n  else if (nv >= 1) e.push({ consulta: `host/${ipr.ip}`, evidencia: `${nv} CVE(s): ${s.vulns.join(', ')}`, puntos: P.shodan.cves_1 });\n  const riesgo = s.puertos.filter(p => cfg.puertos_riesgo.includes(p));\n  if (riesgo.length) e.push({ consulta: `host/${ipr.ip}`, evidencia: `Puertos sensibles expuestos: ${riesgo.join(', ')}`, puntos: Math.min(riesgo.length * P.shodan.puerto_riesgo, P.shodan.max_puertos) });\n  if (!nv && s.puertos.length && s.puertos.every(p => cfg.puertos_web.includes(p))) e.push({ consulta: `host/${ipr.ip}`, evidencia: `Solo puertos web (${s.puertos.join(', ')}) y sin CVEs`, puntos: P.shodan.solo_web });\n  if (!e.length) e.push({ consulta: `host/${ipr.ip}`, evidencia: `Puertos: ${s.puertos.join(', ') || 'ninguno'}; sin hallazgos ponderables`, puntos: 0 });\n  return e;\n}), P.shodan.max);\n\n// ---------- 2. ABUSEIPDB ----------\nconst estAbuse = agregado(d.ips.map(i => i.abuseipdb.estado));\nif (estAbuse === 'no_disponible') noDisponible('abuseipdb', d.ips[0] ? d.ips[0].abuseipdb.motivo : 'sin IPs');\nelse registrar('abuseipdb', peorIp(ipr => {\n  const a = ipr.abuseipdb; if (a.estado !== 'ok') return null;\n  const f = infraCompartida(ipr) ? P.cdn_factor : 1;\n  const nota = f < 1 ? ` (infraestructura compartida x${P.cdn_factor})` : '';\n  const ev = `confianza_abuso=${a.confianza_abuso}, reportes=${a.total_reportes}`;\n  const c = `check/${ipr.ip}`;\n  if (a.confianza_abuso >= P.abuseipdb.alto.umbral) return [{ consulta: c, evidencia: ev + nota, puntos: P.abuseipdb.alto.pts * f }];\n  if (a.confianza_abuso >= P.abuseipdb.medio.umbral) return [{ consulta: c, evidencia: ev + nota, puntos: P.abuseipdb.medio.pts * f }];\n  if (a.confianza_abuso >= P.abuseipdb.bajo.umbral) return [{ consulta: c, evidencia: ev + nota, puntos: P.abuseipdb.bajo.pts * f }];\n  if (!a.total_reportes) return [{ consulta: c, evidencia: 'Sin reportes de abuso (90 días)', puntos: P.abuseipdb.limpio }];\n  return [{ consulta: c, evidencia: ev + ' (reportes antiguos/baja confianza, informativo)', puntos: 0 }];\n}), P.abuseipdb.max);\n\n// ---------- 3. IP-API (PROXY / HOSTING / DATACENTER) ----------\nconst estIPAPI = agregado(d.ips.map(i => i.ipapi.estado));\nif (estIPAPI === 'no_disponible') noDisponible('ipapi', d.ips[0] ? d.ips[0].ipapi.motivo : 'sin IPs');\nelse registrar('ipapi', peorIp(ipr => {\n  const a = ipr.ipapi; if (a.estado !== 'ok') return null;\n  const f = infraCompartida(ipr) ? P.cdn_factor : 1;\n  const c = `ip-api/json/${ipr.ip}`;\n  if (a.proxy) return [{ consulta: c, evidencia: `IP clasificada como PROXY / VPN / Anonimizador (${a.isp || a.org || 'desconocido'})`, puntos: P.ipapi.proxy * f }];\n  if (a.hosting) return [{ consulta: c, evidencia: `IP alojada en Datacenter / Cloud / Hosting (${a.isp || a.org || 'desconocido'})`, puntos: P.ipapi.hosting * f }];\n  return [{ consulta: c, evidencia: `Infraestructura corporativa/residencial propia (no proxy/no hosting)`, puntos: P.ipapi.limpio }];\n}), P.ipapi.max);\n\n// ---------- 4. ABUSE.CH (URLhaus + ThreatFox + Feodo) ----------\nconst uh = d.abusech.urlhaus, tf = d.abusech.threatfox;\nconst estFeodo = agregado(d.ips.map(i => i.feodo.estado));\nconst estAbusech = agregado([uh.estado, tf.estado, estFeodo === 'parcial' ? 'ok' : estFeodo]);\nif (estAbusech === 'no_disponible') noDisponible('abuse.ch', `URLhaus: ${uh.motivo}; ThreatFox: ${tf.motivo}; Feodo: ${d.ips[0] ? d.ips[0].feodo.motivo : '-'}`);\nelse {\n  const e = [];\n  const feodoHit = d.ips.find(i => i.feodo.estado === 'ok' && i.feodo.listada);\n  if (feodoHit) e.push({ consulta: 'feodotracker/ipblocklist', evidencia: `${feodoHit.ip} es C2 de botnet (${feodoHit.feodo.detalle.malware})`, puntos: P.abusech.feodo_c2 });\n  if (uh.estado === 'ok' && uh.listado) {\n    if (uh.urls_online > 0) e.push({ consulta: 'urlhaus/host', evidencia: `${uh.urls_online} URL(s) de malware ONLINE (${uh.amenazas.join(', ')})`, puntos: P.abusech.urlhaus_online });\n    else e.push({ consulta: 'urlhaus/host', evidencia: `${uh.urls_total} URL(s) históricas, ninguna online`, puntos: P.abusech.urlhaus_historico });\n  }\n  if (tf.estado === 'ok' && tf.listado) e.push({ consulta: 'threatfox/search_ioc', evidencia: `${tf.iocs.length} IOC(s): ${[...new Set(tf.iocs.map(x => x.malware))].join(', ')}`, puntos: P.abusech.threatfox_ioc });\n  if (!e.length) {\n    if (estAbusech === 'ok') e.push({ consulta: 'urlhaus+threatfox+feodo', evidencia: 'Sin presencia en listas de abuse.ch', puntos: P.abusech.limpio });\n    else e.push({ consulta: 'abuse.ch parcial', evidencia: 'Sin hallazgos en las subconsultas disponibles (cobertura parcial, sin bonificación)', puntos: 0 });\n  }\n  for (const [n, est] of [['urlhaus', uh], ['threatfox', tf]]) if (est.estado !== 'ok') e.push({ consulta: n, evidencia: `subconsulta no disponible: ${est.motivo}`, puntos: 0 });\n  registrar('abuse.ch', e, P.abusech.max);\n}\n\n// ---------- 5. MXTOOLBOX ----------\nconst mx = d.mxtoolbox;\nif (mx.estado === 'no_disponible') noDisponible('mxtoolbox', mx.mx.motivo);\nelse {\n  const e = [];\n  const txt = o => `${(o.failed || []).join(' | ')} ${(o.warnings || []).join(' | ')} ${o.info || ''}`;\n  if (mx.blacklist.estado === 'ok' && mx.blacklist.failed.length) e.push({ consulta: 'lookup/blacklist', evidencia: `Listado en: ${mx.blacklist.failed.slice(0, 5).join('; ')}`, puntos: P.mxtoolbox.blacklist });\n  let spfOk = false, dmarcFuerte = false;\n  if (mx.spf.estado === 'ok') {\n    if (/no spf record|spf record published/i.test(mx.spf.failed.join(' '))) e.push({ consulta: 'lookup/spf', evidencia: 'Sin registro SPF', puntos: P.mxtoolbox.sin_spf });\n    else if (/\\+all/i.test(txt(mx.spf))) e.push({ consulta: 'lookup/spf', evidencia: 'SPF permisivo (+all)', puntos: P.mxtoolbox.spf_permisivo });\n    else spfOk = true;\n  }\n  if (mx.dmarc.estado === 'ok') {\n    if (/no dmarc record|dmarc record published/i.test(mx.dmarc.failed.join(' '))) e.push({ consulta: 'lookup/dmarc', evidencia: 'Sin registro DMARC', puntos: P.mxtoolbox.sin_dmarc });\n    else if (/p=none/i.test(txt(mx.dmarc))) e.push({ consulta: 'lookup/dmarc', evidencia: 'DMARC en p=none (solo monitoreo)', puntos: P.mxtoolbox.dmarc_none });\n    else if (/p=(reject|quarantine)/i.test(txt(mx.dmarc))) dmarcFuerte = true;\n  }\n  if (mx.mx.estado === 'ok' && mx.mx.info === '[]') e.push({ consulta: 'lookup/mx', evidencia: 'Sin registros MX (dominio no recibe correo) - informativo', puntos: 0 });\n  if (!e.some(x => x.puntos > 0) && mx.estado === 'ok' && spfOk && dmarcFuerte && !mx.blacklist.failed.length) {\n    e.push({ consulta: 'mx+spf+dmarc+blacklist', evidencia: 'SPF correcto, DMARC reject/quarantine y sin blacklists', puntos: P.mxtoolbox.correo_ok });\n  }\n  for (const c of ['mx', 'spf', 'dmarc', 'blacklist']) if (mx[c].estado !== 'ok') e.push({ consulta: `lookup/${c}`, evidencia: `subconsulta no disponible: ${mx[c].motivo}`, puntos: 0 });\n  if (!e.length) e.push({ consulta: 'mx+spf+dmarc+blacklist', evidencia: 'Sin hallazgos ponderables', puntos: 0 });\n  registrar('mxtoolbox', e, P.mxtoolbox.max);\n}\n\n// ---------- ISO (informativo, ajuste leve) ----------\nconst iso = d.certificados_iso;\nif (iso.estado === 'ok' && iso.normas.some(n => n.norma === 'ISO 27001')) {\n  detalle.push({ fuente: 'iso', consulta: 'web', evidencia: 'ISO 27001 declarada en el sitio (no verificada)', puntos: P.iso.iso27001_declarado });\n}\n\n// ---------- RESULTADO ----------\nconst total = detalle.reduce((a, e) => a + e.puntos, 0);\nconst score = Math.max(P.min, Math.min(P.max, Math.round(total)));\nconst estados = { shodan: estShodan, abuseipdb: estAbuse, ipapi: estIPAPI, abusech: estAbusech, mxtoolbox: mx.estado };\nconst disponibles = Object.values(estados).filter(e => e !== 'no_disponible').length;\nconst completas = Object.values(estados).filter(e => e === 'ok').length;\n\nreturn {\n  json: {\n    dominio: d.dominio,\n    url: d.url,\n    nombres_origen: d.nombres_origen,\n    confianza_match: d.confianza_match,\n    fuentes_match: d.fuentes_match,\n    score,\n    nivel_riesgo: score < 25 ? 'bajo' : score < 50 ? 'medio' : score < 75 ? 'alto' : 'critico',\n    confianza_score: completas === 5 ? 'alta' : disponibles >= 3 ? 'media' : 'baja',\n    score_parcial: completas < 5,\n    fuentes_disponibles: `${disponibles}/5`,\n    score_detalle: detalle,\n    estado_consultas: {\n      shodan: estShodan,\n      abuseipdb: estAbuse,\n      ipapi: estIPAPI,\n      abusech: { global: estAbusech, urlhaus: uh.estado, threatfox: tf.estado, feodo: estFeodo },\n      mxtoolbox: { global: mx.estado, mx: mx.mx.estado, spf: mx.spf.estado, dmarc: mx.dmarc.estado, blacklist: mx.blacklist.estado },\n      certificados_iso: iso.estado\n    },\n    hallazgos: {\n      por_ip: d.ips,\n      abusech: d.abusech,\n      mxtoolbox: mx,\n      dns_detalle: d.dns_detalle || null,\n      rdap: d.rdap || null\n    },\n    certificados_iso: iso\n  }\n};\n"
+      },
+      "id": "0eccaabe-a786-5931-a6b4-adb0e49e165d",
+      "position": [
+        660,
+        1050
+      ]
+    },
+    {
+      "name": "Reporte final",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Modo: una vez para todos. Arma la SALIDA FINAL: Suite de Inteligencia CTI con Dashboard HTML exhaustivo.\nconst cfg = $('Config').first().json;\nconst resumen = $('Validar candidatos').first().json;\nconst dominios = $input.all().map(i => i.json).filter(j => typeof j.score === 'number').sort((a, b) => b.score - a.score);\n\nconst conteoNiveles = dominios.reduce((a, x) => { a[x.nivel_riesgo] = (a[x.nivel_riesgo] || 0) + 1; return a; }, { critico: 0, alto: 0, medio: 0, bajo: 0 });\n\nfunction esc(v) {\n  return String(v ?? '')\n    .replace(/&/g, '&amp;')\n    .replace(/</g, '&lt;')\n    .replace(/>/g, '&gt;')\n    .replace(/\"/g, '&quot;')\n    .replace(/'/g, '&#39;');\n}\n\nfunction safeUrl(u) {\n  const s = String(u || '').trim();\n  return /^https?:\\/\\//i.test(s) ? esc(s) : '#';\n}\n\nfunction colorScore(s) {\n  if (s >= 75) return { bg: '#dc2626', text: '#fef2f2', border: '#b91c1c', label: 'CRÍTICO' };\n  if (s >= 50) return { bg: '#ea580c', text: '#fff7ed', border: '#c2410c', label: 'ALTO' };\n  if (s >= 25) return { bg: '#ca8a04', text: '#fefce8', border: '#a16207', label: 'MEDIO' };\n  return { bg: '#16a34a', text: '#f0fdf4', border: '#15803d', label: 'BAJO' };\n}\n\nconst PUERTOS_CRITICOS = [21, 22, 23, 25, 110, 135, 139, 143, 445, 1433, 1521, 2375, 3306, 3389, 5432, 5900, 5985, 6379, 9200, 11211, 27017];\nconst PUERTOS_WEB = [80, 443, 8080, 8443];\n\nfunction badgePuerto(p) {\n  const n = Number(p);\n  const isCrit = PUERTOS_CRITICOS.includes(n);\n  const isWeb = PUERTOS_WEB.includes(n);\n  const bg = isCrit ? '#7f1d1d' : isWeb ? '#1e3a8a' : '#374151';\n  const color = isCrit ? '#fca5a5' : isWeb ? '#93c5fd' : '#e5e7eb';\n  const border = isCrit ? '#b91c1c' : isWeb ? '#2563eb' : '#4b5563';\n  return `<span style=\"background:${bg};color:${color};border:1px solid ${border};padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;font-family:monospace;display:inline-block;margin:2px;\">${esc(p)}</span>`;\n}\n\nfunction extractMxInfo(sub) {\n  if (!sub) return [];\n  if (Array.isArray(sub.registros) && sub.registros.length) return sub.registros;\n  if (sub.info && typeof sub.info === 'string') {\n    try {\n      const arr = JSON.parse(sub.info);\n      if (Array.isArray(arr)) {\n        return arr.map(x => ({\n          clave: x.Name || x.Hostname || x.Type || x.Prefix || '',\n          valor: x.Value || x['IP Address'] || x.IP_Address || x.Info || '',\n          desc: x.Description || ''\n        })).filter(x => x.clave || x.valor);\n      }\n    } catch (e) {}\n  }\n  return [];\n}\n\nconst matrizRows = [];\nconst cardsDominiosHtml = dominios.map((d, idx) => {\n  const col = colorScore(d.score);\n  const h = d.hallazgos || {};\n  const ips = h.por_ip || [];\n  const primaryIp = ips[0] || {};\n  const ia = primaryIp.ipapi || {};\n  const sh = primaryIp.shodan || {};\n  const ab = primaryIp.abuseipdb || {};\n  const mx = h.mxtoolbox || {};\n  const ach = h.abusech || {};\n  const uh = ach.urlhaus || {};\n  const tf = ach.threatfox || {};\n  const iso = d.certificados_iso || {};\n  const rdap = h.rdap || {};\n  const dns = h.dns_detalle || {};\n\n  const todosPuertos = [...new Set(ips.flatMap(i => (i.shodan && i.shodan.puertos) || []))].sort((a, b) => a - b);\n  const todasVulns = [...new Set(ips.flatMap(i => (i.shodan && i.shodan.vulns) || []))];\n  const todosCpes = [...new Set(ips.flatMap(i => (i.shodan && i.shodan.cpes) || []))];\n  const todosTags = [...new Set(ips.flatMap(i => (i.shodan && i.shodan.tags) || []))];\n  const todosHosts = [...new Set(ips.flatMap(i => (i.shodan && i.shodan.hostnames) || []))];\n  const maxAbuse = ips.reduce((m, i) => Math.max(m, (i.abuseipdb && i.abuseipdb.confianza_abuso) || 0), 0);\n  const totalReportesAbuse = ips.reduce((m, i) => m + ((i.abuseipdb && i.abuseipdb.total_reportes) || 0), 0);\n  const reportesRecientes = ips.flatMap(i => (i.abuseipdb && i.abuseipdb.reportes_recientes) || []).slice(0, 8);\n  const feodoHit = ips.find(i => i.feodo && i.feodo.listada);\n\n  let mxItems = extractMxInfo(mx.mx);\n  if (!mxItems.length && Array.isArray(dns.mx) && dns.mx.length) mxItems = dns.mx.map(v => ({ clave: 'MX (DoH)', valor: v }));\n  let spfItems = extractMxInfo(mx.spf);\n  if (!spfItems.length && Array.isArray(dns.spf) && dns.spf.length) spfItems = dns.spf.map(v => ({ clave: 'SPF (DoH)', valor: v }));\n  let dmarcItems = extractMxInfo(mx.dmarc);\n  if (!dmarcItems.length && Array.isArray(dns.dmarc) && dns.dmarc.length) dmarcItems = dns.dmarc.map(v => ({ clave: 'DMARC (DoH)', valor: v }));\n  const blFails = (mx.blacklist && mx.blacklist.failed) || [];\n\n  const origenTxt = (d.nombres_origen || []).join(', ');\n  const searchBlob = [\n    d.dominio, origenTxt, ips.map(i => i.ip).join(' '),\n    ia.pais, ia.ciudad, ia.isp, ia.org, ab.isp,\n    todasVulns.join(' '), todosCpes.join(' '), rdap.registrador\n  ].filter(Boolean).join(' ').toLowerCase();\n\n  matrizRows.push(`\n    <tr class=\"matriz-row\" data-nivel=\"${col.label}\" data-search=\"${esc(searchBlob)}\">\n      <td style=\"padding:8px 10px;\">\n        <a href=\"#dom-${idx}\" style=\"color:#60a5fa;font-weight:700;text-decoration:none;\">${esc(d.dominio)}</a>\n        <div style=\"color:#94a3b8;font-size:11px;\">${esc(origenTxt)}</div>\n      </td>\n      <td style=\"padding:8px 10px;\"><span style=\"background:${col.bg};color:${col.text};padding:3px 9px;border-radius:9999px;font-weight:800;font-size:11px;white-space:nowrap;\">${d.score}/100 · ${col.label}</span></td>\n      <td style=\"padding:8px 10px;\">\n        <div style=\"font-family:monospace;color:#e2e8f0;\">${esc(primaryIp.ip || '-')}</div>\n        <div style=\"color:#94a3b8;font-size:11px;\">${esc(ia.pais || ab.pais || '-')} · ${esc(ia.isp || ab.isp || sh.org || '-')}</div>\n      </td>\n      <td style=\"padding:8px 10px;\">${todosPuertos.length ? todosPuertos.slice(0, 4).join(', ') + (todosPuertos.length > 4 ? '...' : '') : '0 puertos'} · ${todasVulns.length ? `<span style=\"color:#f87171;font-weight:700;\">${todasVulns.length} CVEs</span>` : '<span style=\"color:#22c55e;\">0 CVEs</span>'}</td>\n      <td style=\"padding:8px 10px;\"><strong style=\"color:${maxAbuse >= 50 ? '#ef4444' : maxAbuse >= 25 ? '#eab308' : '#22c55e'};\">${maxAbuse}%</strong> (${totalReportesAbuse} rep)</td>\n      <td style=\"padding:8px 10px;\">${spfItems.length ? '🟢 SPF' : '🔴 Sin SPF'} · ${dmarcItems.length ? '🟢 DMARC' : '🟡 Sin DMARC'}</td>\n      <td style=\"padding:8px 10px;\">${rdap.estado === 'ok' && rdap.antiguedad_anios !== null ? esc(rdap.antiguedad_anios) + ' años' : '-'} ${(iso.normas && iso.normas.length) ? '· 📜 ISO' : ''}</td>\n    </tr>\n  `);\n\n  // 1. FILA DE IPs Y RED (IP-API)\n  const filasIps = ips.map(i => {\n    const api = i.ipapi || {};\n    const aip = i.abuseipdb || {};\n    const shd = i.shodan || {};\n    const hasIpApi = api.estado === 'ok';\n    const proxyBadge = !hasIpApi ? '<span style=\"color:#94a3b8;\">N/A</span>' : api.proxy\n      ? '<span style=\"background:#7f1d1d;color:#fca5a5;padding:2px 6px;border-radius:4px;font-weight:600;\">🔴 SÍ (Proxy/VPN/Tor)</span>'\n      : '<span style=\"background:#064e3b;color:#a7f3d0;padding:2px 6px;border-radius:4px;font-weight:600;\">🟢 NO (Directo)</span>';\n    const hostingBadge = !hasIpApi ? '<span style=\"color:#94a3b8;\">N/A</span>' : api.hosting\n      ? '<span style=\"background:#7c2d12;color:#fdba74;padding:2px 6px;border-radius:4px;font-weight:600;\">🟠 Datacenter / Cloud</span>'\n      : (api.mobile ? '<span style=\"background:#1e3a8a;color:#93c5fd;padding:2px 6px;border-radius:4px;font-weight:600;\">📱 Red Móvil</span>' : '<span style=\"background:#064e3b;color:#a7f3d0;padding:2px 6px;border-radius:4px;font-weight:600;\">🟢 Red Propia / Corp</span>');\n    const loc = api.ciudad ? `${api.ciudad}${api.region ? ', ' + api.region : ''}, ${api.pais || ''}` : (api.pais || aip.pais || shd.pais || 'Desconocido');\n    return `\n      <tr style=\"border-bottom:1px solid #1e293b;font-size:12px;\">\n        <td style=\"padding:8px 10px;font-family:monospace;font-weight:600;color:#60a5fa;\">\n          ${esc(i.ip)}\n          ${api.reverse ? `<div style=\"font-size:10px;color:#94a3b8;font-weight:400;\">PTR: ${esc(api.reverse)}</div>` : ''}\n        </td>\n        <td style=\"padding:8px 10px;color:#e2e8f0;\">\n          <div>${esc(loc)} (${esc(api.pais_codigo || '-')})</div>\n          ${api.zona_horaria ? `<div style=\"font-size:10px;color:#94a3b8;\">TZ: ${esc(api.zona_horaria)}</div>` : ''}\n        </td>\n        <td style=\"padding:8px 10px;color:#cbd5e1;\">${esc(api.isp || api.org || aip.isp || shd.isp || shd.org || '-')}</td>\n        <td style=\"padding:8px 10px;color:#94a3b8;font-family:monospace;\">${esc(api.as || shd.asn || '-')}</td>\n        <td style=\"padding:8px 10px;\">${proxyBadge}</td>\n        <td style=\"padding:8px 10px;\">${hostingBadge}</td>\n      </tr>\n    `;\n  }).join('');\n\n  // 2. VULNERABILIDADES CVE Y SOFTWARE CPE (SHODAN)\n  const cpesHtml = todosCpes.length ? `\n    <div style=\"margin-top:8px;font-size:12px;color:#cbd5e1;\">\n      <strong>Software &amp; Tecnologías Detectadas (CPE):</strong>\n      <div style=\"display:flex;gap:5px;flex-wrap:wrap;margin-top:4px;\">\n        ${todosCpes.map(c => `<span style=\"background:#1e293b;color:#93c5fd;border:1px solid #334155;padding:2px 7px;border-radius:4px;font-size:11px;font-family:monospace;\">${esc(c)}</span>`).join('')}\n      </div>\n    </div>\n  ` : '';\n  const tagsHtml = todosTags.length ? `<div style=\"font-size:11px;color:#94a3b8;margin-top:6px;\"><strong>Etiquetas Shodan:</strong> ${todosTags.map(esc).join(', ')}</div>` : '';\n\n  const vulnsHtml = todasVulns.length ? `\n    <div style=\"margin-top:10px;\">\n      <div style=\"font-size:12px;font-weight:600;color:#f87171;margin-bottom:6px;\">⚠️ Vulnerabilidades CVE Detectadas (${todasVulns.length}):</div>\n      <div style=\"display:flex;gap:6px;flex-wrap:wrap;\">\n        ${todasVulns.map(v => `\n          <a href=\"https://nvd.nist.gov/vuln/detail/${encodeURIComponent(v)}\" target=\"_blank\" style=\"background:#450a0a;color:#fca5a5;border:1px solid #991b1b;padding:3px 8px;border-radius:4px;font-size:11px;font-family:monospace;text-decoration:none;font-weight:600;\">\n            ${esc(v)} ↗\n          </a>\n        `).join('')}\n      </div>\n    </div>\n  ` : '<div style=\"color:#22c55e;font-size:12px;margin-top:8px;\">✅ Sin vulnerabilidades CVE conocidas indexadas en Shodan.</div>';\n\n  // 3. ABUSEIPDB DETALLE + REPORTES RECIENTES\n  const abuseProgressCol = maxAbuse >= 50 ? '#ef4444' : maxAbuse >= 25 ? '#eab308' : '#22c55e';\n  const recientesHtml = reportesRecientes.length ? `\n    <div style=\"margin-top:10px;border-top:1px solid #1e293b;padding-top:8px;\">\n      <div style=\"font-size:11px;font-weight:700;color:#fca5a5;margin-bottom:4px;\">📋 Últimos Incidentes / Categorías Reportadas:</div>\n      ${reportesRecientes.map(r => `\n        <div style=\"font-size:11px;color:#cbd5e1;background:#0f172a;padding:5px 8px;border-radius:4px;margin-bottom:4px;border-left:2px solid #ef4444;\">\n          <span style=\"color:#94a3b8;font-family:monospace;\">[${r.fecha ? esc(new Date(r.fecha).toLocaleDateString()) : '-'}${r.pais_reportante ? ' · ' + esc(r.pais_reportante) : ''}]</span>\n          <strong style=\"color:#fca5a5;\">${(r.categorias || []).map(esc).join(', ') || 'Abuso reportado'}</strong>\n          ${r.comentario ? ` — <span style=\"color:#94a3b8;\">\"${esc(r.comentario)}\"</span>` : ''}\n        </div>\n      `).join('')}\n    </div>\n  ` : '';\n  const abuseHtml = `\n    <div style=\"display:flex;gap:20px;flex-wrap:wrap;align-items:center;\">\n      <div style=\"min-width:180px;\">\n        <div style=\"font-size:11px;color:#94a3b8;text-transform:uppercase;\">Nivel de Confianza de Abuso</div>\n        <div style=\"font-size:24px;font-weight:800;color:${abuseProgressCol};\">${maxAbuse}%</div>\n        <div style=\"background:#334155;border-radius:9999px;height:8px;width:100%;overflow:hidden;margin-top:4px;\">\n          <div style=\"background:${abuseProgressCol};height:100%;width:${maxAbuse}%;\"></div>\n        </div>\n      </div>\n      <div style=\"font-size:12px;color:#cbd5e1;line-height:1.6;\">\n        <div><strong>Reportes de Ataque:</strong> ${totalReportesAbuse} reportes en los últimos 90 días</div>\n        <div><strong>Denunciantes Únicos:</strong> ${ab.usuarios_distintos || 0} redes distintas · <strong>Tipo Uso:</strong> ${esc(ab.tipo_uso || 'N/A')}</div>\n        <div><strong>Último Reporte:</strong> ${ab.ultimo_reporte ? esc(new Date(ab.ultimo_reporte).toLocaleString()) : 'Sin reportes recientes'}</div>\n        <div><strong>Lista Blanca / Tor:</strong> ${ab.whitelisted ? '🟢 En lista blanca' : '⚪ No en lista blanca'} · ${ab.es_tor ? '🔴 Nodo Tor' : 'No Tor'}</div>\n      </div>\n    </div>\n    ${recientesHtml}\n  `;\n\n  // 4. ABUSE.CH (FEODO + URLHAUS + THREATFOX)\n  const feodoMal = feodoHit ? (feodoHit.feodo.malware || (feodoHit.feodo.detalle && feodoHit.feodo.detalle.malware) || 'Malware C2') : '';\n  const feodoBadge = feodoHit\n    ? `<div style=\"background:#7f1d1d;color:#fca5a5;padding:8px 12px;border-radius:6px;margin-bottom:8px;font-size:12px;font-weight:600;\">\n         🚨 ALERTA CRÍTICA: ${esc(feodoHit.ip)} figura activa como C2 de Botnet (${esc(feodoMal)})\n       </div>`\n    : `<div style=\"color:#22c55e;font-size:12px;margin-bottom:6px;\">✅ Feodo Tracker: Ninguna IP asociada está listada como Command &amp; Control (C2).</div>`;\n\n  const urlhausHtml = uh.listado ? `\n    <div style=\"margin-top:6px;font-size:12px;color:#fca5a5;\">\n      ⚠️ URLhaus: <strong>${uh.urls_total}</strong> URLs detectadas (${uh.urls_online} activas online).\n      Amenazas: <strong>${(uh.amenazas || []).map(esc).join(', ') || 'Malware general'}</strong>\n      ${(uh.muestras || []).slice(0, 3).map(m => `\n        <div style=\"font-family:monospace;font-size:11px;background:#1e1b4b;padding:4px 8px;border-radius:4px;margin-top:4px;word-break:break-all;\">\n          ${esc(m.url)} [${esc(m.estado)}] ${m.tags && m.tags.length ? '(' + m.tags.map(esc).join(', ') + ')' : ''}\n        </div>\n      `).join('')}\n    </div>\n  ` : '<div style=\"color:#22c55e;font-size:12px;\">✅ URLhaus: Sin URLs de distribución de malware activas.</div>';\n\n  const threatfoxHtml = tf.listado ? `\n    <div style=\"margin-top:6px;font-size:12px;color:#fca5a5;\">\n      ⚠️ ThreatFox: <strong>${(tf.iocs || []).length}</strong> Indicadores de Compromiso (IOCs) asociados.\n      ${(tf.iocs || []).slice(0, 3).map(ioc => `\n        <div style=\"font-family:monospace;font-size:11px;background:#31102b;padding:4px 8px;border-radius:4px;margin-top:4px;\">\n          ${esc(ioc.ioc)} · ${esc(ioc.tipo)} · ${esc(ioc.malware || 'Payload')} (Confianza: ${esc(ioc.confianza)}%)\n        </div>\n      `).join('')}\n    </div>\n  ` : '<div style=\"color:#22c55e;font-size:12px;\">✅ ThreatFox: Sin IOCs maliciosos registrados para este dominio.</div>';\n\n  // 5. MXTOOLBOX + DNS\n  const mxResumenHtml = `\n    <div style=\"display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:12px;font-size:12px;\">\n      <div style=\"background:#0f172a;border:1px solid #1e293b;border-radius:6px;padding:10px;\">\n        <div style=\"font-weight:700;color:#93c5fd;margin-bottom:4px;\">📬 Servidores MX Receptores:</div>\n        ${mxItems.length ? mxItems.map(m => `<div style=\"font-family:monospace;font-size:11px;color:#e2e8f0;\">• ${esc(m.valor || m.clave)}</div>`).join('') : '<div style=\"color:#94a3b8;\">Sin registros MX reportados</div>'}\n      </div>\n      <div style=\"background:#0f172a;border:1px solid #1e293b;border-radius:6px;padding:10px;\">\n        <div style=\"font-weight:700;color:#93c5fd;margin-bottom:4px;\">🛡️ Configuración SPF:</div>\n        ${spfItems.length ? spfItems.map(s => `<div style=\"font-family:monospace;font-size:11px;color:#e2e8f0;word-break:break-all;\">${esc(s.valor || s.desc)}</div>`).join('') : '<div style=\"color:#f87171;\">Sin registro SPF válido detectado</div>'}\n      </div>\n      <div style=\"background:#0f172a;border:1px solid #1e293b;border-radius:6px;padding:10px;\">\n        <div style=\"font-weight:700;color:#93c5fd;margin-bottom:4px;\">🔒 Política DMARC:</div>\n        ${dmarcItems.length ? dmarcItems.map(dm => `<div style=\"font-family:monospace;font-size:11px;color:#e2e8f0;word-break:break-all;\">${esc(dm.valor || dm.desc)}</div>`).join('') : '<div style=\"color:#f87171;\">Sin política DMARC configurada</div>'}\n      </div>\n      <div style=\"background:#0f172a;border:1px solid #1e293b;border-radius:6px;padding:10px;\">\n        <div style=\"font-weight:700;color:#93c5fd;margin-bottom:4px;\">🚫 Blacklists Mundiales (DNSBL):</div>\n        ${blFails.length\n          ? `<div style=\"color:#ef4444;font-weight:600;\">🔴 Aparece en ${blFails.length} lista(s): ${blFails.map(esc).join(', ')}</div>`\n          : (mx.blacklist && mx.blacklist.estado === 'no_disponible'\n              ? `<div style=\"color:#fbbf24;\">⚠️ Blacklist no disponible (${esc(mx.blacklist.motivo || 'cuota')})</div>`\n              : '<div style=\"color:#22c55e;font-weight:600;\">🟢 Limpio (0 de 50+ listas negras)</div>')}\n      </div>\n    </div>\n  `;\n\n  const nsHtml = (dns.ns && dns.ns.length) || (dns.txt_extra && dns.txt_extra.length) ? `\n    <div style=\"margin-top:10px;background:#0f172a;border:1px solid #1e293b;border-radius:6px;padding:10px;font-size:12px;\">\n      <div style=\"font-weight:700;color:#93c5fd;margin-bottom:4px;\">🌐 Servidores DNS Autoritativos (NS) &amp; TXT:</div>\n      ${dns.ns && dns.ns.length ? `<div style=\"color:#e2e8f0;font-family:monospace;font-size:11px;\"><strong>NS:</strong> ${dns.ns.map(esc).join(' · ')}</div>` : ''}\n      ${dns.txt_extra && dns.txt_extra.length ? `<div style=\"color:#94a3b8;font-family:monospace;font-size:11px;margin-top:4px;word-break:break-all;\"><strong>TXT Extras:</strong> ${dns.txt_extra.slice(0, 4).map(esc).join(' | ')}</div>` : ''}\n    </div>\n  ` : '';\n\n  // 6. RDAP / WHOIS + CERTIFICACIONES ISO\n  const rdapHtml = rdap.estado === 'ok' ? `\n    <div style=\"background:#0f172a;border:1px solid #1e293b;border-radius:6px;padding:10px;margin-bottom:10px;font-size:12px;display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:10px;\">\n      <div><span style=\"color:#94a3b8;font-size:11px;\">Registrador:</span><div style=\"color:#f8fafc;font-weight:600;\">${esc(rdap.registrador)}</div></div>\n      <div><span style=\"color:#94a3b8;font-size:11px;\">Fecha de Creación:</span><div style=\"color:#e2e8f0;font-weight:600;\">${rdap.creacion ? esc(new Date(rdap.creacion).toLocaleDateString()) : '-'} ${rdap.antiguedad_anios !== null && rdap.antiguedad_anios !== undefined ? `(${esc(rdap.antiguedad_anios)} años)` : ''}</div></div>\n      <div><span style=\"color:#94a3b8;font-size:11px;\">Expiración:</span><div style=\"color:#e2e8f0;\">${rdap.expiracion ? esc(new Date(rdap.expiracion).toLocaleDateString()) : '-'}</div></div>\n      <div><span style=\"color:#94a3b8;font-size:11px;\">DNSSEC / Bloqueo:</span><div style=\"color:#e2e8f0;\">${rdap.dnssec ? '🟢 Firmado' : '⚪ Sin DNSSEC'} · ${(rdap.estados || []).some(s => String(s).includes('Prohibited')) ? '🔒 Transfer Locked' : 'Abierto'}</div></div>\n    </div>\n  ` : `<div style=\"color:#94a3b8;font-size:11px;margin-bottom:8px;\">ℹ️ WHOIS/RDAP: ${esc(rdap.motivo || 'No disponible para este TLD')}.</div>`;\n\n  const normas = iso.normas || [];\n  const isoHtml = normas.length ? `\n    <div style=\"margin-top:6px;\">\n      <div style=\"display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;\">\n        ${normas.map(n => `\n          <span style=\"background:#1e3a8a;color:#bfdbfe;border:1px solid #3b82f6;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;\">\n            ${esc(n.norma)} · ${esc(n.descripcion || 'Norma Internacional')} ${n.versiones && n.versiones.length ? '(' + n.versiones.map(esc).join(', ') + ')' : ''}\n          </span>\n        `).join('')}\n      </div>\n      ${normas.flatMap(n => n.evidencias || []).slice(0, 2).map(e => `\n        <div style=\"background:#0f172a;border-left:3px solid #3b82f6;padding:6px 10px;margin-top:4px;font-size:11px;color:#cbd5e1;\">\n          <em>\"...${esc(e.fragmento)}...\"</em> <a href=\"${safeUrl(e.url)}\" target=\"_blank\" style=\"color:#60a5fa;margin-left:6px;\">[Ver Fuente]</a>\n        </div>\n      `).join('')}\n    </div>\n  ` : '<div style=\"color:#94a3b8;font-size:12px;\">No se identificaron certificaciones ISO declaradas en las páginas públicas auditadas.</div>';\n\n  // 7. DESGLOSE DEL SCORE\n  const desgloseRows = (d.score_detalle || []).map(item => `\n    <tr style=\"border-bottom:1px solid #1e293b;font-size:12px;\">\n      <td style=\"padding:6px 10px;font-weight:700;font-family:monospace;color:${item.puntos > 0 ? '#f87171' : item.puntos < 0 ? '#4ade80' : '#94a3b8'};\">\n        ${item.puntos > 0 ? '+' + item.puntos : item.puntos}\n      </td>\n      <td style=\"padding:6px 10px;color:#cbd5e1;text-transform:uppercase;font-weight:600;\">${esc(item.fuente)}</td>\n      <td style=\"padding:6px 10px;color:#94a3b8;font-family:monospace;font-size:11px;\">${esc(item.consulta || '-')}</td>\n      <td style=\"padding:6px 10px;color:#e2e8f0;\">${esc(item.evidencia)}</td>\n    </tr>\n  `).join('');\n\n  return `\n    <div id=\"dom-${idx}\" class=\"domain-card dossier-card\" data-nivel=\"${col.label}\" data-search=\"${esc(searchBlob)}\" style=\"background:#111827;border:1px solid #1f2937;border-radius:10px;margin-bottom:24px;overflow:hidden;box-shadow:0 4px 6px -1px rgba(0,0,0,0.3);\">\n\n      <!-- ENCABEZADO DE DOMINIO -->\n      <div style=\"background:#1e293b;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;border-bottom:1px solid #334155;\">\n        <div>\n          <div style=\"display:flex;align-items:center;gap:10px;flex-wrap:wrap;\">\n            <a href=\"${safeUrl(d.url)}\" target=\"_blank\" style=\"color:#60a5fa;font-size:18px;font-weight:700;text-decoration:none;\">${esc(d.dominio)}</a>\n            <span style=\"background:#0f172a;color:#94a3b8;font-size:11px;padding:3px 8px;border-radius:4px;border:1px solid #334155;\">\n              Entidad: ${esc(origenTxt)}\n            </span>\n          </div>\n          <div style=\"color:#94a3b8;font-size:12px;margin-top:4px;\">\n            🌐 IPs: <span style=\"color:#e2e8f0;font-family:monospace;\">${ips.map(i => esc(i.ip)).join(', ') || 'Sin IPs'}</span>\n            &nbsp;·&nbsp; Ubicación: <strong style=\"color:#e2e8f0;\">${ia.ciudad ? esc(ia.ciudad) + ', ' : ''}${esc(ia.pais || ab.pais || 'Global')}</strong>\n            &nbsp;·&nbsp; Red: <strong style=\"color:#cbd5e1;\">${esc(ia.isp || ia.org || ab.isp || sh.org || 'Desconocido')}</strong>\n          </div>\n        </div>\n\n        <div style=\"display:flex;align-items:center;gap:12px;\">\n          <div style=\"text-align:right;\">\n            <div style=\"font-size:10px;color:#94a3b8;text-transform:uppercase;\">Score de Riesgo CTI</div>\n            <div style=\"background:${col.bg};color:${col.text};border:1px solid ${col.border};padding:6px 14px;border-radius:9999px;font-size:16px;font-weight:800;display:inline-block;margin-top:2px;\">\n              ${d.score}/100 · ${col.label}\n            </div>\n          </div>\n        </div>\n      </div>\n\n      <!-- BARRA DE SEÑALES RÁPIDAS -->\n      <div style=\"background:#0f172a;padding:12px 20px;display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:12px;border-bottom:1px solid #1e293b;font-size:12px;\">\n        <div>\n          <div style=\"color:#94a3b8;font-size:11px;\">📡 Tipo de Red (IP-API)</div>\n          <div style=\"color:#e2e8f0;font-weight:600;margin-top:2px;\">\n            ${ia.proxy ? '🔴 Proxy / VPN / Tor' : '🟢 Sin Proxy'} · ${ia.hosting ? '🟠 Datacenter' : '🟢 Corporativo'}\n          </div>\n        </div>\n        <div>\n          <div style=\"color:#94a3b8;font-size:11px;\">🔍 Puertos &amp; CVEs (Shodan)</div>\n          <div style=\"color:#e2e8f0;font-weight:600;margin-top:2px;\">\n            ${todosPuertos.length ? todosPuertos.slice(0, 4).join(', ') + (todosPuertos.length > 4 ? '...' : '') : 'Sin puertos'}\n            · ${todasVulns.length ? '<span style=\"color:#f87171;\">' + todasVulns.length + ' CVEs</span>' : '<span style=\"color:#22c55e;\">0 CVEs</span>'}\n          </div>\n        </div>\n        <div>\n          <div style=\"color:#94a3b8;font-size:11px;\">⚠️ Reputación (AbuseIPDB)</div>\n          <div style=\"color:#e2e8f0;font-weight:600;margin-top:2px;\">\n            ${maxAbuse}% sospecha · ${totalReportesAbuse} reportes (90d)\n          </div>\n        </div>\n        <div>\n          <div style=\"color:#94a3b8;font-size:11px;\">☣️ Ciberamenazas (Abuse.ch)</div>\n          <div style=\"color:#e2e8f0;font-weight:600;margin-top:2px;\">\n            ${feodoHit ? '<span style=\"color:#ef4444;\">🔴 Botnet C2</span>' : '🟢 Feodo Ok'} · ${uh.listado ? '<span style=\"color:#f87171;\">' + uh.urls_total + ' URLs Maliciosas</span>' : '🟢 0 URLs'}\n          </div>\n        </div>\n        <div>\n          <div style=\"color:#94a3b8;font-size:11px;\">✉️ Seguridad Email &amp; DNSBL</div>\n          <div style=\"color:#e2e8f0;font-weight:600;margin-top:2px;\">\n            ${blFails.length ? '<span style=\"color:#ef4444;\">🔴 Blacklist (' + blFails.length + ')</span>' : '🟢 Blacklist Ok'} · ${spfItems.length ? '🟢 SPF Ok' : '🟡 Sin SPF'}\n          </div>\n        </div>\n      </div>\n\n      <!-- SUITE DETALLADA EXPANDIBLE -->\n      <details class=\"dossier-details\" style=\"padding:16px 20px;cursor:pointer;\" open>\n        <summary style=\"font-size:13px;font-weight:700;color:#93c5fd;outline:none;user-select:none;margin-bottom:14px;\">\n          📊 Dossier Técnico de Inteligencia (Desplegar / Ocultar Detalles Exhaustivos)\n        </summary>\n\n        <div style=\"display:flex;flex-direction:column;gap:18px;margin-top:12px;\">\n\n          <!-- PANEL 1: IP-API -->\n          <div style=\"background:#090d16;border:1px solid #1e293b;border-radius:8px;padding:14px;\">\n            <div style=\"font-weight:700;font-size:13px;color:#38bdf8;margin-bottom:8px;\">\n              🌐 1. Infraestructura de Red &amp; Geolocalización (IP-API · Sin Cuotas)\n            </div>\n            <table style=\"width:100%;border-collapse:collapse;text-align:left;\">\n              <thead>\n                <tr style=\"color:#94a3b8;font-size:11px;border-bottom:1px solid #334155;background:#0f172a;\">\n                  <th style=\"padding:6px 10px;\">IP / PTR</th>\n                  <th style=\"padding:6px 10px;\">Ubicación</th>\n                  <th style=\"padding:6px 10px;\">ISP / Organización</th>\n                  <th style=\"padding:6px 10px;\">ASN</th>\n                  <th style=\"padding:6px 10px;\">Anonimizador (Proxy/VPN)</th>\n                  <th style=\"padding:6px 10px;\">Tipo Alojamiento</th>\n                </tr>\n              </thead>\n              <tbody>${filasIps}</tbody>\n            </table>\n          </div>\n\n          <!-- PANEL 2: SHODAN -->\n          <div style=\"background:#090d16;border:1px solid #1e293b;border-radius:8px;padding:14px;\">\n            <div style=\"font-weight:700;font-size:13px;color:#38bdf8;margin-bottom:8px;\">\n              🔍 2. Superficie de Ataque, CPEs &amp; Puertos Expuestos (Shodan)\n            </div>\n            <div style=\"font-size:12px;color:#cbd5e1;margin-bottom:6px;\">\n              <strong>Puertos Abiertos Detectados:</strong>\n              <div style=\"margin-top:4px;\">\n                ${todosPuertos.length ? todosPuertos.map(badgePuerto).join('') : '<span style=\"color:#94a3b8;\">Ningún puerto común detectado</span>'}\n              </div>\n            </div>\n            ${cpesHtml}\n            ${vulnsHtml}\n            ${todosHosts.length ? `<div style=\"font-size:11px;color:#94a3b8;margin-top:8px;\"><strong>Hostnames DNS asociados:</strong> ${todosHosts.map(esc).join(', ')}</div>` : ''}\n            ${tagsHtml}\n          </div>\n\n          <!-- PANEL 3: ABUSEIPDB -->\n          <div style=\"background:#090d16;border:1px solid #1e293b;border-radius:8px;padding:14px;\">\n            <div style=\"font-weight:700;font-size:13px;color:#38bdf8;margin-bottom:8px;\">\n              🚨 3. Historial de Abuso y Reportes de Ataques (AbuseIPDB)\n            </div>\n            ${abuseHtml}\n          </div>\n\n          <!-- PANEL 4: ABUSE.CH -->\n          <div style=\"background:#090d16;border:1px solid #1e293b;border-radius:8px;padding:14px;\">\n            <div style=\"font-weight:700;font-size:13px;color:#38bdf8;margin-bottom:8px;\">\n              ☣️ 4. Amenazas Activas, Botnets &amp; Malware (Abuse.ch Suite)\n            </div>\n            ${feodoBadge}\n            ${urlhausHtml}\n            ${threatfoxHtml}\n          </div>\n\n          <!-- PANEL 5: MXTOOLBOX + DNS -->\n          <div style=\"background:#090d16;border:1px solid #1e293b;border-radius:8px;padding:14px;\">\n            <div style=\"font-weight:700;font-size:13px;color:#38bdf8;margin-bottom:8px;\">\n              ✉️ 5. Seguridad de Correo Electrónico, DNS &amp; Blacklists (MXToolbox + Google DoH)\n            </div>\n            ${mxResumenHtml}\n            ${nsHtml}\n          </div>\n\n          <!-- PANEL 6: WHOIS / RDAP & ISO -->\n          <div style=\"background:#090d16;border:1px solid #1e293b;border-radius:8px;padding:14px;\">\n            <div style=\"font-weight:700;font-size:13px;color:#38bdf8;margin-bottom:8px;\">\n              📜 6. Registro WHOIS/RDAP, Antigüedad &amp; Cumplimiento ISO\n            </div>\n            ${rdapHtml}\n            ${isoHtml}\n          </div>\n\n          <!-- PANEL 7: AUDITORÍA DEL SCORE -->\n          <div style=\"background:#090d16;border:1px solid #1e293b;border-radius:8px;padding:14px;\">\n            <div style=\"font-weight:700;font-size:13px;color:#38bdf8;margin-bottom:8px;\">\n              ⚖️ 7. Auditoría Contable del Score (Regla Ponderada 1-100)\n            </div>\n            <table style=\"width:100%;border-collapse:collapse;text-align:left;\">\n              <thead>\n                <tr style=\"color:#94a3b8;font-size:11px;border-bottom:1px solid #334155;background:#0f172a;\">\n                  <th style=\"padding:6px 10px;\">Puntos</th>\n                  <th style=\"padding:6px 10px;\">Fuente</th>\n                  <th style=\"padding:6px 10px;\">Consulta</th>\n                  <th style=\"padding:6px 10px;\">Evidencia Técnica</th>\n                </tr>\n              </thead>\n              <tbody>${desgloseRows}</tbody>\n            </table>\n          </div>\n\n        </div>\n      </details>\n\n    </div>\n  `;\n}).join('');\n\nconst filasSinDominio = resumen.sin_dominio.map(s => `\n  <tr style=\"border-bottom:1px solid #1e293b;\">\n    <td style=\"padding:10px 14px;color:#f8fafc;font-weight:600;\">${esc(s.nombre)}</td>\n    <td style=\"padding:10px 14px;color:#94a3b8;font-size:13px;\">${esc(s.motivo)}</td>\n    <td style=\"padding:10px 14px;color:#fbbf24;font-size:12px;\">Continuado (sin impacto adverso)</td>\n  </tr>\n`).join('');\n\nconst html = `<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title>SOC Threat Intelligence Suite · Dossier de Reputación</title>\n  <style>\n    body { font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif; background:#070a13; color:#f1f5f9; margin:0; padding:24px; }\n    .container { max-width:1280px; margin:0 auto; }\n    .card { background:#111827; border:1px solid #1f2937; border-radius:10px; padding:18px; margin-bottom:20px; }\n    .metric { display:inline-block; padding:12px 18px; background:#0b0f19; border:1px solid #1e293b; border-radius:8px; margin-right:12px; margin-bottom:8px; min-width:140px; }\n    .metric-val { font-size:24px; font-weight:800; color:#fff; }\n    .metric-lbl { font-size:11px; color:#94a3b8; text-transform:uppercase; margin-top:4px; font-weight:600; }\n    @media print { .no-print { display: none !important; } }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n\n    <!-- TOP HEADER -->\n    <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:12px;\">\n      <div>\n        <h1 style=\"margin:0; font-size:24px; color:#38bdf8; display:flex; align-items:center; gap:8px;\">\n          🛡️ SOC Threat Intelligence Suite\n        </h1>\n        <div style=\"color:#94a3b8; font-size:13px; margin-top:4px;\">\n          Auditoría técnica multi-herramienta (Shodan · AbuseIPDB · IP-API · Abuse.ch · MXToolbox + DoH · RDAP · ISO) · Generado: ${new Date().toLocaleString()}\n        </div>\n      </div>\n      <div class=\"no-print\" style=\"display:flex;gap:8px;flex-wrap:wrap;\">\n        <button onclick=\"window.print()\" style=\"background:#1e293b;color:#cbd5e1;border:1px solid #334155;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;\">🖨️ Imprimir / PDF</button>\n        <a href=\"/form/ti-dominios\" style=\"background:#2563eb; color:#fff; padding:10px 18px; border-radius:8px; text-decoration:none; font-size:13px; font-weight:700; display:inline-block; box-shadow:0 2px 4px rgba(37,99,235,0.4);\">\n          + Nueva Consulta CTI\n        </a>\n      </div>\n    </div>\n\n    <!-- METRICS BAR -->\n    <div class=\"card\" style=\"padding:14px 18px;\">\n      <div style=\"display:flex; flex-wrap:wrap;\">\n        <div class=\"metric\"><div class=\"metric-val\">${resumen.nombres.length}</div><div class=\"metric-lbl\">Entidades Entrada</div></div>\n        <div class=\"metric\"><div class=\"metric-val\" style=\"color:#60a5fa;\">${dominios.length}</div><div class=\"metric-lbl\">Dominios Analizados</div></div>\n        <div class=\"metric\"><div class=\"metric-val\" style=\"color:#ef4444;\">${conteoNiveles.critico || 0}</div><div class=\"metric-lbl\">Riesgo Crítico</div></div>\n        <div class=\"metric\"><div class=\"metric-val\" style=\"color:#f97316;\">${conteoNiveles.alto || 0}</div><div class=\"metric-lbl\">Riesgo Alto</div></div>\n        <div class=\"metric\"><div class=\"metric-val\" style=\"color:#eab308;\">${conteoNiveles.medio || 0}</div><div class=\"metric-lbl\">Riesgo Medio</div></div>\n        <div class=\"metric\"><div class=\"metric-val\" style=\"color:#22c55e;\">${conteoNiveles.bajo || 0}</div><div class=\"metric-lbl\">Riesgo Bajo</div></div>\n      </div>\n    </div>\n\n    <!-- MATRIZ COMPARATIVA Y FILTROS DEL LOTE -->\n    ${dominios.length ? `\n    <div class=\"card\" style=\"padding:16px 18px;\">\n      <div class=\"no-print\" style=\"display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;\">\n        <input id=\"filtroInput\" type=\"text\" placeholder=\"🔎 Filtrar lote por dominio, entidad, IP, país, ISP o CVE...\" oninput=\"aplicarFiltro()\" style=\"flex:1;min-width:240px;background:#0b0f19;border:1px solid #334155;border-radius:6px;color:#f1f5f9;padding:8px 12px;font-size:13px;\">\n        <select id=\"filtroNivel\" onchange=\"aplicarFiltro()\" style=\"background:#0b0f19;border:1px solid #334155;border-radius:6px;color:#f1f5f9;padding:8px 12px;font-size:13px;\">\n          <option value=\"\">Todos los niveles</option>\n          <option value=\"CRÍTICO\">Solo CRÍTICO</option>\n          <option value=\"ALTO\">Solo ALTO</option>\n          <option value=\"MEDIO\">Solo MEDIO</option>\n          <option value=\"BAJO\">Solo BAJO</option>\n        </select>\n        <button onclick=\"toggleTodos(true)\" style=\"background:#1e293b;color:#cbd5e1;border:1px solid #334155;padding:8px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;\">▾ Expandir todos</button>\n        <button onclick=\"toggleTodos(false)\" style=\"background:#1e293b;color:#cbd5e1;border:1px solid #334155;padding:8px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;\">▸ Colapsar todos</button>\n      </div>\n      <div style=\"font-weight:700;font-size:13px;color:#93c5fd;margin-bottom:8px;\">📋 Matriz Comparativa Rápida del Lote (clic para ir al Dossier completo)</div>\n      <div style=\"overflow-x:auto;\">\n        <table style=\"width:100%;border-collapse:collapse;text-align:left;font-size:12px;\">\n          <thead>\n            <tr style=\"background:#0f172a;color:#94a3b8;font-size:11px;text-transform:uppercase;border-bottom:1px solid #334155;\">\n              <th style=\"padding:8px 10px;\">Dominio / Entidad</th>\n              <th style=\"padding:8px 10px;\">Score</th>\n              <th style=\"padding:8px 10px;\">IP / Red / País</th>\n              <th style=\"padding:8px 10px;\">Superficie (Shodan)</th>\n              <th style=\"padding:8px 10px;\">Abuso (90d)</th>\n              <th style=\"padding:8px 10px;\">Email &amp; DNS</th>\n              <th style=\"padding:8px 10px;\">RDAP / ISO</th>\n            </tr>\n          </thead>\n          <tbody>${matrizRows.join('')}</tbody>\n        </table>\n      </div>\n    </div>` : ''}\n\n    <!-- LISTADO DE DOSSIERS POR DOMINIO -->\n    <div style=\"margin-top:10px;\">\n      ${cardsDominiosHtml || '<div class=\"card\" style=\"text-align:center;color:#94a3b8;padding:30px;\">No se encontraron dominios verificados para las entidades ingresadas.</div>'}\n    </div>\n\n    <!-- ENTIDADES SIN DOMINIO -->\n    ${resumen.sin_dominio.length ? `\n    <div class=\"card\" style=\"padding:0; overflow:hidden; margin-top:24px;\">\n      <div style=\"padding:14px 18px; border-bottom:1px solid #1e293b; font-weight:700; font-size:14px; color:#fbbf24; background:#0f172a;\">\n        Entidades sin Dominio Identificado (Flujo Continuado sin Fallas)\n      </div>\n      <table style=\"width:100%; border-collapse:collapse; text-align:left;\">\n        <thead>\n          <tr style=\"background:#090d16; color:#94a3b8; font-size:11px; text-transform:uppercase;\">\n            <th style=\"padding:8px 14px;\">Entidad Ingresada</th>\n            <th style=\"padding:8px 14px;\">Motivo Técnico</th>\n            <th style=\"padding:8px 14px;\">Estado</th>\n          </tr>\n        </thead>\n        <tbody>${filasSinDominio}</tbody>\n      </table>\n    </div>` : ''}\n\n  </div>\n  <script>\n    function aplicarFiltro() {\n      const q = (document.getElementById('filtroInput').value || '').trim().toLowerCase();\n      const niv = document.getElementById('filtroNivel').value;\n      document.querySelectorAll('.dossier-card, .matriz-row').forEach(el => {\n        const matchQ = !q || (el.getAttribute('data-search') || '').includes(q);\n        const matchN = !niv || el.getAttribute('data-nivel') === niv;\n        el.style.display = (matchQ && matchN) ? '' : 'none';\n      });\n    }\n    function toggleTodos(abrir) {\n      document.querySelectorAll('.dossier-details').forEach(d => {\n        if (abrir) d.setAttribute('open', '');\n        else d.removeAttribute('open');\n      });\n    }\n  <\\/script>\n</body>\n</html>`;\n\nconst datosFinales = {\n  generado_en: new Date().toISOString(),\n  resumen: {\n    nombres_procesados: resumen.nombres.length,\n    nombres_con_dominio: resumen.nombres.filter(n => n.estado === 'con_dominio').length,\n    nombres_sin_dominio: resumen.sin_dominio.length,\n    dominios_analizados: dominios.length,\n    por_nivel: conteoNiveles\n  },\n  lista_urls: resumen.lista_urls,\n  tabla: dominios.map(x => ({\n    dominio: x.dominio, score: x.score, nivel: x.nivel_riesgo, confianza: x.confianza_score,\n    fuentes: x.fuentes_disponibles,\n    iso: (x.certificados_iso && x.certificados_iso.normas ? x.certificados_iso.normas.map(n => n.norma).join(', ') : '-'),\n    estado: `SH:${x.estado_consultas.shodan} AB:${x.estado_consultas.abuseipdb} NET:${x.estado_consultas.ipapi} ACH:${x.estado_consultas.abusech.global} MX:${x.estado_consultas.mxtoolbox.global}`\n  })),\n  dominios,\n  sin_dominio: resumen.sin_dominio,\n  regla_score: cfg.pesos,\n  detalle_descubrimiento: resumen.nombres,\n  html\n};\n\nreturn [{ json: datosFinales }];\n"
+      },
+      "id": "a622cf0d-5bab-5c44-a91c-43f8c96f03a1",
+      "position": [
+        880,
+        1050
+      ]
+    },
+    {
+      "name": "Convertir a JSON",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "parameters": {
+        "operation": "toJson",
+        "options": {
+          "fileName": "=ti_dominios_{{ $now.toFormat('yyyyLLdd_HHmmss') }}.json"
+        }
+      },
+      "id": "05cf21f9-f975-5a12-8c7f-2319259e4cfc",
+      "position": [
+        1100,
+        1050
+      ]
+    },
+    {
+      "name": "Nota credenciales",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "parameters": {
+        "width": 420,
+        "height": 220,
+        "content": "## Credenciales (nunca en texto plano)\nCrear en *Credentials* (cifradas con N8N_ENCRYPTION_KEY):\n- **AbuseIPDB API** · Header Auth · `Key`\n- **abuse.ch Auth-Key** · Header Auth · `Auth-Key`\n- **MXToolbox API** · Header Auth · `Authorization`\n- **Webhook TI token** · Header Auth (protege el webhook)\n\n*(Shodan InternetDB, IP-API, Google DoH y RDAP funcionan sin API key ni cuotas)*"
+      },
+      "id": "554786dc-4b8f-59e3-9284-434c6d49e6e6",
+      "position": [
+        0,
+        -320
+      ]
+    },
+    {
+      "name": "Nota score",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "parameters": {
+        "width": 420,
+        "height": 200,
+        "content": "## Score 1-100\n`clamp(base 10 + Σ puntos, 1, 100)`\nTopes positivos: AbuseIPDB 30 · abuse.ch 30 · Shodan 20 · IP-API 15 · MXToolbox 15.\nPeor IP del dominio. CDN/Hosting x0.5 en AbuseIPDB/IP-API.\nFuente caída = 0 pts + `no_disponible`.\nPesos editables en el nodo **Config**."
+      },
+      "id": "58e9d663-d2fb-5fb0-963a-9cee50fe755b",
+      "position": [
+        1320,
+        1200
+      ]
+    }
+  ],
+  "connections": {
+    "Inicio manual": {
+      "main": [
+        [
+          {
+            "node": "Nombres de ejemplo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nombres de ejemplo": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook entrada": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formulario Web CTI": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Normalizar nombres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar nombres": {
+      "main": [
+        [
+          {
+            "node": "Wikidata SPARQL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wikidata SPARQL": {
+      "main": [
+        [
+          {
+            "node": "Norm Wikidata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Norm Wikidata": {
+      "main": [
+        [
+          {
+            "node": "crt.sh Organización",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "crt.sh Organización": {
+      "main": [
+        [
+          {
+            "node": "Norm crt.sh",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Norm crt.sh": {
+      "main": [
+        [
+          {
+            "node": "Expandir candidatos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Expandir candidatos": {
+      "main": [
+        [
+          {
+            "node": "¿Hay candidatos?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Hay candidatos?": {
+      "main": [
+        [
+          {
+            "node": "DoH Candidatos",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Validar candidatos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DoH Candidatos": {
+      "main": [
+        [
+          {
+            "node": "Validar candidatos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar candidatos": {
+      "main": [
+        [
+          {
+            "node": "¿Hay dominios?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Hay dominios?": {
+      "main": [
+        [
+          {
+            "node": "Dominios únicos",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reporte final",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dominios únicos": {
+      "main": [
+        [
+          {
+            "node": "IPs únicas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IPs únicas": {
+      "main": [
+        [
+          {
+            "node": "Shodan Host",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shodan Host": {
+      "main": [
+        [
+          {
+            "node": "Norm Shodan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Norm Shodan": {
+      "main": [
+        [
+          {
+            "node": "AbuseIPDB Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AbuseIPDB Check": {
+      "main": [
+        [
+          {
+            "node": "Norm AbuseIPDB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Norm AbuseIPDB": {
+      "main": [
+        [
+          {
+            "node": "IP-API Proxy & Hosting",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IP-API Proxy & Hosting": {
+      "main": [
+        [
+          {
+            "node": "Norm IP-API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Norm IP-API": {
+      "main": [
+        [
+          {
+            "node": "Feodo Blocklist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Feodo Blocklist": {
+      "main": [
+        [
+          {
+            "node": "Agrupar por dominio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agrupar por dominio": {
+      "main": [
+        [
+          {
+            "node": "URLhaus Host",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "URLhaus Host": {
+      "main": [
+        [
+          {
+            "node": "Norm URLhaus",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Norm URLhaus": {
+      "main": [
+        [
+          {
+            "node": "ThreatFox IOC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ThreatFox IOC": {
+      "main": [
+        [
+          {
+            "node": "Norm ThreatFox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Norm ThreatFox": {
+      "main": [
+        [
+          {
+            "node": "Expandir MX",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Expandir MX": {
+      "main": [
+        [
+          {
+            "node": "MXToolbox Lookup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MXToolbox Lookup": {
+      "main": [
+        [
+          {
+            "node": "Norm MXToolbox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Norm MXToolbox": {
+      "main": [
+        [
+          {
+            "node": "Expandir DNS DoH",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Expandir DNS DoH": {
+      "main": [
+        [
+          {
+            "node": "DoH DNS Registros",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DoH DNS Registros": {
+      "main": [
+        [
+          {
+            "node": "Norm DNS DoH",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Norm DNS DoH": {
+      "main": [
+        [
+          {
+            "node": "RDAP Whois",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RDAP Whois": {
+      "main": [
+        [
+          {
+            "node": "Norm RDAP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Norm RDAP": {
+      "main": [
+        [
+          {
+            "node": "Expandir URLs ISO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Expandir URLs ISO": {
+      "main": [
+        [
+          {
+            "node": "Web ISO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Web ISO": {
+      "main": [
+        [
+          {
+            "node": "Norm ISO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Norm ISO": {
+      "main": [
+        [
+          {
+            "node": "Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score": {
+      "main": [
+        [
+          {
+            "node": "Reporte final",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reporte final": {
+      "main": [
+        [
+          {
+            "node": "Convertir a JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  },
+  "pinData": {},
+  "active": false,
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

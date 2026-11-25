@@ -111,3 +111,6 @@ group_by_day.py
 push_es.py
 run_prune.py
 set_godebug.py
+*.txt.gz
+ti_dominios_*.html
+ti_dominios_*.json

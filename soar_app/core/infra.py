@@ -322,19 +322,19 @@ class MobileAlertsNotifier:
     Envío completamente asíncrono en segundo plano (daemon thread)
     con control anti-spam y deduplicación por ticket en memoria RAM.
     """
-    DEFAULT_TOPIC = "technoma_soc_kevin_alerts_773"
+    DEFAULT_TOPIC = "soc-technoma"
     _current_topic = None
 
     @classmethod
     def get_topic(cls) -> str:
         if cls._current_topic:
             return cls._current_topic
-        return os.environ.get("NTFY_TOPIC", cls.DEFAULT_TOPIC).strip()
+        return (os.environ.get("NTFY_TOPIC", "").strip().removeprefix("https://ntfy.sh/").removeprefix("http://ntfy.sh/").strip("/") or cls.DEFAULT_TOPIC)
 
     @classmethod
     def set_topic(cls, topic: str):
         if topic and str(topic).strip():
-            cls._current_topic = str(topic).strip()
+            cls._current_topic = str(topic).strip().removeprefix("https://ntfy.sh/").removeprefix("http://ntfy.sh/").strip("/")
 
     @classmethod
     def send_notification(cls, title: str, message: str, priority: str = "default", tags: str = ""):
