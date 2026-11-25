@@ -126,6 +126,11 @@ def _cargar_env_seguro() -> Tuple[str, str, str, str]:
         if not gemini_key and os.environ.get("NVIDIA_API_KEY"):
             gemini_key = os.environ.get("NVIDIA_API_KEY")
 
+    # .env.example sugiere "https://tenant..." pero todo el código arma f"https://{HOST}/...":
+    # se normaliza a solo hostname para evitar URLs "https://https://...".
+    if host:
+        host = re.sub(r"^\s*https?://", "", str(host).strip(), flags=re.IGNORECASE).split("/")[0].strip()
+
     if not host:          errores.append("STELLAR_HOST")
     if not email:         errores.append("STELLAR_EMAIL")
     if not stellar_token: errores.append("STELLAR_TOKEN")
@@ -377,6 +382,63 @@ class MobileAlertsNotifier:
         t.start()
 
 MobileNotificationDispatcher = MobileAlertsNotifier
+
+
+# -----------------------------------------------------------------------------
+# EJECUCIÓN DE LLAMADAS BLOQUEANTES SIN CONGELAR LA GUI
+# -----------------------------------------------------------------------------
+from concurrent.futures import ThreadPoolExecutor as _ThreadPoolExecutor
+from PySide6.QtCore import QEventLoop as _QEventLoop
+
+SOAR_BG_EXECUTOR = _ThreadPoolExecutor(max_workers=4, thread_name_prefix="soar-bg")
+
+
+def run_off_ui_thread(fn, *args, timeout: float = 30.0, **kwargs):
+    """
+    Ejecuta `fn` en un hilo de fondo. Si se llama desde el hilo de la GUI, mantiene la
+    interfaz respondiendo (QEventLoop local) mientras espera el resultado.
+    Propaga la excepción de `fn`; lanza TimeoutError si no termina a tiempo.
+    """
+    fut = SOAR_BG_EXECUTOR.submit(fn, *args, **kwargs)
+    app = QApplication.instance()
+    if app is None or QThread.currentThread() is not app.thread():
+        return fut.result(timeout=timeout)
+    loop = _QEventLoop()
+    poll = QTimer()
+    poll.setInterval(25)
+    poll.timeout.connect(lambda: fut.done() and loop.quit())
+    poll.start()
+    QTimer.singleShot(int(timeout * 1000), loop.quit)
+    if not fut.done():
+        loop.exec()
+    poll.stop()
+    return fut.result(timeout=0.05)
+
+
+def lookup_case_by_ticket(session: requests.Session, headers: Dict[str, str], ticket_id: str) -> Optional[dict]:
+    """
+    Busca un caso por número de ticket y devuelve SOLO el caso cuyo ticket_id coincide
+    exactamente (nunca 'el primero de la lista': si la API ignora el filtro, devolvería
+    el caso más reciente y se actuaría sobre el ticket equivocado).
+    """
+    clean_id = str(ticket_id or "").strip().lstrip("#").strip()
+    if not clean_id:
+        return None
+    for params in ({"ticket_id": clean_id}, {"search": clean_id, "limit": "50"}):
+        try:
+            r = session.get(f"https://{HOST}/connect/api/v1/cases", headers=headers,
+                            params=params, verify=True, timeout=12)
+            if r.status_code != 200:
+                continue
+            data = r.json() or {}
+            inner = data.get("data", {})
+            cases = inner.get("cases", []) if isinstance(inner, dict) else (inner if isinstance(inner, list) else [])
+            for c in cases or []:
+                if isinstance(c, dict) and str(c.get("ticket_id", "")).strip().lstrip("#") == clean_id:
+                    return c
+        except Exception as e:
+            log_to_file(f"[CASE LOOKUP] Error buscando ticket {clean_id} con {list(params)}: {e}")
+    return None
 
 
 # Patrón regex precompilado — cero re.compile() por invocación del fallback path de sanitizar_interflow

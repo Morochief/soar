@@ -167,26 +167,35 @@ class TriageOpsMixin:
                 self.dict_casos_activos[t_id] = c
                 return c.get("_id"), clean_id
 
-        # Búsqueda On-Demand directa a la API de Stellar Cyber para tickets históricos (ej. casos antiguos)
+        # Búsqueda On-Demand directa a la API de Stellar Cyber para tickets históricos (ej. casos antiguos).
+        # Se ejecuta fuera del hilo de la GUI y solo acepta un caso cuyo ticket_id coincida exactamente.
+        if getattr(self, '_case_lookup_in_progress', False):
+            return None, None
+        self._case_lookup_in_progress = True
         try:
-            manager = RestSessionManager()
-            headers = manager.get_headers()
-            lookup_url = f"https://{HOST}/connect/api/v1/cases?ticket_id={clean_id}"
-            r = manager.session.get(lookup_url, headers=headers, verify=True, timeout=12)
-            if r.status_code == 200:
-                cases = (r.json().get("data", {}) or {}).get("cases", [])
-                if cases:
-                    c = cases[0]
-                    self.dict_casos_activos[clean_id] = c
-                    self.dict_casos_activos[t_id] = c
-                    return c.get("_id"), clean_id
+            def _lookup():
+                manager = RestSessionManager()
+                return lookup_case_by_ticket(manager.session, manager.get_headers(), clean_id)
+            c = run_off_ui_thread(_lookup, timeout=30)
+            if c:
+                self.dict_casos_activos[clean_id] = c
+                self.dict_casos_activos[t_id] = c
+                return c.get("_id"), clean_id
+            log_to_file(f"[ON-DEMAND CASE LOOKUP] Ticket {clean_id} no encontrado (sin coincidencia exacta).")
         except Exception as e:
             log_to_file(f"[ON-DEMAND CASE LOOKUP ERROR] Ticket {clean_id}: {e}")
+        finally:
+            self._case_lookup_in_progress = False
 
         return None, None
 
     # Workers que NO deben destruirse: son persistentes y se reutilizan cada ciclo
     PERSISTENT_WORKERS = {'worker_health', 'worker_cases'}
+    # Workers que escriben en Stellar Cyber: nunca se interrumpen con terminate()
+    WRITER_WORKERS = {
+        'worker_take', 'worker_resolve', '_worker_hm_remediator', '_worker_sophos_translate_remediator',
+        '_worker_sati_remediator', '_worker_dpapi_remediator',
+    }
 
     def _safe_kill_worker(self, attr_name: str) -> bool:
         """
@@ -210,11 +219,7 @@ class TriageOpsMixin:
         if hasattr(worker, '_is_killed'):
             worker._is_killed = True  # Cancelación cooperativa (funciona para QThread y QRunnable)
 
-        if isinstance(worker, QThread) and worker.isRunning():
-            worker.quit()
-            if not worker.wait(2000):
-                worker.terminate()
-                worker.wait(500)
+        still_running = isinstance(worker, QThread) and worker.isRunning()
 
         # Desconexión polimórfica: QThread usa señales directas, QRunnable las tiene en worker.signals
         signal_sources = [worker]
@@ -226,10 +231,26 @@ class TriageOpsMixin:
                 if sig is not None:
                     try:
                         sig.disconnect()
-                    except RuntimeError:
+                    except (RuntimeError, TypeError):
                         pass
 
-        if hasattr(worker, 'deleteLater'):
+        if still_running:
+            # Sin wait() ni terminate() en el hilo de la GUI: el hilo termina solo (cancelación
+            # cooperativa) y se libera recién entonces. terminate() podía cortar un PUT a medias.
+            if not hasattr(self, '_retired_workers'):
+                self._retired_workers = []
+            self._retired_workers.append(worker)
+
+            def _release(w=worker):
+                try:
+                    self._retired_workers.remove(w)
+                except ValueError:
+                    pass
+                w.deleteLater()
+            worker.finished.connect(_release)
+            if not worker.isRunning():  # terminó justo antes de conectar la señal
+                _release()
+        elif hasattr(worker, 'deleteLater'):
             worker.deleteLater()
         setattr(self, attr_name, None)
         return True
@@ -730,38 +751,63 @@ class TriageOpsMixin:
         
         params = {
             "case_id": case_id,
-            "comment": comment_text if comment_text else None
+            "comment": comment_text if comment_text else None,
+            # Contexto que vuelve en la señal de éxito: la GUI y las notificaciones
+            # solo se actualizan cuando el backend CONFIRMA el cierre.
+            "context": {
+                "kind": "resolve",
+                "t_id": str(t_id),
+                "case_id": case_id,
+                "verdict": veredicto_seleccionado,
+                "dictamen_sla": dictamen_sla,
+                "mttr_info": mttr_info,
+                "priority": priority,
+            },
         }
-        
-        # Actualizar de inmediato el estado en la memoria local para reflejarlo instantáneamente en la GUI
-        if str(t_id) in self.dict_casos_activos:
-            self.dict_casos_activos[str(t_id)]["status"] = "Resolved"
-            self.dict_casos_activos[str(t_id)]["resolution"] = veredicto_seleccionado
-            if hasattr(self, '_last_cases_data'):
-                # Actualizar el pool en memoria
-                for c in self._last_cases_data.get("cases", {}).get("data", {}).get("cases", []):
-                    if str(c.get("ticket_id")) == str(t_id) or str(c.get("_id")) == str(case_id):
-                        c["status"] = "Resolved"
-                        c["resolution"] = veredicto_seleccionado
-                        break
-            self.display_cases_results_wrapper()
 
         self.worker_resolve = UpdateCaseWorker(payload=payload, params=params)
         self.worker_resolve.finished_signal.connect(self.master_signal_router)
         self.worker_resolve.error_signal.connect(self.master_error_router)
+        self.worker_resolve.error_signal.connect(
+            lambda err, t=str(t_id): self.txt_triage.append(
+                f"\n[!] El cierre del Ticket {t} NO fue confirmado por Stellar Cyber. "
+                f"El caso sigue abierto y la nota de justificación se conservó en el campo de comentario."
+            )
+        )
         self.worker_resolve.start()
+
+    def _on_resolve_confirmed(self, ctx: dict):
+        """Se ejecuta solo cuando el PUT de cierre fue aceptado por el backend."""
+        t_id = ctx.get("t_id")
+        case_id = ctx.get("case_id")
+        veredicto_seleccionado = ctx.get("verdict")
+        dictamen_sla = ctx.get("dictamen_sla")
+        mttr_info = ctx.get("mttr_info") or {}
+        priority = ctx.get("priority")
+
+        # Actualizar el estado en memoria para reflejarlo en la GUI
+        if str(t_id) in self.dict_casos_activos:
+            self.dict_casos_activos[str(t_id)]["status"] = "Resolved"
+            self.dict_casos_activos[str(t_id)]["resolution"] = veredicto_seleccionado
+        if hasattr(self, '_last_cases_data'):
+            for c in self._last_cases_data.get("cases", {}).get("data", {}).get("cases", []):
+                if str(c.get("ticket_id")) == str(t_id) or str(c.get("_id")) == str(case_id):
+                    c["status"] = "Resolved"
+                    c["resolution"] = veredicto_seleccionado
+                    break
+        self.display_cases_results_wrapper()
 
         if hasattr(self, 'check_mobile_alerts') and self.check_mobile_alerts.isChecked():
             if str(t_id) not in self._mobile_notified_auto_closed:
                 self._mobile_notified_auto_closed.add(str(t_id))
-            MobileAlertsNotifier.send_notification(
-                title=f"[CASO RESUELTO] #{t_id} ({veredicto_seleccionado})",
-                message=f"El caso #{t_id} ha sido resuelto y cerrado exitosamente.\nDictamen SLA: {dictamen_sla} (MTTR: {mttr_info['elapsed_str']}).",
-                priority="default",
-                tags="white_check_mark,clipboard"
-            )
-        
-        if mttr_info["breached"]:
+                MobileAlertsNotifier.send_notification(
+                    title=f"[CASO RESUELTO] #{t_id} ({veredicto_seleccionado})",
+                    message=f"El caso #{t_id} ha sido resuelto y cerrado exitosamente.\nDictamen SLA: {dictamen_sla} (MTTR: {mttr_info.get('elapsed_str')}).",
+                    priority="default",
+                    tags="white_check_mark,clipboard"
+                )
+
+        if mttr_info.get("breached"):
             ejecutar_beep(400, 600)
             self.enviar_notificacion_popup(
                 "⚠️ ALERTA: CIERRE CON BRECHA DE SLA MTTR",
@@ -774,7 +820,8 @@ class TriageOpsMixin:
 
         if t_id in self.cache_triage: del self.cache_triage[t_id]
         if t_id in self.cache_ai: del self.cache_ai[t_id]
-        self.input_case_comment.clear()
+        if self.input_case_ticket.text().strip().lstrip("#") == str(t_id).lstrip("#"):
+            self.input_case_comment.clear()
 
     # -----------------------------------------------------------------------------
     # ROUTER ASINCRÓNICA CENTRALIZADO DE SEÑALES (MÓDULOS INTERNOS DE LA CLASE)
@@ -952,8 +999,12 @@ class TriageOpsMixin:
                 self.cache_interflow[cache_key] = full_text
 
         elif action == "update":
-            if result.get("status") == 200:
+            status_code = result.get("status") or 0
+            if 200 <= int(status_code) < 300:
                 self.txt_triage.append("\n[+] REPORTE: Caso e historial de notas impactados con exito en el backend.")
+                ctx = result.get("context") or {}
+                if ctx.get("kind") == "resolve":
+                    self._on_resolve_confirmed(ctx)
                 QTimer.singleShot(200, self.trigger_cases_refresh)  # Evita reentrada en lifecycle del worker persistente
             else:
                 self.txt_triage.append("\n[!] ERROR: El perimetro del Gateway rechazo la orden PUT.")
@@ -1195,29 +1246,28 @@ class TriageOpsMixin:
             found = any(str(c.get("ticket_id", "")).strip().lstrip("#") == clean_id for c in pool)
             if not found:
                 try:
-                    manager = RestSessionManager()
-                    headers = manager.get_headers()
-                    lookup_url = f"https://{HOST}/connect/api/v1/cases?ticket_id={clean_id}"
-                    r = manager.session.get(lookup_url, headers=headers, verify=True, timeout=10)
-                    if r.status_code == 200:
-                        cases = (r.json().get("data", {}) or {}).get("cases", [])
-                        if cases:
-                            c = cases[0]
-                            if not hasattr(self, '_extended_cases_pool') or self._extended_cases_pool is None:
-                                self._extended_cases_pool = []
-                            self._extended_cases_pool.insert(0, c)
-                            if not hasattr(self, 'dict_casos_activos') or self.dict_casos_activos is None:
-                                self.dict_casos_activos = {}
-                            self.dict_casos_activos[clean_id] = c
-                            self.dict_casos_activos[f"#{clean_id}"] = c
-                            # Cambiar filtro de tiempo a 'Todo el Historial' para que no lo oculte el cutoff
-                            if hasattr(self, 'combo_cases_time'):
-                                self.combo_cases_time.blockSignals(True)
-                                self.combo_cases_time.setCurrentIndex(5) # "Tiempo: Todo el Historial"
-                                self.combo_cases_time.blockSignals(False)
-                            self._render_cases_view()
-                            if hasattr(self, 'lbl_cases_count_info'):
-                                self.lbl_cases_count_info.setText(f"✓ Ticket #{clean_id} descargado on-demand desde Stellar Cyber API")
+                    def _lookup():
+                        manager = RestSessionManager()
+                        return lookup_case_by_ticket(manager.session, manager.get_headers(), clean_id)
+                    c = run_off_ui_thread(_lookup, timeout=30)
+                    if c is None and hasattr(self, 'lbl_cases_count_info'):
+                        self.lbl_cases_count_info.setText(f"✗ Ticket #{clean_id} no encontrado en Stellar Cyber API")
+                    if c:
+                        if not hasattr(self, '_extended_cases_pool') or self._extended_cases_pool is None:
+                            self._extended_cases_pool = []
+                        self._extended_cases_pool.insert(0, c)
+                        if not hasattr(self, 'dict_casos_activos') or self.dict_casos_activos is None:
+                            self.dict_casos_activos = {}
+                        self.dict_casos_activos[clean_id] = c
+                        self.dict_casos_activos[f"#{clean_id}"] = c
+                        # Cambiar filtro de tiempo a 'Todo el Historial' para que no lo oculte el cutoff
+                        if hasattr(self, 'combo_cases_time'):
+                            self.combo_cases_time.blockSignals(True)
+                            self.combo_cases_time.setCurrentIndex(5) # "Tiempo: Todo el Historial"
+                            self.combo_cases_time.blockSignals(False)
+                        self._render_cases_view()
+                        if hasattr(self, 'lbl_cases_count_info'):
+                            self.lbl_cases_count_info.setText(f"✓ Ticket #{clean_id} descargado on-demand desde Stellar Cyber API")
                 except Exception as e:
                     log_to_file(f"[SEARCH RETURN PRESSED LOOKUP ERROR] Ticket {clean_id}: {e}")
 
@@ -1746,6 +1796,29 @@ class TriageOpsMixin:
             ("5145" in combined and "share" in combined)
         )
 
+    _TRACKING_SET_ATTRS = (
+        '_auto_assigned_cases', '_remediated_cases', '_remediated_translate_cases',
+        '_remediated_sati_cases', '_remediated_dpapi_cases', '_seen_case_ids',
+        '_mobile_notified_assigned', '_mobile_notified_mttd_risk', '_mobile_notified_mttr_risk',
+        '_mobile_notified_auto_closed',
+    )
+    _TRACKING_MAX_ITEMS = 3000
+
+    def _prune_case_tracking(self, raw_cases: list):
+        """
+        Evita el crecimiento ilimitado de los registros en RAM durante turnos 24/7: si un
+        registro supera el tope, se conservan solo los tickets presentes en la cola actual.
+        """
+        current = {str(c.get("ticket_id") or c.get("_id")) for c in raw_cases if isinstance(c, dict)}
+        for attr in self._TRACKING_SET_ATTRS:
+            data = getattr(self, attr, None)
+            if isinstance(data, set) and len(data) > self._TRACKING_MAX_ITEMS:
+                setattr(self, attr, {x for x in data if str(x) in current})
+        for attr in ('_case_history_status', '_case_identity_cache'):
+            data = getattr(self, attr, None)
+            if isinstance(data, dict) and len(data) > self._TRACKING_MAX_ITEMS:
+                setattr(self, attr, {k: v for k, v in data.items() if str(k) in current})
+
     def _process_auto_guardia_and_hm(self, raw_cases: list):
         """
         Evalúa en cada ciclo de telemetría:
@@ -1759,8 +1832,26 @@ class TriageOpsMixin:
         if not raw_cases:
             return
 
+        self._prune_case_tracking(raw_cases)
+
+        # Nunca renovar el token JWT en el hilo de la GUI (POST bloqueante de hasta 10s).
+        # Si el token venció, se renueva en segundo plano y este ciclo se omite (el próximo,
+        # 60s después, ya lo tiene).
         session_mgr = RestSessionManager()
-        headers = session_mgr.get_headers()
+        if not session_mgr.jwt_token or time.time() >= session_mgr.token_expiry:
+            if not getattr(self, '_token_refresh_pending', False):
+                self._token_refresh_pending = True
+
+                def _refresh_bg(mgr=session_mgr):
+                    try:
+                        mgr.get_headers()
+                    except Exception as e:
+                        log_to_file(f"[AUTH] Renovación de token en segundo plano falló: {e}")
+                    finally:
+                        self._token_refresh_pending = False
+                SOAR_BG_EXECUTOR.submit(_refresh_bg)
+            return
+        headers = {"Authorization": f"Bearer {session_mgr.jwt_token}", "Content-Type": "application/json"}
         session = session_mgr.session
 
         # 1. DISPARAR SONDEO ASÍNCRONO DE IDENTIDADES PARA CASOS DE AUTENTICACIÓN
@@ -1924,25 +2015,63 @@ class TriageOpsMixin:
                         worker.assigned_signal.connect(self._on_auto_guardia_assigned)
                         worker.error_signal.connect(self._on_auto_guardia_error)
                         self._auto_guardia_workers.append(worker)
+
+                        def _release_guardia(w=worker):
+                            try:
+                                self._auto_guardia_workers.remove(w)
+                            except ValueError:
+                                pass
+                            w.deleteLater()
+                        worker.finished.connect(_release_guardia)
                         worker.start()
+
+    def _release_probe_worker(self, t_id: str):
+        """
+        Quita el probe del registro solo cuando el QThread terminó de verdad. Hacer pop
+        apenas llega la señal soltaba la última referencia con run() todavía activo
+        ("QThread: Destroyed while thread is still running" → cierre abrupto de la app).
+        """
+        probe = self._active_probe_workers.pop(t_id, None)
+        if probe is None:
+            return
+        if probe.isRunning():
+            if not hasattr(self, '_retired_workers'):
+                self._retired_workers = []
+            self._retired_workers.append(probe)
+
+            def _release(w=probe):
+                try:
+                    self._retired_workers.remove(w)
+                except ValueError:
+                    pass
+                w.deleteLater()
+            probe.finished.connect(_release)
+            if not probe.isRunning():
+                _release()
+        else:
+            probe.deleteLater()
 
     def _on_identity_probe_finished(self, info: dict):
         t_id = info.get("ticket_id")
-        self._active_probe_workers.pop(t_id, None)
+        self._release_probe_worker(t_id)
         self._case_identity_cache[t_id] = info
         log_to_file(f"[PROBE IDENTIDAD] Caso #{t_id} auditado: usuarios={info.get('users')} | pure_hm={info.get('pure_hm')}")
 
         # Si se confirma que es 100% puro HealthMailbox y está activo el checkbox, disparar auto-remediación
         if info.get("pure_hm") and hasattr(self, 'check_auto_healthmailbox') and self.check_auto_healthmailbox.isChecked():
-            if t_id not in self._remediated_cases:
+            mgr = RestSessionManager()
+            token_ok = bool(mgr.jwt_token) and time.time() < mgr.token_expiry
+            # Si el token venció no se renueva aquí (hilo de la GUI): el próximo ciclo de
+            # _process_auto_guardia_and_hm lo renueva en segundo plano y retoma el caso.
+            if token_ok and t_id not in self._remediated_cases:
                 if self._worker_hm_remediator is None or not self._worker_hm_remediator.isRunning():
                     self._remediated_cases.add(t_id)
                     c_obj = self.dict_casos_activos.get(t_id, {"_id": info.get("case_id"), "ticket_id": t_id})
                     log_to_file(f"[SOAR AUTO-REMEDIATION] Disparando auto-remediador para caso verificado #{t_id}...")
                     self._worker_hm_remediator = HealthMailboxAutoRemediatorWorker(
                         case_obj=c_obj,
-                        session=RestSessionManager().session,
-                        headers=RestSessionManager().get_headers()
+                        session=mgr.session,
+                        headers={"Authorization": f"Bearer {mgr.jwt_token}", "Content-Type": "application/json"}
                     )
                     self._worker_hm_remediator.remediation_finished.connect(self._on_hm_remediation_finished)
                     self._worker_hm_remediator.remediation_failed.connect(self._on_hm_remediation_failed)
@@ -1952,7 +2081,7 @@ class TriageOpsMixin:
         self.display_cases_results_wrapper()
 
     def _on_identity_probe_failed(self, ticket_id: str, error_msg: str):
-        self._active_probe_workers.pop(ticket_id, None)
+        self._release_probe_worker(ticket_id)
         log_to_file(f"[PROBE ERROR] Fallo al sondear caso #{ticket_id}: {error_msg}")
 
     def _on_hm_remediation_finished(self, result: dict):
@@ -2063,7 +2192,7 @@ class TriageOpsMixin:
         if hasattr(self, 'check_mobile_alerts') and self.check_mobile_alerts.isChecked():
             MobileAlertsNotifier.send_notification(
                 title=f"⚠️ [ATENCIÓN] Caso #{t_id} WebControl NO es Translate",
-                message=f"Host: {hosts} | Usuario: {users}\nActividad: {details}\nEl caso NO fue auto-cerrado y quedó asignado en 'In Progress' para tu revisión.",
+                message=f"Host: {hosts} | Usuario: {users}\nActividad: {details}\nEl caso NO fue auto-cerrado y queda pendiente de tu revisión manual.",
                 priority="high",
                 tags="warning,rotating_light"
             )
@@ -2297,7 +2426,13 @@ class TriageOpsMixin:
 
             # --- 3. DETECCIÓN DE CASO ASIGNADO A KEVIN ---
             ass_lower = assignee.lower()
-            is_assigned_to_me = (ass_lower == EMAIL_USUARIO.lower()) or ("kevin" in ass_lower and "moraes" in ass_lower) or ("kevin" in ass_lower)
+            # Comparación por identidad del operador (email o "Nombre Apellido" exacto), no por
+            # substring: "kevin" coincidía con cualquier analista llamado Kevin.
+            my_email = EMAIL_USUARIO.lower()
+            my_alias = os.environ.get("SOAR_OPERATOR_NAME", "").strip().lower()
+            is_assigned_to_me = (ass_lower == my_email) or (my_alias and ass_lower == my_alias) or (
+                not my_alias and "kevin" in ass_lower and "moraes" in ass_lower
+            )
             prev_ass = prev_info.get("assignee", "") if prev_info else ""
             if is_assigned_to_me and not is_closed:
                 if t_id not in self._mobile_notified_assigned or (prev_ass and prev_ass != assignee):

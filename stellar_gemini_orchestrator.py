@@ -11,7 +11,7 @@ import json
 import time
 import random
 import requests
-from typing import Any, Dict, List, Union, Optional
+from typing import Any, Dict, List, Union, Optional, Tuple
 
 from forensic_utils import clean_forensic_data
 # =============================================================================
@@ -198,6 +198,27 @@ class SecurityMaskingEngine:
 # =============================================================================
 # CLASE ORQUESTRADORA DE PRODUCCIÓN (StellarGeminiOrchestrator)
 # =============================================================================
+
+def _armar_contexto_con_limite(rag_text: str, telemetria: str, max_bytes: int = 80000, max_rag_bytes: int = 24000) -> str:
+    """
+    Arma RAG + telemetría respetando el límite de 80KB. Antes el RAG iba primero y el
+    recorte cortaba la TELEMETRÍA del caso (lo más importante). Ahora el RAG tiene un
+    presupuesto propio y la telemetría usa el resto.
+    """
+    def _cut(texto: str, limite: int) -> Tuple[str, bool]:
+        b = texto.encode("utf-8")
+        if len(b) <= limite:
+            return texto, False
+        return b[:max(0, limite)].decode("utf-8", errors="ignore"), True
+
+    separador = "\n\n--- TELEMETRIA DEL CASO ---\n"
+    rag_part, _ = _cut(rag_text or "", max_rag_bytes) if rag_text else ("", False)
+    restante = max_bytes - len(rag_part.encode("utf-8")) - (len(separador.encode("utf-8")) if rag_part else 0)
+    tele_part, truncado = _cut(telemetria or "", restante)
+    if truncado:
+        tele_part += "\n\n[TELEMETRÍA TRUNCADA AL LÍMITE DE 80KB — ANALIZAR HALLAZGOS PRIORITARIOS VISIBLES]"
+    return (rag_part + separador + tele_part) if rag_part else tele_part
+
 def _load_system_instructions() -> str:
     import os, sys
     base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
@@ -295,16 +316,10 @@ class StellarGeminiOrchestrator:
             except Exception as e:
                 print(f"[RAG] Error querying: {e}")
                 
-        if rag_context_text:
-            contexto_a_enviar = rag_context_text + "\n\n--- TELEMETRIA DEL CASO ---\n" + contexto_a_enviar
         # -----------------------
 
         # 3. Control de Ventana de Contexto (80KB Guard)
-        MAX_CONTEXT_BYTES = 80000
-        contexto_bytes = contexto_a_enviar.encode('utf-8')
-        if len(contexto_bytes) > MAX_CONTEXT_BYTES:
-            contexto_a_enviar = contexto_bytes[:MAX_CONTEXT_BYTES].decode('utf-8', errors='ignore')
-            contexto_a_enviar += "\n\n[CONTEXTO TRUNCADO A 80KB — ANALIZAR HALLAZGOS PRIORITARIOS VISIBLES]"
+        contexto_a_enviar = _armar_contexto_con_limite(rag_context_text, contexto_a_enviar)
 
         # 4. Invocación Prioritaria vía Google Antigravity OAuth (Gemini 3.8 Flash High)
         system_instructions = _load_system_instructions()
@@ -446,14 +461,8 @@ class StellarGeminiOrchestrator:
         elif on_status:
             on_status("[AI] 2/3 Transmitiendo dictamen en vivo desde Gemini 3.8 Flash (Antigravity OAuth)...\n" + "-"*75 + "\n")
 
-        if rag_context_text:
-            contexto_a_enviar = rag_context_text + "\n\n--- TELEMETRIA DEL CASO ---\n" + contexto_a_enviar
 
-        MAX_CONTEXT_BYTES = 80000
-        contexto_bytes = contexto_a_enviar.encode('utf-8')
-        if len(contexto_bytes) > MAX_CONTEXT_BYTES:
-            contexto_a_enviar = contexto_bytes[:MAX_CONTEXT_BYTES].decode('utf-8', errors='ignore')
-            contexto_a_enviar += "\n\n[CONTEXTO TRUNCADO A 80KB — ANALIZAR HALLAZGOS PRIORITARIOS VISIBLES]"
+        contexto_a_enviar = _armar_contexto_con_limite(rag_context_text, contexto_a_enviar)
 
         system_instructions = _load_system_instructions()
         try:
@@ -464,14 +473,46 @@ class StellarGeminiOrchestrator:
                     {"role": "user", "content": contexto_a_enviar},
                 ]
                 acumulado = []
-                for chunk in stream_antigravity(messages=messages, temperature=0.3, max_tokens=8192):
-                    if not chunk:
-                        continue
-                    if self.enable_pii_masking:
-                        chunk = self.mask_engine.desofuscar_texto(chunk)
-                    acumulado.append(chunk)
+                pendiente = ""
+                try:
+                    for chunk in stream_antigravity(messages=messages, temperature=0.3, max_tokens=8192):
+                        if not chunk:
+                            continue
+                        if self.enable_pii_masking:
+                            # Un token de enmascaramiento puede quedar partido entre dos chunks:
+                            # se retiene la cola desde el último '[' sin cerrar hasta completarlo.
+                            pendiente += chunk
+                            corte = pendiente.rfind("[")
+                            if corte != -1 and "]" not in pendiente[corte:] and len(pendiente) - corte < 64:
+                                emitir, pendiente = pendiente[:corte], pendiente[corte:]
+                            else:
+                                emitir, pendiente = pendiente, ""
+                            if not emitir:
+                                continue
+                            chunk = self.mask_engine.desofuscar_texto(emitir)
+                        acumulado.append(chunk)
+                        if on_chunk:
+                            on_chunk(chunk)
+                except Exception as e_mid:
+                    if acumulado:
+                        # Ya se mostró texto parcial: no se relanza el pedido completo (duplicaría
+                        # la salida en pantalla). Se devuelve lo recibido con aviso de corte.
+                        aviso = f"\n\n[AI] ⚠️ Transmisión interrumpida: {e_mid}. El dictamen puede estar incompleto; reintente el análisis."
+                        if pendiente:
+                            resto = self.mask_engine.desofuscar_texto(pendiente) if self.enable_pii_masking else pendiente
+                            acumulado.append(resto)
+                            if on_chunk:
+                                on_chunk(resto)
+                        acumulado.append(aviso)
+                        if on_chunk:
+                            on_chunk(aviso)
+                        return "".join(acumulado)
+                    raise
+                if pendiente:
+                    resto = self.mask_engine.desofuscar_texto(pendiente) if self.enable_pii_masking else pendiente
+                    acumulado.append(resto)
                     if on_chunk:
-                        on_chunk(chunk)
+                        on_chunk(resto)
                 texto_final = "".join(acumulado)
                 if texto_final.strip():
                     return texto_final

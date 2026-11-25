@@ -20,6 +20,7 @@ import json
 import time
 import threading
 import webbrowser
+import secrets
 from pathlib import Path
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from socketserver import ThreadingMixIn
@@ -33,6 +34,9 @@ if sys.platform == "win32":
         pass
 
 BASE_DIR = Path(__file__).resolve().parent
+
+# Token aleatorio por arranque del servidor (ver SoarWebHandler._api_authorized)
+SESSION_TOKEN = secrets.token_urlsafe(32)
 
 from rag_engine import get_rag
 from cti_engine import CtiEngine
@@ -50,6 +54,7 @@ HTML_DASHBOARD = r"""<!DOCTYPE html>
   <title>🛡️ TECHNOMA SOAR — Web Command Center & Memory Brain</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
   <style>
     body { background-color: #060b16; color: #e2e8f0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
     .glass { background: rgba(15, 23, 42, 0.82); backdrop-filter: blur(12px); border: 1px solid rgba(56, 189, 248, 0.16); }
@@ -249,6 +254,21 @@ HTML_DASHBOARD = r"""<!DOCTYPE html>
   </div>
 
   <script>
+    // Token de sesión: toda llamada a /api/* lo envía en un header propio. Un sitio externo
+    // no puede agregarlo (requiere preflight CORS que este servidor no autoriza).
+    const SOAR_TOKEN = "__SOAR_SESSION_TOKEN__";
+    const _origFetch = window.fetch.bind(window);
+    window.fetch = (url, opts = {}) => {
+      opts.headers = Object.assign({}, opts.headers || {}, {'X-SOAR-Token': SOAR_TOKEN});
+      return _origFetch(url, opts);
+    };
+    function escHtml(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+    function safeMarkdown(md) {
+      const html = marked.parse(md || '');
+      return (window.DOMPurify ? DOMPurify.sanitize(html) : escHtml(md || ''));
+    }
     let catalogData = [];
 
     function switchTab(name) {
@@ -309,13 +329,13 @@ HTML_DASHBOARD = r"""<!DOCTYPE html>
         });
         const data = await res.json();
         if (data.error) throw new Error(data.error);
-        document.getElementById('subpanel-dictamen').innerHTML = marked.parse(data.markdown || '');
+        document.getElementById('subpanel-dictamen').innerHTML = safeMarkdown(data.markdown || '');
         document.getElementById('triage-cierre-box').innerText = data.cierre || '';
         document.getElementById('triage-tsv-box').innerText = data.tsv || '';
         document.getElementById('triage-mempack-box').innerText = data.memory_context || '';
         document.getElementById('triage-status').innerText = `✅ Dictamen completado en ${data.elapsed_s}s.`;
       } catch (e) {
-        document.getElementById('subpanel-dictamen').innerHTML = `<p class="text-red-400 text-xs">Error: ${e.message}</p>`;
+        document.getElementById('subpanel-dictamen').innerHTML = `<p class="text-red-400 text-xs">Error: ${escHtml(e.message)}</p>`;
         document.getElementById('triage-status').innerText = '❌ Error en análisis.';
       } finally {
         btn.disabled = false;
@@ -352,10 +372,10 @@ HTML_DASHBOARD = r"""<!DOCTYPE html>
       wrap.innerHTML = data.results.map(r => `
         <div class="glass rounded-xl p-4 border-l-4 border-sky-400">
           <div class="flex items-center justify-between mb-2">
-            <span class="text-xs font-bold text-sky-300">[${r.category}] ${r.rel_path}</span>
+            <span class="text-xs font-bold text-sky-300">[${escHtml(r.category)}] ${escHtml(r.rel_path)}</span>
             <span class="text-xs px-2 py-0.5 rounded bg-slate-800 text-emerald-400 font-mono">Score BM25: ${r.score} · ${data.elapsed_ms}ms</span>
           </div>
-          <pre class="text-xs text-slate-300 whitespace-pre-wrap font-mono bg-slate-950/80 p-3 rounded-lg border border-slate-800">${r.content.replace(/</g, '&lt;')}</pre>
+          <pre class="text-xs text-slate-300 whitespace-pre-wrap font-mono bg-slate-950/80 p-3 rounded-lg border border-slate-800">${escHtml(r.content)}</pre>
         </div>
       `).join('');
     }
@@ -367,7 +387,7 @@ HTML_DASHBOARD = r"""<!DOCTYPE html>
       box.innerHTML = '<span class="text-sky-400 animate-pulse">Escaneando en paralelo (VT + AbuseIPDB + URLScan + OTX + MxToolbox)...</span>';
       const res = await fetch(`/api/cti?observable=${encodeURIComponent(obs)}`);
       const data = await res.json();
-      box.innerHTML = data.html + `<pre class="mt-4 p-3 bg-slate-950 rounded border border-slate-800 text-[11px] overflow-x-auto">${JSON.stringify(data.raw, null, 2)}</pre>`;
+      box.innerHTML = data.html + `<pre class="mt-4 p-3 bg-slate-950 rounded border border-slate-800 text-[11px] overflow-x-auto">${escHtml(JSON.stringify(data.raw, null, 2))}</pre>`;
     }
 
     async function runSlaCheck() {
@@ -396,10 +416,10 @@ HTML_DASHBOARD = r"""<!DOCTYPE html>
 
       const rows = filtered.map(i => `
         <tr class="border-b border-slate-800/80 hover:bg-slate-800/40">
-          <td class="py-2 px-3 text-xs font-semibold text-sky-400">${i.category}</td>
-          <td class="py-2 px-3 text-xs font-mono text-slate-200">${i.rel_path}</td>
+          <td class="py-2 px-3 text-xs font-semibold text-sky-400">${escHtml(i.category)}</td>
+          <td class="py-2 px-3 text-xs font-mono text-slate-200">${escHtml(i.rel_path)}</td>
           <td class="py-2 px-3 text-xs text-slate-400">${(i.size_bytes/1024).toFixed(1)} KB</td>
-          <td class="py-2 px-3 text-xs text-slate-300">${i.summary}</td>
+          <td class="py-2 px-3 text-xs text-slate-300">${escHtml(i.summary)}</td>
         </tr>
       `).join('');
 
@@ -432,6 +452,26 @@ class SoarWebHandler(BaseHTTPRequestHandler):
     def log_message(self, format: str, *args) -> None:
         pass
 
+    def _host_allowed(self) -> bool:
+        """Anti DNS-rebinding: solo se aceptan Host localhost/127.0.0.1 con el puerto del servidor."""
+        host = (self.headers.get("Host") or "").strip().lower()
+        port = self.server.server_address[1]
+        return host in {f"localhost:{port}", f"127.0.0.1:{port}"}
+
+    def _api_authorized(self) -> bool:
+        """Las rutas /api/* exigen el token de sesión en el header X-SOAR-Token."""
+        sent = self.headers.get("X-SOAR-Token", "")
+        return bool(sent) and secrets.compare_digest(sent, SESSION_TOKEN)
+
+    def _guard(self, path: str) -> bool:
+        if not self._host_allowed():
+            self.send_error(403, "Host no permitido")
+            return False
+        if path.startswith("/api/") and not self._api_authorized():
+            self.send_error(403, "Token de sesion invalido")
+            return False
+        return True
+
     def _send_json(self, payload: dict, status: int = 200) -> None:
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
@@ -443,9 +483,11 @@ class SoarWebHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
         qs = parse_qs(parsed.query)
+        if not self._guard(parsed.path):
+            return
 
         if parsed.path == "/" or parsed.path == "/index.html":
-            body = HTML_DASHBOARD.encode("utf-8")
+            body = HTML_DASHBOARD.replace("__SOAR_SESSION_TOKEN__", SESSION_TOKEN).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
@@ -457,7 +499,10 @@ class SoarWebHandler(BaseHTTPRequestHandler):
             t0 = time.perf_counter()
             q = (qs.get("q", [""])[0]).strip()
             cat = (qs.get("category", [""])[0]).strip() or None
-            top_k = int(qs.get("top_k", ["6"])[0])
+            try:
+                top_k = max(1, min(50, int(qs.get("top_k", ["6"])[0])))
+            except ValueError:
+                top_k = 6
             rag = get_rag()
             results = rag.query(q, top_k=top_k, category=cat)
             elapsed_ms = round((time.perf_counter() - t0) * 1000, 2)
@@ -491,9 +536,28 @@ class SoarWebHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:
         parsed = urlparse(self.path)
-        length = int(self.headers.get("Content-Length", "0"))
+        if not self._guard(parsed.path):
+            return
+        ctype = (self.headers.get("Content-Type") or "").split(";")[0].strip().lower()
+        if ctype != "application/json":
+            self._send_json({"error": "Content-Type debe ser application/json"}, status=415)
+            return
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+        except ValueError:
+            length = 0
+        if length > 5 * 1024 * 1024:
+            self._send_json({"error": "Cuerpo demasiado grande"}, status=413)
+            return
         raw_body = self.rfile.read(length).decode("utf-8", errors="ignore") if length > 0 else "{}"
-        data = json.loads(raw_body or "{}")
+        try:
+            data = json.loads(raw_body or "{}")
+        except json.JSONDecodeError:
+            self._send_json({"error": "JSON inválido"}, status=400)
+            return
+        if not isinstance(data, dict):
+            self._send_json({"error": "Se esperaba un objeto JSON"}, status=400)
+            return
 
         if parsed.path == "/api/memory":
             t0 = time.perf_counter()

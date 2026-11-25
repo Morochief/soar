@@ -1190,6 +1190,7 @@ class XdrDashboard(
         if hasattr(self, 'timer_live'): self.timer_live.stop()
         if hasattr(self, 'timer_triage_countdown'): self.timer_triage_countdown.stop()
         if hasattr(self, 'timer_so_health'): self.timer_so_health.stop()
+        if hasattr(self, 'timer_feeds_daily'): self.timer_feeds_daily.stop()
 
         # Cerrar limpiamente todas las ventanas satélites del SOCWindowManager
         if hasattr(self, 'window_manager') and self.window_manager:
@@ -1218,12 +1219,23 @@ class XdrDashboard(
                 w._is_killed = True
                 if hasattr(w, 'isRunning') and w.isRunning():
                     w.quit()
-                    if hasattr(w, 'wait') and not w.wait(4000):
+                    if w_name in self.WRITER_WORKERS:
+                        # Workers que ESCRIBEN en Stellar (comentario + cierre/asignación): nunca
+                        # se fuerzan con terminate() para no dejar un caso a medio actualizar.
+                        if not w.wait(20000):
+                            log_to_file(f"[SYS ENFORCEMENT] Worker de escritura {w_name} sigue activo al cerrar; no se fuerza.")
+                    elif hasattr(w, 'wait') and not w.wait(4000):
                         log_to_file(f"[SYS ENFORCEMENT] Hilo {w_name} no respondio a tiempo. Forzando terminacion.")
                         if hasattr(w, 'terminate'):
                             w.terminate()
                         if hasattr(w, 'wait'):
                             w.wait(1000)
+
+        # Workers retirados por _safe_kill_worker que aún no terminaron
+        for rw in list(getattr(self, '_retired_workers', [])):
+            if rw.isRunning():
+                rw._is_killed = True
+                rw.wait(20000)
 
         # Cleanup de workers de auto-guardia
         if hasattr(self, '_auto_guardia_workers'):
@@ -1232,7 +1244,7 @@ class XdrDashboard(
                     gw._is_killed = True
                     gw.quit()
                     if hasattr(gw, 'wait'):
-                        gw.wait(1000)
+                        gw.wait(12000)
 
         # Cleanup de workers de sondeo de identidad
         if hasattr(self, '_active_probe_workers'):
