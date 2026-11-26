@@ -35,6 +35,21 @@ from feeds_engine import (
     FEED_TIER_MAPPING, CTI_TIERS, TIER_TACTICAL, TIER_RESEARCH, TIER_NEWS
 )
 from feeds_ai_orchestrator import FeedsAIWorker, FeedsAIOrchestrator
+from qt_worker_utils import replace_worker, retire_workers
+
+
+def _es_url_web(url: str) -> bool:
+    """Solo se abren/enlazan URLs http(s): un feed podría traer file://, ms-msdt:, etc."""
+    return bool(url) and str(url).strip().lower().startswith(("http://", "https://"))
+
+
+_CVE_RE = re.compile(r"\b(CVE-\d{4}-\d{4,7})\b")
+_CVE_SPAN = r'<span style="background-color: #78350f; color: #fef08a; padding: 2px 6px; border-radius: 4px; font-weight: bold; border: 1px solid #ca8a04;">\1</span>'
+
+
+def _resaltar_cves_seguro(texto: str) -> str:
+    """Escapa el HTML del texto (viene de webs/feeds de terceros) y recién después resalta los CVEs."""
+    return _CVE_RE.sub(_CVE_SPAN, html.escape(texto or "", quote=False))
 
 
 class WebReaderWorker(QThread):
@@ -65,7 +80,7 @@ class WebReaderWorker(QThread):
         }
 
         try:
-            resp = requests.get(self.url, headers=headers, timeout=12, verify=False)
+            resp = requests.get(self.url, headers=headers, timeout=12)
             if resp.status_code != 200:
                 self.fetch_failed.emit(self.item_id, f"El servidor web respondió con código HTTP {resp.status_code}")
                 return
@@ -100,12 +115,8 @@ class WebReaderWorker(QThread):
                 if len(raw_txt) < 30 and elem.name == "p":
                     continue
 
-                # Resaltar CVEs en el texto
-                highlighted_txt = re.sub(
-                    r"\b(CVE-\d{4}-\d{4,7})\b",
-                    r'<span style="background-color: #78350f; color: #fef08a; padding: 2px 6px; border-radius: 4px; font-weight: bold; border: 1px solid #ca8a04;">\1</span>',
-                    raw_txt
-                )
+                # Escapar (el texto es de la web de terceros) y resaltar CVEs
+                highlighted_txt = _resaltar_cves_seguro(raw_txt)
 
                 if elem.name in ["h2", "h3"]:
                     paragraphs.append(f'<h3 style="color: #38bdf8; margin-top: 14px; margin-bottom: 6px; font-size: 14px;">{highlighted_txt}</h3>')
@@ -117,7 +128,7 @@ class WebReaderWorker(QThread):
                     paragraphs.append(f'<p style="margin-bottom: 10px; line-height: 1.6; font-size: 12px; color: #e2e8f0;">{highlighted_txt}</p>')
                     plain_lines.append(raw_txt)
                 elif elem.name in ["ul", "ol"]:
-                    items = [f'<li style="margin-bottom: 4px; color: #cbd5e1;">{li.get_text(" ", strip=True)}</li>' for li in elem.find_all("li")]
+                    items = [f'<li style="margin-bottom: 4px; color: #cbd5e1;">{html.escape(li.get_text(" ", strip=True), quote=False)}</li>' for li in elem.find_all("li")]
                     if items:
                         paragraphs.append(f'<ul style="margin-left: 20px; margin-bottom: 10px;">{"".join(items)}</ul>')
                         plain_lines.append("- " + "\n- ".join(li.get_text(" ", strip=True) for li in elem.find_all("li")))
@@ -184,6 +195,11 @@ class FeedsIntelDialog(QDialog):
         self._apply_dark_style()
         self._init_ui()
         self.load_items_from_db(reset_page=True)
+
+    def closeEvent(self, event):
+        retire_workers([self.web_worker], ("article_fetched", "fetch_failed"))
+        retire_workers([self.ai_worker], ("report_ready", "error_occurred"))
+        super().closeEvent(event)
 
     def _apply_dark_style(self):
         """Aplica el diseño visual institucional Dark Mode del SOC."""
@@ -957,20 +973,20 @@ class FeedsIntelDialog(QDialog):
             return
 
         # 1. Actualizar Tarjeta de Cabecera del Lector In-App
-        self.lbl_reader_title.setText(item_data["title"])
-        self.lbl_reader_source.setText(f"<b>Fuente:</b> {item_data['feed_name']}")
+        self.lbl_reader_title.setText(html.escape(item_data["title"] or "", quote=False))
+        self.lbl_reader_source.setText(f"<b>Fuente:</b> {html.escape(item_data['feed_name'] or '', quote=False)}")
         pub_d = item_data.get("published_date") or "N/A"
-        self.lbl_reader_date.setText(f"<b>Fecha:</b> {pub_d}")
+        self.lbl_reader_date.setText(f"<b>Fecha:</b> {html.escape(str(pub_d), quote=False)}")
         cat = item_data.get("category") or "CTI Threat Intel"
         tier_val = item_data.get("tier") or FEED_TIER_MAPPING.get(item_data.get("feed_id", ""), TIER_NEWS)
         tier_color = "#fb923c" if tier_val == TIER_TACTICAL else ("#c084fc" if tier_val == TIER_RESEARCH else "#38bdf8")
         self.lbl_reader_category.setText(
             f"<b>Nivel CTI:</b> <span style='color: {tier_color}; font-weight: bold;'>[{tier_val}]</span> "
-            f"&nbsp;|&nbsp; <b>Especialidad:</b> {cat}"
+            f"&nbsp;|&nbsp; <b>Especialidad:</b> {html.escape(str(cat), quote=False)}"
         )
         link = item_data.get("link") or ""
-        if link:
-            self.lbl_reader_link.setText(f'<a style="color: #60a5fa;" href="{link}">🔗 Abrir Enlace Original</a>')
+        if _es_url_web(link):
+            self.lbl_reader_link.setText(f'<a style="color: #60a5fa;" href="{html.escape(link, quote=True)}">🔗 Abrir Enlace Original</a>')
         else:
             self.lbl_reader_link.setText("")
 
@@ -981,18 +997,14 @@ class FeedsIntelDialog(QDialog):
         summary = item_data.get("summary") or ""
 
         # Resaltar CVEs en el resumen
-        summary_highlighted = re.sub(
-            r"\b(CVE-\d{4}-\d{4,7})\b",
-            r'<span style="background-color: #78350f; color: #fef08a; padding: 2px 6px; border-radius: 4px; font-weight: bold; border: 1px solid #ca8a04;">\1</span>',
-            summary
-        )
+        summary_highlighted = _resaltar_cves_seguro(summary)
 
         if full_content:
             self.btn_fetch_full_web.setText("🔄 Actualizar Noticia desde Web")
             body_html = f"""
             <div style="font-family: Segoe UI, sans-serif; line-height: 1.65; color: #e2e8f0;">
                 <div style="background-color: #064e3b; color: #34d399; padding: 6px 12px; border-radius: 4px; margin-bottom: 12px; font-size: 11px; font-weight: bold; border: 1px solid #059669;">
-                    ✓ Noticia completa extraída de la web del autor ({item_data['feed_name']})
+                    ✓ Noticia completa extraída de la web del autor ({html.escape(item_data['feed_name'] or '', quote=False)})
                 </div>
                 {full_content}
             </div>
@@ -1090,8 +1102,12 @@ class FeedsIntelDialog(QDialog):
         html_out.append('<h4 style="color: #94a3b8; margin-bottom: 6px;">Telemetría Cruda del Feed:</h4>')
         html_out.append(f'<p style="font-size: 11px; color: #cbd5e1;"><b>ID Interno SQLite:</b> {item_data["id"]}<br/>')
         html_out.append(f'<b>SHA-256 Deduplicación:</b> <code>{item_data["content_hash"]}</code><br/>')
-        html_out.append(f'<b>Hora de Ingesta:</b> {item_data.get("ingested_at", "N/A")}<br/>')
-        html_out.append(f'<b>URL Original:</b> <a style="color: #38bdf8;" href="{item_data["link"]}">{item_data["link"]}</a></p>')
+        html_out.append(f'<b>Hora de Ingesta:</b> {html.escape(str(item_data.get("ingested_at", "N/A")))}<br/>')
+        link_raw = item_data.get("link") or ""
+        if _es_url_web(link_raw):
+            html_out.append(f'<b>URL Original:</b> <a style="color: #38bdf8;" href="{html.escape(link_raw, quote=True)}">{html.escape(link_raw)}</a></p>')
+        else:
+            html_out.append(f'<b>URL Original:</b> {html.escape(link_raw) or "N/A"}</p>')
 
         html_out.append('</div>')
         self.txt_iocs_view.setHtml("".join(html_out))
@@ -1107,7 +1123,7 @@ class FeedsIntelDialog(QDialog):
 
         item = self.current_selected_item
         url = item.get("link")
-        if not url or not url.startswith("http"):
+        if not _es_url_web(url):
             QMessageBox.warning(self, "URL Inválida", "El artículo no contiene un enlace web válido.")
             return
 
@@ -1116,7 +1132,7 @@ class FeedsIntelDialog(QDialog):
         self.progress_bar.setRange(0, 0)
         self.progress_bar.show()
 
-        self.web_worker = WebReaderWorker(item["id"], url)
+        self.web_worker = replace_worker(self.web_worker, WebReaderWorker(item["id"], url), ("article_fetched", "fetch_failed"))
         self.web_worker.article_fetched.connect(self._on_article_fetched)
         self.web_worker.fetch_failed.connect(self._on_fetch_failed)
         self.web_worker.start()
@@ -1135,7 +1151,7 @@ class FeedsIntelDialog(QDialog):
             body_html = f"""
             <div style="font-family: Segoe UI, sans-serif; line-height: 1.65; color: #e2e8f0;">
                 <div style="background-color: #064e3b; color: #34d399; padding: 6px 12px; border-radius: 4px; margin-bottom: 12px; font-size: 11px; font-weight: bold; border: 1px solid #059669;">
-                    ✓ Noticia completa extraída de la web del autor ({self.current_selected_item['feed_name']})
+                    ✓ Noticia completa extraída de la web del autor ({html.escape(self.current_selected_item['feed_name'] or '', quote=False)})
                 </div>
                 {full_html}
             </div>
@@ -1299,14 +1315,14 @@ class FeedsIntelDialog(QDialog):
 
         summary_to_send = item.get("full_content") or item.get("summary") or item["title"]
 
-        self.ai_worker = FeedsAIWorker(
+        self.ai_worker = replace_worker(self.ai_worker, FeedsAIWorker(
             item_id=item["id"],
             feed_title=item["title"],
             feed_source=item["feed_name"],
             feed_url=item["link"],
             feed_summary=summary_to_send,
             provider=provider_choice
-        )
+        ), ("report_ready", "error_occurred"))
         self.ai_worker.report_ready.connect(self._on_ai_report_ready)
         self.ai_worker.error_occurred.connect(self._on_ai_error)
         self.ai_worker.start()
@@ -1387,7 +1403,7 @@ class FeedsIntelDialog(QDialog):
 
     def open_current_in_browser(self):
         """Abre el enlace original del feed en el navegador web predeterminado."""
-        if self.current_selected_item and self.current_selected_item.get("link"):
+        if self.current_selected_item and _es_url_web(self.current_selected_item.get("link")):
             QDesktopServices.openUrl(QUrl(self.current_selected_item["link"]))
         else:
             QMessageBox.information(self, "Sin Enlace", "El elemento seleccionado no tiene un enlace web válido.")
