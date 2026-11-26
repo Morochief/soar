@@ -29,9 +29,73 @@ try:
 except ImportError:
     pass
 
+import re
+import ipaddress
+from functools import lru_cache
+
 from openai import OpenAI
+from soc_prompts import SYSTEM_PROMPT_TRIAGE
 
 BASE_DIR = Path(__file__).resolve().parent
+AD_INVENTORY_PATH = BASE_DIR / "Analista SOC" / "02_Base_de_Conocimiento" / "ad_users_inventory.md"
+
+# Subredes conocidas (antes se comparaba con `"192.168.15." in texto`, que también
+# coincidía con 192.168.150-159.x y etiquetaba mal esas IPs).
+SUBREDES_CONOCIDAS = [
+    (ipaddress.ip_network("192.168.169.0/24"), "192.168.169.0/24 (WiFi_Corp / Usuarios Technoma)"),
+    (ipaddress.ip_network("192.168.15.0/24"), "192.168.15.0/24 (VLAN-15 Servidores y Sensores Technoma)"),
+    (ipaddress.ip_network("172.16.0.0/16"), "172.16.0.0/16 (Red Corporativa Caja Ande)"),
+]
+
+
+def _mtime(path: Path) -> float:
+    try:
+        return path.stat().st_mtime
+    except OSError:
+        return 0.0
+
+
+@lru_cache(maxsize=4)
+def _usuarios_ad_cache(path_str: str, mtime: float) -> frozenset:
+    path = Path(path_str)
+    if not path.exists():
+        return frozenset()
+    with open(path, "r", encoding="utf-8", errors="ignore") as f:
+        return frozenset(
+            line.strip().lstrip("- ").strip().lower()
+            for line in f
+            if line.strip() and not line.startswith("#") and not line.startswith("*")
+        )
+
+
+def cargar_usuarios_ad() -> frozenset:
+    """Set de cuentas del inventario de AD (una por línea '- usuario'), cacheado por fecha de modificación."""
+    return _usuarios_ad_cache(str(AD_INVENTORY_PATH), _mtime(AD_INVENTORY_PATH))
+
+
+def _normalizar_usuario(username: str) -> str:
+    u = (username or "").strip().lower()
+    if "\\" in u:
+        u = u.split("\\")[-1]
+    if "@" in u:
+        u = u.split("@")[0]
+    return u.strip()
+
+
+def _contiene_token(texto_lower: str, token: str) -> bool:
+    """Coincidencia por token completo (no substring): 'admin' no coincide dentro de 'administrador'."""
+    return re.search(rf"(?<![\w.\-$]){re.escape(token)}(?![\w\-$]|\.\w)", texto_lower) is not None
+
+
+def _etiqueta_subred(valor: str) -> str:
+    try:
+        ip = ipaddress.ip_address(valor.strip())
+    except ValueError:
+        return ""
+    for net, etiqueta in SUBREDES_CONOCIDAS:
+        if ip in net:
+            return f"[Subred] {etiqueta}"
+    return ""
 
 NVIDIA_BASE_URL = os.environ.get("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1")
 NVIDIA_API_KEY = os.environ.get("NVIDIA_API_KEY", "")
@@ -44,47 +108,40 @@ def ejecutar_herramienta_local(nombre: str, args: dict) -> str:
     if nombre == "buscar_usuario_active_directory":
         username = args.get("username", "")
         print(f"  ⚡ [Tool] Consultando Directorio Activo para usuario: '{username}'...", flush=True)
-        path = BASE_DIR / "Analista SOC" / "02_Base_de_Conocimiento" / "ad_users_inventory.md"
-        if not path.exists():
-            return f"Inventario no encontrado en {path}"
-        clean_user = username.lower().strip().replace("technoma\\", "").replace("cajaande\\", "")
-        with open(path, "r", encoding="utf-8", errors="ignore") as f:
-            contenido = f.read()
-        lines = [line.strip().lower() for line in contenido.splitlines() if line.strip()]
-        coincidencias = [l for l in lines if clean_user in l]
-        if coincidencias:
-            return f"Usuario '{username}' ENCONTRADO en Active Directory: {', '.join(coincidencias)} (Usuario Corporativo Válido)."
+        if not AD_INVENTORY_PATH.exists():
+            return f"Inventario no encontrado en {AD_INVENTORY_PATH}"
+        clean_user = _normalizar_usuario(username)
+        if len(clean_user) < 3:
+            return f"Usuario '{username}' no válido para buscar en Active Directory (vacío o demasiado corto)."
+        # Coincidencia EXACTA de la cuenta (antes: substring, y un usuario vacío "encontraba" todo el archivo)
+        if clean_user in cargar_usuarios_ad():
+            return (f"Usuario '{username}' FIGURA en el inventario de Active Directory como cuenta '{clean_user}'. "
+                    "Esto solo confirma que la cuenta existe; no prueba que la actividad sea legítima.")
         return f"Usuario '{username}' NO encontrado en el inventario de Active Directory."
 
     elif nombre == "buscar_activo_o_ip":
         ip_o_host = args.get("ip_o_host", "")
         print(f"  ⚡ [Tool] Consultando inventario de infraestructura para: '{ip_o_host}'...", flush=True)
         query = ip_o_host.lower().strip()
+        if len(query) < 3:
+            return f"No se encontró registro para '{ip_o_host}' (valor vacío o demasiado corto)."
         resultados = []
-        p1 = BASE_DIR / "Analista SOC" / "computers_and_servers.md"
-        if p1.exists():
-            with open(p1, "r", encoding="utf-8", errors="ignore") as f:
+        fuentes = [
+            (BASE_DIR / "Analista SOC" / "computers_and_servers.md", "[Caja Ande]"),
+            (BASE_DIR / "Analista SOC" / "Reportes" / "Reporte_Consolidado_Cortex_XDR_Technoma.md", "[Cortex Technoma]"),
+            (BASE_DIR / "deep_dive_soc_gateway.md", "[Red/Gateway]"),
+        ]
+        for ruta, etiqueta in fuentes:
+            if not ruta.exists():
+                continue
+            with open(ruta, "r", encoding="utf-8", errors="ignore") as f:
                 for line in f:
-                    if query in line.lower():
-                        resultados.append(f"[Caja Ande] {line.strip()[:110]}")
-        p2 = BASE_DIR / "Analista SOC" / "Reportes" / "Reporte_Consolidado_Cortex_XDR_Technoma.md"
-        if p2.exists():
-            with open(p2, "r", encoding="utf-8", errors="ignore") as f:
-                for line in f:
-                    if query in line.lower():
-                        resultados.append(f"[Cortex Technoma] {line.strip()[:110]}")
-        p3 = BASE_DIR / "deep_dive_soc_gateway.md"
-        if p3.exists():
-            with open(p3, "r", encoding="utf-8", errors="ignore") as f:
-                for line in f:
-                    if query in line.lower():
-                        resultados.append(f"[Red/Gateway] {line.strip()[:110]}")
-        if "192.168.169." in query:
-            resultados.append("[Subred] 192.168.169.0/24 (WiFi_Corp / Usuarios Technoma)")
-        if "192.168.15." in query:
-            resultados.append("[Subred] 192.168.15.0/24 (VLAN-15 Servidores y Sensores Technoma)")
-        if "172.16." in query:
-            resultados.append("[Subred] 172.16.0.0/16 (Red Corporativa Caja Ande)")
+                    # Token completo: '10.0.0.1' ya no coincide con '10.0.0.15'
+                    if _contiene_token(line.lower(), query):
+                        resultados.append(f"{etiqueta} {line.strip()[:110]}")
+        subred = _etiqueta_subred(query)
+        if subred:
+            resultados.append(subred)
 
         if resultados:
             return "Activo encontrado:\n" + "\n".join(resultados[:8])
@@ -94,6 +151,8 @@ def ejecutar_herramienta_local(nombre: str, args: dict) -> str:
         termino = args.get("termino", "")
         print(f"  ⚡ [Tool] Buscando precedentes de falsos positivos para: '{termino}'...", flush=True)
         query = termino.lower().strip()
+        if len(query) < 3:
+            return f"Sin precedentes específicos para '{termino}'."
         hallazgos = []
         p1 = BASE_DIR / "prompt_stellar_python.md"
         if p1.exists():
@@ -189,9 +248,6 @@ OPENAI_TOOLS_SCHEMA = [
         }
     }
 ]
-
-
-import re
 
 
 # =============================================================================
@@ -413,7 +469,14 @@ def auto_enriquecer_contexto(texto: str) -> str:
     
     # 1. IPs (prioriza privadas internas de la organización)
     ips = set(re.findall(r"\b(?:\d{1,3}\.){3}\d{1,3}\b", texto))
-    for ip in sorted(ips, key=lambda x: (not x.startswith(("192.168.", "10.", "172.")), x))[:6]:
+
+    def _es_privada(x: str) -> bool:
+        try:
+            return ipaddress.ip_address(x).is_private
+        except ValueError:
+            return False
+
+    for ip in sorted(ips, key=lambda x: (not _es_privada(x), x))[:6]:
         info = ejecutar_herramienta_local("buscar_activo_o_ip", {"ip_o_host": ip})
         if "No se encontró" not in info:
             hallazgos.append(f"• **IP {ip}:** {info.strip()}")
@@ -424,26 +487,26 @@ def auto_enriquecer_contexto(texto: str) -> str:
         info = ejecutar_herramienta_local("buscar_activo_o_ip", {"ip_o_host": h})
         hallazgos.append(f"• **Host {h}:** {info.strip()}")
         
-    # 3. Usuarios en Active Directory
-    path_ad = BASE_DIR / "Analista SOC" / "02_Base_de_Conocimiento" / "ad_users_inventory.md"
-    if path_ad.exists():
-        with open(path_ad, "r", encoding="utf-8", errors="ignore") as f:
-            ad_users = {line.strip().lstrip("- ").strip().lower() for line in f if line.strip() and not line.startswith("#") and not line.startswith("*")}
-        
+    # 3. Usuarios en Active Directory (coincidencia por token completo, no substring)
+    ad_users = cargar_usuarios_ad()
+    if ad_users:
         texto_lower = texto.lower()
         usuarios_encontrados = set()
         for u in ad_users:
-            if len(u) >= 4 and u in texto_lower:
+            if len(u) >= 4 and _contiene_token(texto_lower, u):
                 usuarios_encontrados.add(u)
-        
-        m_users = re.findall(r'(?:username|usuario|user)\s*[:=]?\s*["\']?([a-zA-Z0-9_.-]+)', texto, re.I)
+
+        m_users = re.findall(r'(?:username|usuario|user)\s*[:=]?\s*["\']?([a-zA-Z0-9_.\\@-]+)', texto, re.I)
         for mu in m_users:
-            mu_clean = mu.lower().strip()
+            mu_clean = _normalizar_usuario(mu)
             if mu_clean in ad_users:
                 usuarios_encontrados.add(mu_clean)
-                
-        for u in list(usuarios_encontrados)[:4]:
-            hallazgos.append(f"• **Usuario en Active Directory:** `{u}` (Colaborador corporativo legítimo en technoma.local)")
+
+        for u in sorted(usuarios_encontrados)[:4]:
+            hallazgos.append(
+                f"• **Cuenta presente en Active Directory:** `{u}` (existe en technoma.local; "
+                "esto NO prueba que la actividad sea legítima — una cuenta válida puede estar comprometida)"
+            )
 
     # 4. Heurísticas y Precedentes en Base de Conocimiento
     texto_low = texto.lower()
@@ -484,59 +547,25 @@ def auto_enriquecer_contexto(texto: str) -> str:
     return "\n".join(hallazgos)
 
 
-def ejecutar_consulta(prompt_usuario: str, modelo: str = None):
+def ejecutar_consulta(prompt_usuario: str, modelo: str = None, contexto_memoria: str = ""):
+    """
+    Ejecuta el triaje forense. `contexto_memoria` (opcional) es el paquete de casos históricos
+    del RAG que arma soar_web.py; antes se calculaba pero nunca llegaba a la IA.
+    Lanza RuntimeError si no hay credenciales (antes hacía sys.exit dentro del servidor web).
+    """
     target_model = modelo or NVIDIA_MODEL
     client = OpenAI(
         base_url=NVIDIA_BASE_URL,
         api_key=NVIDIA_API_KEY
     )
 
-    system_instruction = (
-        "Eres el Agente Autónomo de Ciberseguridad de Technoma SOC asistiendo al analista Kevin Moraes.\n"
-        "Tu objetivo es el triaje forense y análisis integral de alertas de Stellar Cyber OpenXDR / Interflow, FortiGate y Cortex XDR.\n\n"
-        "PRINCIPIOS FUNDAMENTALES DE ANÁLISIS FORENSE:\n"
-        "1. CAUSALIDAD CONSOLIDADA (TERMINANTEMENTE PROHIBIDO EL DESORDEN):\n"
-        "   - Está TERMINANTEMENTE PROHIBIDO fragmentar el dictamen en 'Alerta 1, Alerta 2, Alerta 3' o emitir análisis separados.\n"
-        "   - Si recibes múltiples eventos, un lote o array 'docs' de Interflow, debes analizar la causalidad integral del incidente como UN ÚNICO CASO CONSOLIDADO, cruzando el tráfico, los activos y las firmas disparadas.\n"
-        "2. USO DE EVIDENCIAS LOCALES Y PRECEDENTES DEL SOC:\n"
-        "   - Considera prioritarias las evidencias técnicas locales ya verificadas en Active Directory e inventario que se adjuntan al caso.\n"
-        "3. RIGOR FORENSE Y DESCARTE DE FALSOS POSITIVOS (PROHIBIDO SER UN 'LORO DE ALERTAS'):\n"
-        "   - ESTÁ TERMINANTEMENTE PROHIBIDO repetir ciegamente la descripción genérica de la máquina (ej: si Stellar dice 'indicates potential DNS tunnelling').\n"
-        "   - Tu rol como analista forense es verificar el DOMINIO REAL y los payloads. Los modelos de Machine Learning (new_ml) se confunden con frecuencia por alta entropía al procesar microservicios SaaS legítimos.\n"
-        "   - Si el dominio involucrado (ej: wbx2.com / webex.com, teamviewer.com, google.com, microsoft.com) pertenece a una suite corporativa legítima y las IPs resueltas pertenecen a sus ASNs oficiales (ej: Cisco AS13445), DEBES clasificar el caso OBLIGATORIAMENTE como Benign True Positive / Falso Positivo Operativo, recomendando tuning/supresión en vez de declarar falsos incidentes de exfiltración.\n"
-        "4. COMENTARIO DE CIERRE HUMANIZADO:\n"
-        "   - El Comentario de Cierre Maestro debe ser redactado en un párrafo analítico continuo, fluido, profesional y elegante. Prohibidas listas numeradas mecánicas o introducciones de '1. El primer evento...'. Debe estar listo para copiar y pegar en auditorías o en el modal de cierre de Stellar Cyber.\n\n"
-        "ESTRUCTURA OBLIGATORIA DEL DICTAMEN (LAS 4 FASES CLARAS):\n\n"
-        "### Fase 1: Declaración de Ingesta y Resumen Ejecutivo Nativo Stellar Cyber\n"
-        "- **Declaración de Ingesta:** Indica el total de eventos analizados en el lote, tenant y ventana horaria.\n"
-        "- **Tabla Consolidada de Entidades Críticas:** Activo Origen (IP, Host, MAC), Activo Destino (IP, Host/Dominio, Puerto), Protocolo, Firmas IDS / Reglas disparadas, Severidad.\n"
-        "- **Resumen Ejecutivo (Los 4 Puntos Oficiales de Stellar Cyber):**\n"
-        "  * Resumen General: Breve síntesis del incidente y la anomalía detectada.\n"
-        "  * Origen de la Amenaza: Host, IP y proceso o usuario causante.\n"
-        "  * Impacto en el Destino: Qué activos recibieron el tráfico y si hubo compromiso.\n"
-        "  * Mitigación y Estado: Estado del caso y acciones de respuesta.\n\n"
-        "### Fase 2: Triaje y Correlación Forense Consolidada\n"
-        "- **Disección Técnica y Causalidad Integral:** Explicación analítica clara de por qué el motor/IDS disparó la alerta y qué estaba ocurriendo en realidad (diferenciando ruido operativo de ataque real).\n"
-        "- **IOCs y Firmas Relacionadas:** Tabla compacta con SID, nombre de firma, clasificación de severidad y payload/query.\n"
-        "- **Matriz de Impacto CIA:** Evaluación breve (Confidencialidad: C0-C3, Integridad: I0-I3, Disponibilidad: A0-A3).\n"
-        "- **Veredicto y Confianza:** Uno de los 4 cuadrantes (True Positive, False Positive, Benign True Positive / Falso Positivo Operativo, Unclear) con porcentaje de confianza analítica (0-100%).\n"
-        "- **Mapeo MITRE ATT&CK y Playbook Technoma SOC:** Técnica MITRE y código de playbook (ej. PB-1.1, PB-6.1).\n\n"
-        "### Fase 3: Instrucción de Cierre en Stellar Cyber (Cierre Humanizado)\n"
-        "- **Estado:** Closed / Resolved.\n"
-        "- **Resolution Tag:** False Positive / Benign / True Positive.\n"
-        "- **Comentario de Cierre Maestro:** Un solo párrafo fluido, analítico y profesional (sin numeraciones ni viñetas mecánicas), redactado en un bloque de cita `> ...` listo para auditoría.\n"
-        "- **Recomendación de Tuning / Regla de Supresión:** Parámetros exactos de filtro o whitelist en el sensor o firewall para mitigar falsos positivos.\n\n"
-        "### Fase 4: Exportación de Bitácoras\n"
-        "1. **Ficha para Bitácora Personal Markdown (`Bitacora_Personal_Casos_SOC.md`):** Ficha modular estructurada.\n"
-        "2. **Bitácora Oficial de Turno (18 Columnas):** Tabla de apoyo visual de 18 columnas oficiales (A: Fecha/Hora, B: Analista [Kevin Moraes], C: Tenant, D: ID caso, E: Fuente, F: Nro Ticket, G: Prioridad, H: Tipo evento, I: Asunto, J: Activos, K: Descripción, L: Evidencia, M: Solicitud Acción, N: Estado, O: URL, P: Generación Ticket, Q: TICKET, R: Playbook) seguida obligatoriamente de un bloque ```tsv con 1 única línea con campos delimitados por tabuladores (\\t) y comillas dobles en campos largos para pegar en Excel con 1 clic."
-    )
+    system_instruction = SYSTEM_PROMPT_TRIAGE
 
     from soar_ai_client import is_antigravity_available, SoarUnifiedOpenAIClient
 
     antigravity_ok = is_antigravity_available()
     if not antigravity_ok and not NVIDIA_API_KEY:
-        print("❌ Ni Google Antigravity OAuth ni NVIDIA_API_KEY están disponibles (defínela en el archivo .env).")
-        sys.exit(1)
+        raise RuntimeError("Ni Google Antigravity OAuth ni NVIDIA_API_KEY están disponibles (defínela en el archivo .env).")
 
     print("\n🔍 [SOC AGENT] Analizando caso localmente (Pre-extracción de evidencias)...", flush=True)
     evidencias_locales = auto_enriquecer_contexto(prompt_usuario)
@@ -555,6 +584,13 @@ def ejecutar_consulta(prompt_usuario: str, modelo: str = None):
         )
     else:
         prompt_enriquecido = prompt_compacto
+
+    if contexto_memoria:
+        prompt_enriquecido += (
+            "\n\n---\n### MEMORIA DEL SOC (casos históricos, plantillas y playbooks relacionados):\n"
+            f"{contexto_memoria}\n---\n"
+            "Usa esta memoria como referencia; verifica que realmente aplique a este caso antes de reutilizar un veredicto."
+        )
 
     messages = [
         {"role": "system", "content": system_instruction},
@@ -597,6 +633,14 @@ def main():
     parser.add_argument("-f", "--file", help="Ruta a un archivo JSON o de texto con la alerta cruda")
     args = parser.parse_args()
 
+    try:
+        _main_consulta(args, parser)
+    except RuntimeError as e:
+        print(f"❌ {e}")
+        sys.exit(1)
+
+
+def _main_consulta(args, parser):
     if args.file:
         ruta = Path(args.file)
         if not ruta.exists():

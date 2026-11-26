@@ -530,10 +530,9 @@ class SoarWebHandler(BaseHTTPRequestHandler):
             try:
                 rag = get_rag()
                 mem_ctx = rag.instant_case_context(text)
-                compact = preparar_entrada(text)
-                full_prompt = f"{compact}\n\n{mem_ctx}\n\nUtiliza obligatoriamente este paquete de memoria verificada en tu dictamen consolidado de 4 fases."
                 from soc_agent import ejecutar_consulta
-                markdown_resp = ejecutar_consulta(text)
+                # La memoria del RAG ahora sí llega a la IA (antes se armaba y se descartaba)
+                markdown_resp = ejecutar_consulta(text, contexto_memoria=mem_ctx)
                 cierre = extraer_cierre_consola(markdown_resp)
                 tsv = extraer_tsv_18_columnas(markdown_resp)
                 elapsed_s = round(time.perf_counter() - t0, 2)
