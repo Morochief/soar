@@ -13,6 +13,62 @@ from email import message_from_string
 from email.policy import default as default_policy
 from typing import Dict, Any, List, Optional
 from html import escape as he
+import os
+
+
+def _authserv_id(header_value: str) -> str:
+    """authserv-id de un Authentication-Results (lo que va antes del primer ';')."""
+    return str(header_value).split(";", 1)[0].strip().lower()
+
+
+def seleccionar_auth_results(headers: List[str]) -> str:
+    """
+    Devuelve SOLO el Authentication-Results confiable. Cualquiera puede agregar cabeceras
+    falsas más abajo al enviar el correo ("spf=pass dkim=pass"), así que no se deben
+    mezclar todas. Si se define TRUSTED_AUTHSERV_IDS (ej. "mx.technoma.com.py,protection.outlook.com")
+    se usa la primera cabecera de esos servidores; si no, la de más arriba (la que agregó
+    el último servidor, es decir el propio gateway).
+    """
+    headers = [str(h) for h in headers if str(h).strip()]
+    if not headers:
+        return ""
+    confiables = [x.strip().lower() for x in os.environ.get("TRUSTED_AUTHSERV_IDS", "").split(",") if x.strip()]
+    if confiables:
+        for h in headers:
+            aid = _authserv_id(h)
+            if any(aid == c or aid.endswith("." + c) for c in confiables):
+                return h
+    return headers[0]
+
+
+_TLD_EXTRACT = None
+
+
+def dominio_organizacional(dom: str) -> str:
+    """
+    Dominio organizacional (RFC 7489) usando la Public Suffix List vía `tldextract`
+    (snapshot incluido, sin red). Si tldextract no está instalado, usa la heurística anterior.
+    """
+    global _TLD_EXTRACT
+    if not dom:
+        return ""
+    dom = dom.lower().strip().strip(".")
+    try:
+        if _TLD_EXTRACT is None:
+            import tldextract
+            _TLD_EXTRACT = tldextract.TLDExtract(suffix_list_urls=())
+        ext = _TLD_EXTRACT(dom)
+        if ext.domain and ext.suffix:
+            return f"{ext.domain}.{ext.suffix}"
+    except Exception:
+        pass
+    pts = dom.split(".")
+    cc_tlds = {"com", "edu", "gov", "gob", "org", "net", "co", "mil", "nom", "ac"}
+    if len(pts) >= 3 and pts[-2] in cc_tlds and len(pts[-1]) == 2:
+        return ".".join(pts[-3:])
+    if len(pts) >= 2:
+        return ".".join(pts[-2:])
+    return dom
 
 from PySide6.QtCore import Qt, QUrl, QProcess
 from PySide6.QtGui import QTextCursor, QColor, QDesktopServices, QCursor
@@ -81,9 +137,8 @@ def parse_email_headers_forensic(raw_content: str) -> Dict[str, Any]:
     x_spam_status = str(msg.get("X-Spam-Status", "")).strip()
 
     # Recoger todas las cabeceras de Authentication-Results (puede haber más de una si pasó por varios gateways)
-    all_auth_results = " ".join([str(h) for h in msg.get_all("Authentication-Results", [])])
-    if not all_auth_results:
-        all_auth_results = str(msg.get("Authentication-Results", "")).strip()
+    # Solo la cabecera confiable (no se mezclan las que pudo insertar el remitente)
+    all_auth_results = seleccionar_auth_results(msg.get_all("Authentication-Results", []) or [])
 
     # Extraer SCL (Spam Confidence Level de Microsoft 365: -1 a 9)
     scl_val = None
@@ -105,7 +160,12 @@ def parse_email_headers_forensic(raw_content: str) -> Dict[str, Any]:
 
     # 1. Análisis de Autenticación Técnica (SPF / DKIM / DMARC)
     # Incluir también X-Spam-Status si contiene veredictos como dmarc_fail o spf_fail
-    combined_auth = f"{all_auth_results} {received_spf} {x_spam_status}".lower()
+    # Received-SPF solo se usa si no hay un Authentication-Results confiable con spf=
+    combined_auth = f"{all_auth_results} {x_spam_status}".lower()
+    if "spf=" not in combined_auth and received_spf:
+        m_rspf = re.match(r"\s*(pass|fail|softfail|neutral|none|temperror|permerror)\b", received_spf, re.I)
+        if m_rspf:
+            combined_auth += f" spf={m_rspf.group(1).lower()}"
     
     def _extract_auth_status(proto: str) -> str:
         # 1. Buscar patrón estándar proto=pass|fail
@@ -129,15 +189,28 @@ def parse_email_headers_forensic(raw_content: str) -> Dict[str, Any]:
     dmarc_status = _extract_auth_status("dmarc")
 
     # Extraer dominio de firma DKIM (d=tag)
+    # Preferir el d= de la firma DKIM que PASÓ según el gateway confiable. Si hay varias firmas
+    # (la del dominio y la del proveedor de envío), se elige la alineada con el From.
     dkim_domain = ""
-    if dkim_sig:
-        m_d = re.search(r'\bd=([a-zA-Z0-9\.\-_]+)', dkim_sig)
-        if m_d:
-            dkim_domain = m_d.group(1).lower().strip()
-    elif "header.d=" in all_auth_results.lower():
-        m_hd = re.search(r'header\.d=([a-zA-Z0-9\.\-_]+)', all_auth_results, re.IGNORECASE)
-        if m_hd:
-            dkim_domain = m_hd.group(1).lower().strip()
+    from_dom_tmp = extract_domain_from_email(from_hdr)
+    dkim_pass_domains = [d.lower() for d in re.findall(r'dkim=pass[^;]*?header\.d=([a-zA-Z0-9\.\-_]+)', all_auth_results, re.IGNORECASE)]
+    if dkim_pass_domains:
+        alineado = [d for d in dkim_pass_domains if dominio_organizacional(d) == dominio_organizacional(from_dom_tmp)]
+        dkim_domain = (alineado or dkim_pass_domains)[0]
+    else:
+        firmas = [str(h) for h in (msg.get_all("DKIM-Signature", []) or [])]
+        dominios_firma = []
+        for f_sig in firmas:
+            m_d = re.search(r'(?:^|;)\s*d=([a-zA-Z0-9\.\-_]+)', f_sig)
+            if m_d:
+                dominios_firma.append(m_d.group(1).lower().strip())
+        if dominios_firma:
+            alineado = [d for d in dominios_firma if dominio_organizacional(d) == dominio_organizacional(from_dom_tmp)]
+            dkim_domain = (alineado or dominios_firma)[0]
+        elif "header.d=" in all_auth_results.lower():
+            m_hd = re.search(r'header\.d=([a-zA-Z0-9\.\-_]+)', all_auth_results, re.IGNORECASE)
+            if m_hd:
+                dkim_domain = m_hd.group(1).lower().strip()
 
     # 2. Análisis de Saltos de Red (Hop Table RFC 5322) - Bottom-Up Cronológico
     received_headers = msg.get_all("Received", [])
@@ -221,15 +294,7 @@ def parse_email_headers_forensic(raw_content: str) -> Dict[str, Any]:
 
     # 3. Alineación DMARC Formal (RFC 7489)
     def _extract_base_domain(dom):
-        if not dom:
-            return ""
-        pts = dom.lower().strip().split(".")
-        cc_tlds = {"com", "edu", "gov", "gob", "org", "net", "co", "mil", "nom"}
-        if len(pts) >= 3 and pts[-2] in cc_tlds:
-            return ".".join(pts[-3:])
-        elif len(pts) >= 2:
-            return ".".join(pts[-2:])
-        return dom.lower().strip()
+        return dominio_organizacional(dom)
 
     base_from = _extract_base_domain(from_domain)
     base_return = _extract_base_domain(return_domain)

@@ -15,6 +15,17 @@ import os
 import re
 import json
 from datetime import datetime
+from html import escape as _he
+
+# Analista por defecto (configurable en .env con SOC_ANALYST_NAME)
+ANALISTA_DEFAULT = os.environ.get("SOC_ANALYST_NAME", "Kevin Moraes")
+TICKET_PREFIX = "THN-SOC-"
+
+
+def ticket_id_valido(ticket_id: str) -> bool:
+    """El ID debe tener número real (no vacío, ni 'THN-SOC-', ni 'THN-SOC-XX')."""
+    t = (ticket_id or "").strip().upper()
+    return bool(re.fullmatch(r"[A-Z]+-[A-Z]+-\d+", t))
 from typing import Dict, Any, Optional
 
 from PySide6.QtCore import Qt, Signal, Slot, QSize, QRect, QMarginsF
@@ -69,7 +80,7 @@ class TechnomaTicketEngine:
             "evidencia": "",
             "solicitud_accion": "",
             "tenant": "",
-            "analista": "Kevin Moraes",
+            "analista": ANALISTA_DEFAULT,
             "fecha_hora": datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         }
 
@@ -143,7 +154,7 @@ class TechnomaTicketEngine:
         parts = tsv_row.strip().split('\t')
         data = {
             "fecha_hora": parts[0].strip() if len(parts) > 0 else datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
-            "analista": parts[1].strip() if len(parts) > 1 else "Kevin Moraes",
+            "analista": parts[1].strip() if len(parts) > 1 else ANALISTA_DEFAULT,
             "tenant": parts[2].strip() if len(parts) > 2 else "",
             "id_caso": parts[3].strip() if len(parts) > 3 else "N/A",
             "fuente_deteccion": parts[4].strip() if len(parts) > 4 else "Sophos Central",
@@ -204,13 +215,15 @@ class TechnomaTicketEngine:
         Genera la fila oficial de 18 columnas separadas por tabuladores para la Bitácora.
         """
         def escape_tsv(val: str) -> str:
-            v = (val or "").replace('"', '""').strip()
-            if '\n' in v or '\t' in v:
-                return f'"{v}\n\n"'
+            # Regla TSV/CSV de Excel: solo si el campo va entre comillas se duplican las comillas internas.
+            # Antes se duplicaban siempre (aparecían "" literales) y se agregaban 2 saltos de línea extra.
+            v = (val or "").strip()
+            if '\n' in v or '\t' in v or '"' in v:
+                return '"' + v.replace('"', '""') + '"'
             return v
 
         fecha = data.get("fecha_hora") or datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-        analista = data.get("analista") or "Kevin Moraes"
+        analista = data.get("analista") or ANALISTA_DEFAULT
         tenant = data.get("tenant") or "Caja Ande"
         id_caso = data.get("id_caso") or "N/A"
         fuente = data.get("fuente_deteccion") or "Sophos Central"
@@ -277,13 +290,14 @@ class TechnomaTicketEngine:
         if not logo_html:
             logo_html = '<div style="text-align: center; margin-bottom: 6px; font-family: \'Outfit\', sans-serif; font-size: 22px; font-weight: bold; color: #a81c1c;">THN TECHNOMA</div>'
 
+        # Todo se escapa: la evidencia suele traer JSON/XML con '<' y '>' que desaparecían del PDF
         rows = [
-            ("Prioridad", data.get("prioridad") or "Media 🟡"),
-            ("Asunto", data.get("asunto") or ""),
-            ("Descripción", (data.get("descripcion") or "").replace("\n", "<br/>")),
-            ("Activos", (data.get("activos") or "").replace("\n", "<br/>")),
-            ("Evidencia", f"<pre style='font-family: \"Outfit\", Consolas, monospace; font-size: 11pt; margin: 0; white-space: pre-wrap;'>{data.get('evidencia') or ''}</pre>"),
-            ("Solicitud de Acción", (data.get("solicitud_accion") or "").replace("\n", "<br/>"))
+            ("Prioridad", _he(data.get("prioridad") or "Media 🟡")),
+            ("Asunto", _he(data.get("asunto") or "")),
+            ("Descripción", _he(data.get("descripcion") or "").replace("\n", "<br/>")),
+            ("Activos", _he(data.get("activos") or "").replace("\n", "<br/>")),
+            ("Evidencia", f"<pre style='font-family: \"Outfit\", Consolas, monospace; font-size: 11pt; margin: 0; white-space: pre-wrap;'>{_he(data.get('evidencia') or '')}</pre>"),
+            ("Solicitud de Acción", _he(data.get("solicitud_accion") or "").replace("\n", "<br/>"))
         ]
 
         tbody = ""
@@ -298,7 +312,7 @@ class TechnomaTicketEngine:
         html = f"""
         <div style="font-family: 'Outfit', sans-serif; font-size: 12pt; max-width: 650px; background-color: #ffffff; padding: 14px; border: 2px solid #222222;">
             {logo_html}
-            <div style="background-color: #f2f2f2; color: #a81c1c; font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 14pt; text-align: center; padding: 6px; border: 1.5px solid #222222; border-bottom: none;">{ticket}</div>
+            <div style="background-color: #f2f2f2; color: #a81c1c; font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 14pt; text-align: center; padding: 6px; border: 1.5px solid #222222; border-bottom: none;">{_he(ticket)}</div>
             <table style="width: 100%; border-collapse: collapse; border: 1.5px solid #222222;">
                 <tbody>
                     {tbody}
@@ -462,6 +476,8 @@ class TechnomaTicketCardWidget(QFrame):
         t_id = (data.get("ticket_id") or "THN-SOC-XX").upper()
         self.lbl_ticket_header.setText(t_id)
 
+        for _lbl in self.val_labels.values():
+            _lbl.setTextFormat(Qt.PlainText)  # '<' de la evidencia no se interpreta como HTML
         self.val_labels["prioridad"].setText(data.get("prioridad") or "Media 🟡")
         self.val_labels["asunto"].setText(data.get("asunto") or "")
         self.val_labels["descripcion"].setText(data.get("descripcion") or "")
@@ -589,7 +605,9 @@ class TechnomaTicketGeneratorDialog(QDialog):
         row1 = QHBoxLayout()
         v_id = QVBoxLayout()
         v_id.addWidget(QLabel("Nro. Ticket (THN-SOC):"))
-        self.txt_ticket_id = QLineEdit("THN-SOC-98")
+        # Antes arrancaba en "THN-SOC-98" y era fácil emitir un ticket con un ID viejo
+        self.txt_ticket_id = QLineEdit(TICKET_PREFIX)
+        self.txt_ticket_id.setPlaceholderText("THN-SOC-<número>")
         self.txt_ticket_id.textChanged.connect(self._update_preview)
         v_id.addWidget(self.txt_ticket_id)
         row1.addLayout(v_id, 1)
@@ -749,7 +767,7 @@ class TechnomaTicketGeneratorDialog(QDialog):
             "descripcion": self.txt_descripcion.toPlainText().strip(),
             "evidencia": self.txt_evidencia.toPlainText().strip(),
             "solicitud_accion": self.txt_solicitud.toPlainText().strip(),
-            "analista": "Kevin Moraes",
+            "analista": ANALISTA_DEFAULT,
             "fecha_hora": datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         }
 
@@ -758,7 +776,7 @@ class TechnomaTicketGeneratorDialog(QDialog):
         self.card_preview.set_ticket_data(data)
 
     def load_data(self, data: Dict[str, str]):
-        self.txt_ticket_id.setText(data.get("ticket_id") or "THN-SOC-98")
+        self.txt_ticket_id.setText(data.get("ticket_id") or TICKET_PREFIX)
         prio = TechnomaTicketEngine.normalize_priority(data.get("prioridad") or "Media 🟡")
         idx = self.combo_prio.findText(prio)
         if idx >= 0:
@@ -776,7 +794,7 @@ class TechnomaTicketGeneratorDialog(QDialog):
 
     def load_pua_sample(self):
         sample = {
-            "ticket_id": "THN-SOC-98",
+            "ticket_id": TICKET_PREFIX,
             "prioridad": "Media 🟡",
             "tenant": "Caja Ande",
             "asunto": "MALWARE - Generic Reputation PUA detectado en CJPPA081",
@@ -860,8 +878,22 @@ class TechnomaTicketGeneratorDialog(QDialog):
         except Exception as e:
             QMessageBox.critical(self, "Error de Importación", f"No se pudo parsear la fila de la bitácora: {e}")
 
+    def _confirmar_ticket_id(self) -> bool:
+        """Avisa si el ID de ticket no tiene número real antes de copiar/exportar."""
+        tid = self.txt_ticket_id.text().strip()
+        if ticket_id_valido(tid):
+            return True
+        resp = QMessageBox.question(
+            self, "ID de ticket incompleto",
+            f"El ID de ticket '{tid or '(vacío)'}' no tiene un número válido (ej. THN-SOC-123).\n\n¿Continuar de todos modos?",
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No
+        )
+        return resp == QMessageBox.Yes
+
     # --- ACCIONES DE EXPORTACIÓN ---
     def copy_to_excel_card(self):
+        if not self._confirmar_ticket_id():
+            return
         data = self._collect_data()
         tsv = TechnomaTicketEngine.to_excel_ticket_card(data)
         QApplication.clipboard().setText(tsv)
@@ -873,6 +905,8 @@ class TechnomaTicketGeneratorDialog(QDialog):
         )
 
     def copy_to_bitacora_row(self):
+        if not self._confirmar_ticket_id():
+            return
         data = self._collect_data()
         row = TechnomaTicketEngine.to_bitacora_row(data)
         QApplication.clipboard().setText(row)
@@ -883,12 +917,16 @@ class TechnomaTicketGeneratorDialog(QDialog):
         )
 
     def copy_to_markdown(self):
+        if not self._confirmar_ticket_id():
+            return
         data = self._collect_data()
         md = TechnomaTicketEngine.to_markdown_ticket(data)
         QApplication.clipboard().setText(md)
         QMessageBox.information(self, "Markdown Copiado", "Ticket copiado en formato Markdown para Teams, Slack o ITSM.")
 
     def copy_to_html(self):
+        if not self._confirmar_ticket_id():
+            return
         data = self._collect_data()
         html = TechnomaTicketEngine.to_html_ticket(data)
         from PySide6.QtCore import QMimeData
@@ -903,6 +941,8 @@ class TechnomaTicketGeneratorDialog(QDialog):
         )
 
     def copy_as_image(self):
+        if not self._confirmar_ticket_id():
+            return
         pixmap = self.card_preview.render_to_pixmap()
         QApplication.clipboard().setPixmap(pixmap)
         QMessageBox.information(
@@ -912,6 +952,8 @@ class TechnomaTicketGeneratorDialog(QDialog):
         )
 
     def save_as_image(self):
+        if not self._confirmar_ticket_id():
+            return
         ticket_id = (self.txt_ticket_id.text().strip() or "THN-SOC-TICKET").replace("/", "_")
         path, _ = QFileDialog.getSaveFileName(self, "Guardar Tarjeta de Ticket como Imagen", f"{ticket_id}.png", "Imágenes PNG (*.png)")
         if path:
@@ -920,6 +962,8 @@ class TechnomaTicketGeneratorDialog(QDialog):
             QMessageBox.information(self, "Imagen Guardada", f"Tarjeta guardada exitosamente en:\n{path}")
 
     def export_as_pdf(self):
+        if not self._confirmar_ticket_id():
+            return
         ticket_id = (self.txt_ticket_id.text().strip() or "THN-SOC-TICKET").replace("/", "_")
         path, _ = QFileDialog.getSaveFileName(self, "Exportar Ticket como PDF", f"{ticket_id}.pdf", "Archivos PDF (*.pdf)")
         if path:
