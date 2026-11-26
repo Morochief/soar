@@ -8,6 +8,7 @@ en el servidor Security Onion 3 (172.17.10.25).
 
 import os
 import sys
+import shlex
 import paramiko
 from dotenv import load_dotenv
 
@@ -57,17 +58,27 @@ class SO3Client:
         return stdout.read().decode("utf-8", errors="replace"), stderr.read().decode("utf-8", errors="replace")
 
     def sudo(self, cmd):
-        """Ejecuta un comando con sudo utilizando piping de contraseña no interactivo."""
+        """
+        Ejecuta un comando COMPLETO con sudo.
+
+        Antes se armaba `echo <pass> | sudo -S <cmd>`: con comandos compuestos
+        (`a && b`, `a || b`, `a | b`) solo la primera parte corría como root. Ej.: en
+        flush_swap.py `swapoff -a && swapon -a` ejecutaba `swapon` sin sudo, fallaba y dejaba
+        el nodo sin swap. Ahora todo el comando corre dentro de `sudo bash -c '<cmd>'` y la
+        contraseña se envía por stdin (no por `echo`, que se rompía con caracteres especiales).
+        """
         self.connect()
-        full_cmd = f"echo {self.password} | sudo -S {cmd}"
+        full_cmd = f"sudo -S -p '' bash -c {shlex.quote(cmd)}"
         stdin, stdout, stderr = self.client.exec_command(full_cmd)
+        stdin.write(f"{self.password}\n")
+        stdin.flush()
         out = stdout.read().decode("utf-8", errors="replace")
         err = stderr.read().decode("utf-8", errors="replace")
         return out, err
 
     def read_file(self, remote_path):
         """Lee el contenido de un archivo remoto con permisos sudo."""
-        out, _ = self.sudo(f"cat '{remote_path}'")
+        out, _ = self.sudo(f"cat {shlex.quote(remote_path)}")
         return out
 
     def write_file(self, remote_path, content):
@@ -79,8 +90,7 @@ class SO3Client:
             f.write(content)
         sftp.close()
         
-        self.sudo(f"mv '{tmp_path}' '{remote_path}'")
-        self.sudo(f"chmod 644 '{remote_path}'")
+        self.sudo(f"mv {shlex.quote(tmp_path)} {shlex.quote(remote_path)} && chmod 644 {shlex.quote(remote_path)}")
 
     def close(self):
         if self.client:

@@ -1,12 +1,16 @@
-import sys, os, json, requests, urllib3
+import sys, os, json, argparse, requests, urllib3
 urllib3.disable_warnings()
 
-sys.stdout.reconfigure(encoding='utf-8')
-sys.path.append(r'c:\Users\kevinmoraes\Desktop\SOC\soar')
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except Exception:
+    pass
+# Ruta relativa al propio script (antes: ruta absoluta de Windows de un solo equipo)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, BASE_DIR)
 import sync_cortex_cases
 
-HOST = 'technoma.stellarcyber.cloud'
-headers = sync_cortex_cases.get_headers()
+HOST = sync_cortex_cases.HOST
 
 # Dictámenes técnicos caso por caso
 JUSTIFICACIONES = {
@@ -35,8 +39,16 @@ JUSTIFICACIONES = {
     "18190": "Actividad legítima de desarrollo y documentación local desde IDE Antigravity / Python / PowerShell en NB-KMORAEZ hacia Bitacora_Personal_Casos_SOC.md. Falso positivo validado."
 }
 
-with open(r'c:\Users\kevinmoraes\Desktop\SOC\soar\cortex_cases_analysis.json', 'r', encoding='utf-8') as f:
+parser = argparse.ArgumentParser(description="Inserta los dictámenes de JUSTIFICACIONES en los casos de Cortex en Stellar")
+parser.add_argument("--input", default=os.path.join(BASE_DIR, "cortex_cases_analysis.json"),
+                    help="JSON con [{ticket_id, hex_id}, ...] (por defecto cortex_cases_analysis.json junto al script)")
+parser.add_argument("--dry-run", action="store_true", help="Mostrar qué se insertaría sin publicar nada")
+args = parser.parse_args()
+
+with open(args.input, 'r', encoding='utf-8') as f:
     cases = json.load(f)
+
+headers = None if args.dry_run else sync_cortex_cases.get_headers()
 
 print(f"[*] Insertando comentarios forenses en {len(cases)} casos...")
 
@@ -44,7 +56,15 @@ success = 0
 for c in cases:
     t_id = str(c['ticket_id'])
     hex_id = c['hex_id']
-    comment_text = JUSTIFICACIONES.get(t_id, "Actividad operacional y benigna validada por SOC Technoma tras análisis forense.")
+    comment_text = JUSTIFICACIONES.get(t_id)
+    if not comment_text:
+        # Antes se publicaba un texto genérico "validada tras análisis forense" aunque el caso no se
+        # hubiera analizado. Ahora se omite y se avisa para que el analista escriba su dictamen.
+        print(f"  [!] Ticket #{t_id} (ID: {hex_id}) SIN dictamen en JUSTIFICACIONES: se omite (no se publica texto genérico).")
+        continue
+    if args.dry_run:
+        print(f"  [DRY-RUN] Ticket #{t_id}: {comment_text[:90]}...")
+        continue
     
     url = f"https://{HOST}/connect/api/v1/cases/{hex_id}/comments"
     payload = {"comment": comment_text}
