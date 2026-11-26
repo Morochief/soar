@@ -50,11 +50,28 @@ VALID_RESOLUTIONS = ["False Positive", "Benign", "True Positive"]
 def close_case_by_stellar_id(stellar_case_id: str, resolution: str, reason: Optional[str] = None, dry_run: bool = False) -> bool:
     """Cierra un caso en Stellar Cyber actualizando su estado a 'Resolved' y su resolución."""
     if dry_run:
-        print(f"  [DRY-RUN] Se marcaría 'Resolved' con resolución '{resolution}' el Caso Stellar {stellar_case_id}")
+        print(f"  [DRY-RUN] Se marcaría 'Resolved' con resolución '{resolution}' el Caso Stellar {stellar_case_id}"
+              + (f" con comentario: {reason[:80]}" if reason else " (SIN comentario)"))
         return True
     
-    url = f"https://{HOST}/connect/api/v1/cases/{stellar_case_id}"
     headers = sync_cortex_cases.get_headers()
+
+    # 1. Primero el comentario de justificación: si falla, NO se cierra el caso
+    #    (evita casos Resolved sin nota de auditoría).
+    if reason:
+        c_url = f"https://{HOST}/connect/api/v1/cases/{stellar_case_id}/comments"
+        try:
+            rc = requests.post(c_url, headers=headers, json={"comment": reason}, verify=False, timeout=15)
+        except Exception as e:
+            print(f"  [-] ERROR insertando comentario en {stellar_case_id}: {e}. El caso NO se cerró.")
+            return False
+        if rc.status_code not in (200, 201):
+            print(f"  [-] ERROR insertando comentario en {stellar_case_id}: {rc.status_code} - {rc.text[:200]}. El caso NO se cerró.")
+            return False
+        print(f"  [+] Comentario registrado en caso {stellar_case_id}.")
+
+    # 2. Cierre
+    url = f"https://{HOST}/connect/api/v1/cases/{stellar_case_id}"
     payload = {
         "status": "Resolved",
         "resolution": resolution
@@ -62,17 +79,9 @@ def close_case_by_stellar_id(stellar_case_id: str, resolution: str, reason: Opti
     r = requests.put(url, headers=headers, json=payload, verify=False, timeout=30)
     if r.status_code == 200:
         print(f"  [+] ÉXITO: Caso Stellar {stellar_case_id} cerrado como '{resolution}'.")
-        if reason:
-            c_url = f"https://{HOST}/connect/api/v1/cases/{stellar_case_id}/comments"
-            try:
-                requests.post(c_url, headers=headers, json={"comment": reason}, verify=False, timeout=15)
-                print(f"  [+] Comentario registrado en caso {stellar_case_id}.")
-            except Exception as e:
-                print(f"  [-] Error insertando comentario: {e}")
         return True
-    else:
-        print(f"  [-] ERROR cerrando Caso Stellar {stellar_case_id}: {r.status_code} - {r.text[:200]}")
-        return False
+    print(f"  [-] ERROR cerrando Caso Stellar {stellar_case_id}: {r.status_code} - {r.text[:200]}")
+    return False
 
 
 def run_bulk_close(
@@ -114,9 +123,7 @@ def run_bulk_close(
     if cortex_cases:
         for ccid in cortex_cases:
             clean_cid = str(ccid).strip()
-            p1 = f"CASE {clean_cid}"
-            p2 = f"CASE_{clean_cid}"
-            matched = next((c for c in stellar_all_cases if p1 in c.get("name", "").upper() or p2 in c.get("name", "").upper()), None)
+            matched = sync_cortex_cases.find_case_for_cortex_id(stellar_all_cases, clean_cid)
             if matched:
                 if matched not in targets_to_close:
                     targets_to_close.append(matched)
@@ -128,13 +135,11 @@ def run_bulk_close(
         cortex_map = sync_cortex_cases.fetch_cortex_alerts_with_case_id(tenant_id)
         month_cids = []
         for cid, alerts in cortex_map.items():
-            if any(month in str(a.get("timestamp", "")) for a in alerts):
+            if any(sync_cortex_cases.alert_in_month(a, month) for a in alerts):
                 month_cids.append(str(cid))
         print(f"[*] Casos de Cortex identificados en el mes {month}: {month_cids}")
         for clean_cid in month_cids:
-            p1 = f"CASE {clean_cid}"
-            p2 = f"CASE_{clean_cid}"
-            matched = next((c for c in stellar_all_cases if p1 in c.get("name", "").upper() or p2 in c.get("name", "").upper()), None)
+            matched = sync_cortex_cases.find_case_for_cortex_id(stellar_all_cases, clean_cid)
             if matched and matched not in targets_to_close:
                 targets_to_close.append(matched)
 
@@ -150,7 +155,7 @@ def run_bulk_close(
         t_id = c.get("ticket_id")
         name = c.get("name")
         print(f"\n-> Procesando: {name} (Ticket #{t_id} | ID: {st_id})")
-        if close_case_by_stellar_id(st_id, resolution, dry_run=dry_run):
+        if close_case_by_stellar_id(st_id, resolution, reason=reason, dry_run=dry_run):
             success_count += 1
 
     print("\n" + "=" * 80)
