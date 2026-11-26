@@ -68,78 +68,14 @@ _RDAP_CACHE: Dict[str, Dict[str, Optional[str]]] = {}
 
 
 def consultar_asn_abuse_info(asn: Any) -> Optional[Dict[str, str]]:
-    """Consulta el buzón de abuso del Sistema Autónomo BGP vía RDAP aut-num y socket Whois port 43."""
-    if not asn:
-        return None
-    asn_clean = str(asn).upper().replace("AS", "").strip()
-    if not asn_clean.isdigit():
-        return None
-
-    import urllib.request
-    import socket
-
-    endpoints = [
-        f"https://rdap.db.ripe.net/aut-num/AS{asn_clean}",
-        f"https://rdap.org/aut-num/{asn_clean}",
-        f"https://rdap.arin.net/registry/aut-num/{asn_clean}",
-        f"https://rdap.apnic.net/aut-num/{asn_clean}",
-        f"https://rdap.afrinic.net/rdap/aut-num/{asn_clean}"
-    ]
-    for url in endpoints:
-        try:
-            req = urllib.request.Request(url, headers={"User-Agent": "TechnomaSOC/1.0", "Accept": "application/json"})
-            with urllib.request.urlopen(req, timeout=2.5) as resp:
-                if resp.status == 200:
-                    data = json.loads(resp.read().decode("utf-8", errors="ignore"))
-                    # Remarks
-                    for rem in data.get("remarks", []):
-                        for d in rem.get("description", []):
-                            m = re.search(r'([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)', d)
-                            if m and "abuse" in d.lower():
-                                return {"email": m.group(1).strip(), "asn": f"AS{asn_clean}", "holder": data.get("name", "")}
-
-                    # Entities
-                    def _find_abuse(entities):
-                        for ent in entities:
-                            roles = ent.get("roles", [])
-                            vcards = (ent.get("vcardArray") or [[], []])[1]
-                            for card in vcards:
-                                if isinstance(card, list) and len(card) > 3 and card[0] == "email":
-                                    em = str(card[3]).strip()
-                                    if "abuse" in roles or "abuse" in em.lower():
-                                        return em
-                            sub = _find_abuse(ent.get("entities", []))
-                            if sub:
-                                return sub
-                        return None
-
-                    em = _find_abuse(data.get("entities", []))
-                    if em:
-                        return {"email": em, "asn": f"AS{asn_clean}", "holder": data.get("name", "")}
-        except Exception:
-            continue
-
-    # Fallback Socket Port 43
-    for srv in ["whois.ripe.net", "whois.radb.net", "whois.arin.net", "whois.apnic.net"]:
-        try:
-            with socket.create_connection((srv, 43), timeout=2.5) as s:
-                s.sendall(f"AS{asn_clean}\r\n".encode())
-                raw = b""
-                while len(raw) < 512 * 1024:
-                    d = s.recv(4096)
-                    if not d:
-                        break
-                    raw += d
-            text = raw.decode("utf-8", errors="ignore")
-            m = re.search(r'abuse-mailbox:\s*([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-.]+)', text, re.I)
-            if m:
-                return {"email": m.group(1).strip(), "asn": f"AS{asn_clean}", "holder": ""}
-            m2 = re.search(r'Abuse contact.*?([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-.]+)', text, re.I)
-            if m2:
-                return {"email": m2.group(1).strip(), "asn": f"AS{asn_clean}", "holder": ""}
-        except Exception:
-            pass
-
+    """
+    Buzón de abuso del Sistema Autónomo BGP (RDAP aut-num + whois puerto 43).
+    Antes esta lógica estaba copiada aquí y en whois_recon.py; ahora se usa una sola implementación.
+    """
+    from whois_recon import get_asn_abuse_contact
+    res = get_asn_abuse_contact(asn)
+    if res and res.get("email"):
+        return {"email": res["email"], "asn": res.get("asn", ""), "holder": res.get("holder", "")}
     return None
 
 

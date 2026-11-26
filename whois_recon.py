@@ -40,8 +40,8 @@ if hasattr(sys.stdout, "reconfigure"):
     except Exception:
         pass
 
-# Configurar timeout global de socket para evitar bloqueos
-socket.setdefaulttimeout(3.0)
+# Nota: el timeout global de socket se configura solo al ejecutar como script (ver __main__).
+# Hacerlo al importar afectaba a TODO el proceso que importara este módulo (p. ej. la GUI).
 
 RIR_WHOIS_SERVERS = {
     "RIPE": "whois.ripe.net",
@@ -107,16 +107,17 @@ def fetch_json(url: str, headers: Optional[Dict[str, str]] = None, timeout: floa
 def query_raw_whois_socket(query: str, server: str = "whois.ripe.net", port: int = 43, timeout: float = 3.5) -> str:
     """Realiza una consulta Whois directa mediante socket TCP al puerto 43."""
     try:
-        s = socket.create_connection((server, port), timeout=timeout)
-        # Para RIPE o servidores que soportan flags, enviar consulta estándar
-        s.sendall((query.strip() + "\r\n").encode("utf-8"))
-        chunks = []
-        while True:
-            data = s.recv(4096)
-            if not data:
-                break
-            chunks.append(data)
-        s.close()
+        with socket.create_connection((server, port), timeout=timeout) as s:
+            # Para RIPE o servidores que soportan flags, enviar consulta estándar
+            s.sendall((query.strip() + "\r\n").encode("utf-8"))
+            chunks = []
+            total = 0
+            while total < 512 * 1024:
+                data = s.recv(4096)
+                if not data:
+                    break
+                chunks.append(data)
+                total += len(data)
         return b"".join(chunks).decode("utf-8", errors="replace")
     except Exception as e:
         return f"[!] No se pudo obtener el volcado crudo desde {server}:43 ({e})"
@@ -685,4 +686,5 @@ def main():
 
 
 if __name__ == "__main__":
+    socket.setdefaulttimeout(3.0)  # evitar bloqueos en consultas sin timeout explícito
     main()

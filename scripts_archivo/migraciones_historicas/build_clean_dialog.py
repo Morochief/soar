@@ -1,9 +1,14 @@
 import os
 import sys
 
-source_bak = r"C:\Users\kevinmoraes\Documents\soc-env\ingestion_audit_dialog.py.bak"
-target_soc_env = r"C:\Users\kevinmoraes\Documents\soc-env\ingestion_audit_dialog.py"
-target_soar = r"C:\Users\kevinmoraes\Documents\SOC_SOAR\soar\ingestion_audit_dialog.py"
+# Script histórico. Uso: python build_clean_dialog.py <origen.bak> <destino1> [destino2]
+# (antes: rutas absolutas de Windows)
+if len(sys.argv) < 3:
+    print("Uso: python build_clean_dialog.py <ingestion_audit_dialog.py.bak> <destino.py> [destino2.py]")
+    sys.exit(1)
+source_bak = sys.argv[1]
+target_soc_env = sys.argv[2]
+target_soar = sys.argv[3] if len(sys.argv) > 3 else sys.argv[2]
 
 with open(source_bak, "r", encoding="utf-8") as f:
     content = f.read()

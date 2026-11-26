@@ -5,10 +5,13 @@ import requests
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+# Raíz del repo relativa a este script (antes: rutas absolutas de Windows)
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
 def get_stellar_config():
     candidates = [
-        os.path.join(r"C:\Users\kevinmoraes\Documents\SOC_SOAR\soar", "config.json"),
-        os.path.join(r"c:\Users\kevinmoraes\Documents\soc-env", "config.json"),
+        os.path.join(REPO_ROOT, "config.json"),
         "config.json"
     ]
     for p in candidates:
@@ -107,7 +110,7 @@ def query_open_cases():
         print(f"[!] Excepcion al consultar casos: {e}")
 
 def check_log_tail():
-    for base in [r"C:\Users\kevinmoraes\Documents\SOC_SOAR\soar", r"c:\Users\kevinmoraes\Documents\soc-env"]:
+    for base in [REPO_ROOT, os.getcwd()]:
         log_path = os.path.join(base, "historial_caidas.log")
         if os.path.exists(log_path):
             print(f"\n[*] Ultimas 20 lineas de {log_path}:")
