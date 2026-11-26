@@ -43,16 +43,23 @@ class PlaybookEngine:
 
         search_corpus = f'{case_name} {tag_str} {description} {telemetry_sample}'
 
+        def _hay(token: str) -> bool:
+            # Palabra/frase completa: antes 'dos' coincidía dentro de 'todos', etc.
+            token = str(token).lower().strip()
+            if not token:
+                return False
+            return re.search(rf'(?<![a-z0-9áéíóúñ]){re.escape(token)}(?![a-z0-9áéíóúñ])', search_corpus) is not None
+
         scored = []
         for pb in catalog:
             score = 0
             for kw in pb.get('keywords', []):
-                if kw in search_corpus:
+                if _hay(kw):
                     score += 12
             
             clean_title = pb.get('title', '').lower()
-            for w in clean_title.split():
-                if len(w) > 4 and w in search_corpus:
+            for w in re.findall(r'[a-záéíóúñ0-9]+', clean_title):
+                if len(w) > 4 and _hay(w):
                     score += 6
             
             mitre = pb.get('mitre', '').lower()
@@ -66,8 +73,12 @@ class PlaybookEngine:
         scored.sort(key=lambda x: x[0], reverse=True)
         if scored:
             return scored[0][1]
-        
-        return catalog[1] if len(catalog) > 1 else (catalog[0] if catalog else None)
+        # Sin coincidencias: se devuelve el playbook genérico, MARCADO como valor por defecto
+        # (antes se devolvía catalog[1] sin avisar y parecía una recomendación real).
+        base = catalog[1] if len(catalog) > 1 else catalog[0]
+        pb_default = dict(base)
+        pb_default['_es_default'] = True
+        return pb_default
 
     @classmethod
     def get_playbook_by_id(cls, pb_id: str) -> Optional[Dict[str, Any]]:
@@ -93,7 +104,17 @@ class PlaybookEngine:
         framework = pb.get('origin_framework', 'Technoma SOC (NIST / CSF 2.0)')
         fw_color = '#8b5cf6' if 'CERT-PY' in framework else '#0284c7'
 
-        html = f'''
+        aviso_default = ''
+
+        if pb.get('_es_default'):
+
+            aviso_default = ("<div style='background-color: #291b00; border-left: 3px solid #f59e0b; padding: 6px 10px; "
+
+                             "margin-bottom: 10px; color: #fbbf24; font-size: 11px;'>⚠️ Ningún playbook coincidió con el caso: "
+
+                             "se muestra el playbook genérico por defecto. Elija uno manualmente si corresponde.</div>")
+
+        html = aviso_default + f'''
         <div style="font-family: 'Segoe UI', Tahoma, sans-serif; color: #f8fafc;">
             <div style="background-color: #0f172a; border-left: 4px solid {prio_color}; padding: 10px 14px; border-radius: 4px; margin-bottom: 12px;">
                 <div style="font-size: 15px; font-weight: bold; color: #38bdf8;">📘 {title}</div>

@@ -23,6 +23,7 @@ Uso:
 """
 
 import os
+import re
 import sys
 import json
 import base64
@@ -160,11 +161,22 @@ def resolve_case_hex_id(case_identifier: str) -> Optional[str]:
     if len(clean_id) == 24 and all(c in "0123456789abcdefABCDEF" for c in clean_id):
         return clean_id  # Ya es un Hex ID
 
-    # Es un Ticket ID numérico: consultar lista reciente
-    cases = list_cases(status="all", limit=100)
-    for c in cases:
-        if str(c.get("ticket_id")) == clean_id:
-            return c.get("_id")
+    # 1. Intento directo filtrando por ticket_id (se verifica que coincida: la API podría ignorar el filtro)
+    try:
+        res = call_mcp("listCases", {"ticket_id": clean_id, "limit": 5})
+        if isinstance(res, dict) and "data" in res:
+            for c in res["data"].get("cases", []):
+                if str(c.get("ticket_id")) == clean_id:
+                    return c.get("_id")
+    except Exception:
+        pass
+
+    # 2. Búsqueda amplia (antes solo miraba los últimos 100 casos por estado y no encontraba tickets viejos)
+    for limite in (500, 2000):
+        cases = list_cases(status="all", limit=limite)
+        for c in cases:
+            if str(c.get("ticket_id")) == clean_id:
+                return c.get("_id")
 
     return None
 
@@ -194,7 +206,7 @@ def audit_closed_cases(today_only: bool = True) -> List[Dict[str, Any]]:
         tid = c.get("ticket_id")
         hid = c.get("_id")
         tname = c.get("tenant_name")
-        cname = c.get("name")
+        cname = c.get("name") or ""
         res_val = c.get("resolution") or "No Tag"
         mod_by = c.get("modified_by_name") or c.get("modified_by") or "Desconocido"
 
@@ -209,34 +221,45 @@ def audit_closed_cases(today_only: bool = True) -> List[Dict[str, Any]]:
                 for a in alerts if isinstance(a, dict)
             ]
 
-            # Evaluación de calidad del cierre
+            # Evaluación de calidad del cierre.
+            # Antes cualquier comentario que mencionara 'ldap', 'translate', 'sysvol', etc. quedaba
+            # automáticamente "CORRECTO_BENIGNO" (un sello por palabra clave, no una auditoría).
+            # Ahora la coincidencia con un patrón conocido solo se informa como PISTA para revisar,
+            # y la nota se evalúa por su contenido real.
             status_evaluation = "CORRECTO"
             justification = ""
+            pistas = []
 
             if not comment_texts:
                 status_evaluation = "OBSERVADO_SIN_COMENTARIO"
                 justification = "El caso fue cerrado sin dejar notas ni justificación técnica."
             else:
                 combined_comm = " ".join(comment_texts).lower()
-                # Verificar concordancia técnica
-                if "sophos" in cname.lower() or "translate" in combined_comm:
-                    status_evaluation = "CORRECTO_BENIGNO"
-                    justification = "Filtrado web de Sophos bloqueando Google Translate / Proxies de forma preventiva."
-                elif "driver_blocklist" in combined_comm or "bromium" in combined_comm or "brhostdrv" in combined_comm:
-                    status_evaluation = "CORRECTO_BENIGNO"
-                    justification = "Controlador legítimo HP Wolf Security bloqueado por lista de endurecimiento de kernel."
-                elif "sysvol" in combined_comm or "ldap" in combined_comm or "dpapi" in combined_comm or "ipc$" in combined_comm:
-                    status_evaluation = "CORRECTO_BENIGNO"
-                    justification = "Operatoria estándar de Active Directory (GPOs, DPAPI o sincronización entre DCs)."
-                elif "claude.exe" in combined_comm:
-                    status_evaluation = "CORRECTO_BENIGNO"
-                    justification = "Comandos PowerShell codificados generados legítimamente por Claude Desktop App."
-                elif len(comment_texts[0]) < 25:
+                patrones = {
+                    "Filtrado web de Sophos (Google Translate / proxies)": ("translate",),
+                    "Driver HP Wolf Security / Bromium en blocklist": ("driver_blocklist", "bromium", "brhostdrv"),
+                    "Operatoria de Active Directory (GPO, DPAPI, sincronización DC)": ("sysvol", "ldap", "dpapi", "ipc$"),
+                    "PowerShell codificado de Claude Desktop": ("claude.exe",),
+                }
+                for desc_patron, claves in patrones.items():
+                    if any(k in combined_comm for k in claves):
+                        pistas.append(desc_patron)
+
+                texto_total = " ".join(comment_texts)
+                tiene_evidencia = bool(re.search(
+                    r"\b(?:\d{1,3}\.){3}\d{1,3}\b|\bNB-[\w-]+|\.exe\b|hash|sha256|md5|proceso|usuario|host|dominio|ip\b",
+                    texto_total, re.I))
+                if len(texto_total.strip()) < 25:
                     status_evaluation = "OBSERVADO_COMENTARIO_BREVE"
-                    justification = f"Comentario muy corto ({len(comment_texts[0])} caracteres)."
+                    justification = f"Comentario muy corto ({len(texto_total.strip())} caracteres)."
+                elif not tiene_evidencia:
+                    status_evaluation = "OBSERVADO_SIN_EVIDENCIA"
+                    justification = "El comentario no cita evidencia concreta (host, usuario, IP, proceso, hash o dominio)."
                 else:
                     status_evaluation = "CORRECTO"
-                    justification = "Análisis forense detallado documentado por el analista."
+                    justification = "Comentario con evidencia concreta documentada por el analista."
+                if pistas:
+                    justification += " Patrón conocido detectado (verificar que aplique): " + "; ".join(pistas) + "."
 
             results.append({
                 "ticket_id": tid,
@@ -281,7 +304,7 @@ def main():
         print(f"{'TICKET':<9} {'TENANT':<12} {'DICTAMEN':<16} {'EVALUACIÓN':<25} {'ANALISTA'}")
         print(f"{'-'*100}")
         for a in audit_data:
-            print(f"#{a['ticket_id']:<8} {a['tenant'][:11]:<12} {a['resolution'][:15]:<16} {a['evaluation']:<25} {a['analyst']}")
+            print(f"#{a['ticket_id']!s:<8} {(a['tenant'] or '')[:11]:<12} {(a['resolution'] or '')[:15]:<16} {a['evaluation']:<25} {a['analyst']}")
             print(f"   ↳ Razón: {a['audit_note']}")
             if a['comments']:
                 print(f"   ↳ Dictamen Analista: {a['comments'][0][:130]}...")
