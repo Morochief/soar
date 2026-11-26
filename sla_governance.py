@@ -63,16 +63,21 @@ class SlaGovernanceEngine:
         return cls.PRIORITY_MATRIX.get((imp, urg), "P3")
 
     @classmethod
-    def normalize_score(cls, raw_score: Any) -> float:
+    def normalize_score(cls, raw_score: Any, scale: float = 100.0) -> float:
+        """
+        Normaliza el score a la escala 0-100. Los scores de casos de Stellar ya vienen en 0-100.
+        Antes se multiplicaba por 10 cualquier valor <= 10 (asumiendo escala 0-10), y un caso con
+        score 9.5/100 pasaba a 95 = P1. Solo se reescala si se indica explícitamente scale=10.
+        """
         if raw_score is None:
             return 0.0
         try:
             val = float(raw_score)
-            if 0.0 < val <= 10.0:
-                val = val * 10.0
-            return round(val, 1)
         except (ValueError, TypeError):
             return 0.0
+        if scale and scale != 100.0:
+            val = val * (100.0 / float(scale))
+        return round(max(0.0, min(100.0, val)), 1)
 
     @classmethod
     def get_priority(cls, case: dict) -> Tuple[str, str]:
@@ -91,7 +96,7 @@ class SlaGovernanceEngine:
             labels = {"P1": "CRÍTICA", "P2": "ALTA", "P3": "MEDIA", "P4": "BAJA"}
             return p_matrix, labels.get(p_matrix, "MEDIA")
 
-        score = cls.normalize_score(case.get("score"))
+        score = cls.normalize_score(case.get("score"), scale=case.get("score_scale") or 100.0)
         raw_sev = str(case.get("severity", "")).strip().lower()
 
         if score > 0.0:
@@ -160,11 +165,17 @@ class SlaGovernanceEngine:
             is_acknowledged = True
 
         raw_ack = case.get("acknowledged")
+        estimated = False
         if raw_ack and isinstance(raw_ack, (int, float)) and raw_ack > 0:
             ack_time = int(raw_ack)
             is_acknowledged = True
+        elif is_acknowledged:
+            # No hay marca de acuse: 'modified_at' cambia con cualquier comentario o edición posterior,
+            # así que solo sirve como ESTIMACIÓN (se excluye de promedios y de % de cumplimiento).
+            ack_time = case.get("modified_at") or now
+            estimated = True
         else:
-            ack_time = case.get("modified_at") or now if is_acknowledged else now
+            ack_time = now
 
         elapsed_mttd = max(0, ack_time - created_at)
         remaining_mttd = mttd_limit - elapsed_mttd
@@ -181,6 +192,7 @@ class SlaGovernanceEngine:
             "breached": breached,
             "warning": warning,
             "is_acknowledged": is_acknowledged,
+            "estimated": estimated,
             "elapsed_str": cls.format_duration(elapsed_mttd),
             "remaining_str": cls.format_duration(remaining_mttd) if not breached else f"+{cls.format_duration(abs(remaining_mttd))}",
             "limit_str": cls.format_duration(mttd_limit)
@@ -198,11 +210,16 @@ class SlaGovernanceEngine:
         is_resolved = status in ["resolved", "cancelled", "closed"]
 
         raw_closed = case.get("closed")
+        estimated = False
         if raw_closed and isinstance(raw_closed, (int, float)) and raw_closed > 0:
             resolution_time = int(raw_closed)
             is_resolved = True
+        elif is_resolved:
+            # Sin marca de cierre: 'modified_at' es solo una estimación (puede ser una edición posterior)
+            resolution_time = case.get("modified_at") or now
+            estimated = True
         else:
-            resolution_time = case.get("modified_at") or now if is_resolved else now
+            resolution_time = now
 
         elapsed_mttr = max(0, resolution_time - created_at)
         remaining_mttr = mttr_limit - elapsed_mttr
@@ -219,6 +236,7 @@ class SlaGovernanceEngine:
             "breached": breached,
             "warning": warning,
             "is_resolved": is_resolved,
+            "estimated": estimated,
             "elapsed_str": cls.format_duration(elapsed_mttr),
             "remaining_str": cls.format_duration(remaining_mttr) if not breached else f"+{cls.format_duration(abs(remaining_mttr))}",
             "limit_str": cls.format_duration(mttr_limit)
@@ -276,6 +294,7 @@ class SlaGovernanceEngine:
         all_triage = []
         sla_compliant_total = 0
         sla_breached_total = 0
+        sla_sin_datos_total = 0  # casos cuyo tiempo real no se conoce (sin acknowledged/closed)
 
         for c in filtered_cases:
             st = str(c.get("status", "")).strip().lower()
@@ -296,25 +315,37 @@ class SlaGovernanceEngine:
 
             priority_matrix[p_code]["total"] += 1
 
-            if mttd_res["is_acknowledged"]:
+            if mttd_res["is_acknowledged"] and not mttd_res["estimated"]:
                 all_mttd.append(mttd_res["elapsed_ms"])
                 priority_matrix[p_code]["mttd_sum"] += mttd_res["elapsed_ms"]
                 priority_matrix[p_code]["mttd_cnt"] += 1
 
+            def _registrar(cumple: Optional[bool]):
+                nonlocal sla_compliant_total, sla_breached_total, sla_sin_datos_total
+                if cumple is None:
+                    sla_sin_datos_total += 1
+                elif cumple:
+                    sla_compliant_total += 1
+                    priority_matrix[p_code]["compliant"] += 1
+                else:
+                    sla_breached_total += 1
+                    priority_matrix[p_code]["breached"] += 1
+
             if st in ["resolved", "cancelled", "closed"]:
                 status_counts["resolved"] += 1
                 total_alerts_mitigated += sz
-                all_mttr.append(mttr_res["elapsed_ms"])
-                priority_matrix[p_code]["mttr_sum"] += mttr_res["elapsed_ms"]
-                priority_matrix[p_code]["mttr_cnt"] += 1
+                if not mttr_res["estimated"]:
+                    all_mttr.append(mttr_res["elapsed_ms"])
+                    priority_matrix[p_code]["mttr_sum"] += mttr_res["elapsed_ms"]
+                    priority_matrix[p_code]["mttr_cnt"] += 1
 
+                # Triaje = desde la creación del caso hasta que un analista lo toma (acknowledged).
+                # Solo se mide con datos reales; antes se inventaba min(MTTR, 15 min) y se usaba
+                # closed - acknowledged (que es tiempo de resolución, no de triaje).
                 raw_ack = c.get("acknowledged") or 0
-                raw_clo = c.get("closed") or 0
-                if raw_clo > 0 and raw_ack > 0 and raw_clo >= raw_ack:
-                    triage_dur = raw_clo - raw_ack
-                else:
-                    triage_dur = min(mttr_res["elapsed_ms"], 15 * 60 * 1000)
-                all_triage.append(triage_dur)
+                raw_created = c.get("created_at") or 0
+                if isinstance(raw_ack, (int, float)) and raw_ack > 0 and raw_created and raw_ack >= raw_created:
+                    all_triage.append(int(raw_ack - raw_created))
 
                 res_val = str(c.get("resolution") or "").strip().lower()
                 if "false positive" in res_val or "falso" in res_val:
@@ -328,29 +359,22 @@ class SlaGovernanceEngine:
                 else:
                     verdict_counts["Sin Veredicto"] += 1
 
-                if not mttr_res["breached"]:
-                    sla_compliant_total += 1
-                    priority_matrix[p_code]["compliant"] += 1
+                # Cumple solo si cumplió MTTR **y** MTTD (antes se ignoraba el MTTD de los resueltos)
+                if mttr_res["estimated"]:
+                    _registrar(None)
                 else:
-                    sla_breached_total += 1
-                    priority_matrix[p_code]["breached"] += 1
+                    mttd_ok = True if (mttd_res["estimated"] or not mttd_res["is_acknowledged"]) else not mttd_res["breached"]
+                    _registrar((not mttr_res["breached"]) and mttd_ok)
 
             elif st == "in progress":
                 status_counts["in_progress"] += 1
-                if not mttr_res["breached"]:
-                    sla_compliant_total += 1
-                    priority_matrix[p_code]["compliant"] += 1
+                if mttd_res["is_acknowledged"] and not mttd_res["estimated"] and mttd_res["breached"]:
+                    _registrar(False)
                 else:
-                    sla_breached_total += 1
-                    priority_matrix[p_code]["breached"] += 1
+                    _registrar(not mttr_res["breached"])
             elif st == "new":
                 status_counts["new"] += 1
-                if not mttd_res["breached"]:
-                    sla_compliant_total += 1
-                    priority_matrix[p_code]["compliant"] += 1
-                else:
-                    sla_breached_total += 1
-                    priority_matrix[p_code]["breached"] += 1
+                _registrar(not mttd_res["breached"])
             else:
                 status_counts["other"] += 1
 
@@ -407,6 +431,8 @@ class SlaGovernanceEngine:
             "sla_compliance_pct": sla_pct,
             "sla_compliant_total": sla_compliant_total,
             "sla_breached_total": sla_breached_total,
+            "sla_sin_datos_total": sla_sin_datos_total,
+            "triage_samples": len(all_triage),
             "fp_count": fp_cnt,
             "tp_count": tp_cnt,
             "benign_count": benign_cnt,
