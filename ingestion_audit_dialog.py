@@ -46,6 +46,12 @@ except Exception:
     pass
 
 import ui_theme
+from qt_worker_utils import replace_worker, retire_workers
+
+# Tenant por defecto del Radar de Threat Hunting (antes fijo en el código). El radar ahora
+# permite elegir cualquier tenant de la lista; este valor solo es el inicial.
+DEFAULT_TH_CUST_ID = (os.environ.get("STELLAR_TH_CUST_ID") or os.environ.get("STELLAR_TENANT_ID")
+                      or "e511c3fc54cd4d668bb67612c2ef4b04")
 
 
 def get_dropdown_style() -> str:
@@ -144,7 +150,8 @@ class IngestionAuditEngine:
             "blind_spots": [],
             "storage_daily_monthly": [],
             "storage_indices_30d": [],
-            "hardware_sensors": []
+            "hardware_sensors": [],
+            "tenants": []
         }
 
         # 1. Ingestion Stats
@@ -176,6 +183,8 @@ class IngestionAuditEngine:
                 for t in tenants:
                     cid = t.get("cust_id") or t.get("id")
                     tname = t.get("cust_name") or t.get("name")
+                    if cid:
+                        result["tenants"].append({"cust_id": cid, "name": tname or cid})
                     if cid:
                         r_c = self.session.get(f"https://{self.host}/connect/api/v1/connectors?cust_id={cid}", headers=headers, timeout=10)
                         if r_c.status_code == 200:
@@ -221,10 +230,10 @@ class IngestionAuditEngine:
         return result
 
 
-    def fetch_threat_hunting_matrix(self, target_index: str = None, time_filter: dict = None) -> Dict[str, Any]:
+    def fetch_threat_hunting_matrix(self, target_index: str = None, time_filter: dict = None, cust_id: str = None) -> Dict[str, Any]:
         """Consulta en paralelo los 20 modulos de Threat Hunting Library mediante un solo request en <1 segundo."""
         headers = self.get_headers()
-        cust_id = "e511c3fc54cd4d668bb67612c2ef4b04"
+        cust_id = cust_id or DEFAULT_TH_CUST_ID
         if not target_index:
             target_index = f"*{cust_id}*"
             
@@ -255,7 +264,7 @@ class IngestionAuditEngine:
         counts = {}
         total_matched = 0
         try:
-            res = self.session.get(url, headers=headers, json=body, timeout=45, verify=False)
+            res = self.session.get(url, headers=headers, json=body, timeout=45, verify=True)
             elapsed = time.time() - t0
             if res.status_code == 200:
                 buckets = res.json().get("aggregations", {}).get("th_matrix", {}).get("buckets", {})
@@ -276,10 +285,10 @@ class IngestionAuditEngine:
         except Exception as e:
             return {"status": "error", "error": str(e), "counts": {}, "elapsed": 0}
 
-    def fetch_threat_hunting_drilldown(self, module_name: str, query_str: str, target_index: str = None, time_filter: dict = None) -> Dict[str, Any]:
+    def fetch_threat_hunting_drilldown(self, module_name: str, query_str: str, target_index: str = None, time_filter: dict = None, cust_id: str = None) -> Dict[str, Any]:
         """Realiza un drill-down forense sobre un modulo: top srcip, top dstip, top msg_class y muestra cruda."""
         headers = self.get_headers()
-        cust_id = "e511c3fc54cd4d668bb67612c2ef4b04"
+        cust_id = cust_id or DEFAULT_TH_CUST_ID
         if not target_index:
             target_index = f"*{cust_id}*"
             
@@ -308,7 +317,7 @@ class IngestionAuditEngine:
         t0 = time.time()
         url = f"https://{self.host}/connect/api/data/{target_index}/_search"
         try:
-            res = self.session.get(url, headers=headers, json=body, timeout=45, verify=False)
+            res = self.session.get(url, headers=headers, json=body, timeout=45, verify=True)
             elapsed = time.time() - t0
             if res.status_code == 200:
                 data = res.json()
@@ -1066,16 +1075,17 @@ class ThreatHuntingRadarWorker(QThread):
     finished = Signal(dict)
     error = Signal(str)
 
-    def __init__(self, target_index: str = None, time_filter: dict = None, scope_desc: str = ""):
+    def __init__(self, target_index: str = None, time_filter: dict = None, scope_desc: str = "", cust_id: str = None):
         super().__init__()
         self.target_index = target_index
         self.time_filter = time_filter
         self.scope_desc = scope_desc
+        self.cust_id = cust_id
         self.engine = IngestionAuditEngine()
 
     def run(self):
         try:
-            data = self.engine.fetch_threat_hunting_matrix(self.target_index, self.time_filter)
+            data = self.engine.fetch_threat_hunting_matrix(self.target_index, self.time_filter, self.cust_id)
             data["scope_desc"] = self.scope_desc
             if data.get("status") == "success":
                 self.finished.emit(data)
@@ -1089,18 +1099,19 @@ class ThreatHuntingDrilldownWorker(QThread):
     finished = Signal(dict)
     error = Signal(str)
 
-    def __init__(self, module_name: str, query_str: str, target_index: str = None, time_filter: dict = None, scope_desc: str = ""):
+    def __init__(self, module_name: str, query_str: str, target_index: str = None, time_filter: dict = None, scope_desc: str = "", cust_id: str = None):
         super().__init__()
         self.module_name = module_name
         self.query_str = query_str
         self.target_index = target_index
         self.time_filter = time_filter
         self.scope_desc = scope_desc
+        self.cust_id = cust_id
         self.engine = IngestionAuditEngine()
 
     def run(self):
         try:
-            data = self.engine.fetch_threat_hunting_drilldown(self.module_name, self.query_str, self.target_index, self.time_filter)
+            data = self.engine.fetch_threat_hunting_drilldown(self.module_name, self.query_str, self.target_index, self.time_filter, self.cust_id)
             data["scope_desc"] = self.scope_desc
             if data.get("status") == "success":
                 self.finished.emit(data)
@@ -1144,6 +1155,8 @@ class IngestionAuditDialog(QDialog):
         self.data_cache = {}
         self.worker = None
         self.ai_worker = None
+        self.th_worker = None
+        self.drill_worker = None
         self.current_selected_filter = None
         self.last_suggested_rule = ""
         self.quota_monthly_gb = 500.0
@@ -1151,6 +1164,11 @@ class IngestionAuditDialog(QDialog):
 
         self._init_ui()
         self.refrescar_datos()
+
+    def closeEvent(self, event):
+        # Cerrar con consultas en curso ya no destruye QThreads activos (crash)
+        retire_workers([self.worker, self.ai_worker, self.th_worker, self.drill_worker])
+        super().closeEvent(event)
 
     def adaptar_tamano_pantalla(self):
         """Calcula las dimensiones ideales según la pantalla activa para ser 100% responsivo."""
@@ -2434,7 +2452,7 @@ class IngestionAuditDialog(QDialog):
         self.btn_refresh.setEnabled(False)
         self.lbl_status.setText(f"Consultando telemetría de las últimas {hours}h desde Stellar Cyber...")
 
-        self.worker = IngestionAuditWorker(hours)
+        self.worker = replace_worker(self.worker, IngestionAuditWorker(hours))
         self.worker.finished.connect(self._on_data_loaded)
         self._refresh_threat_hunting_radar()
         self.worker.error.connect(self._on_error)
@@ -2451,6 +2469,7 @@ class IngestionAuditDialog(QDialog):
         self.btn_refresh.setEnabled(True)
         self.data_cache = data
         self.lbl_status.setText(f"Telemetría actualizada exitosamente a las {datetime.now().strftime('%H:%M:%S')}")
+        self._poblar_tenants_th(data.get("tenants", []))
 
         # 1. Actualizar KPIs e Ingesta
         sensors = data.get("sensors", [])
@@ -2898,7 +2917,7 @@ class IngestionAuditDialog(QDialog):
         self.btn_copy_suggested_rule.setEnabled(False)
         self.txt_ai_response.setHtml(f"<span style='color: #38bdf8;'>🤖 Consultando Asistente de IA (<b>{model_name_label}</b>)... Evaluando puntos ciegos frente a MITRE ATT&CK y generando recomendación completa sin truncar (3500 tokens max)...</span>")
 
-        self.ai_worker = AiFilterAdvisorWorker(self.current_selected_filter, model_name=selected_model)
+        self.ai_worker = replace_worker(self.ai_worker, AiFilterAdvisorWorker(self.current_selected_filter, model_name=selected_model))
         self.ai_worker.finished.connect(self._on_ai_audit_finished)
         self.ai_worker.error.connect(self._on_ai_audit_error)
         self.ai_worker.start()
@@ -2945,6 +2964,18 @@ class IngestionAuditDialog(QDialog):
         lbl_title.setStyleSheet(f"color: {ui_theme.ACCENT_CYBER}; font-size: 12px; font-weight: bold;")
         ctrl_l.addWidget(lbl_title)
         ctrl_l.addStretch()
+
+        lbl_tenant = QLabel("Tenant:")
+        lbl_tenant.setStyleSheet(f"color: {ui_theme.TEXT_MUTED}; font-size: 11px;")
+        ctrl_l.addWidget(lbl_tenant)
+
+        # Antes el radar consultaba siempre un único tenant fijo; ahora se elige de la lista
+        # de tenants que devuelve la API (se completa al cargar la telemetría).
+        self.cmb_th_tenant = QComboBox()
+        self.cmb_th_tenant.addItem(f"Tenant por defecto ({DEFAULT_TH_CUST_ID[:8]}…)", DEFAULT_TH_CUST_ID)
+        self.cmb_th_tenant.setStyleSheet(get_dropdown_style())
+        self.cmb_th_tenant.currentIndexChanged.connect(self._refresh_threat_hunting_radar)
+        ctrl_l.addWidget(self.cmb_th_tenant)
 
         lbl_scope = QLabel("Rango Temporal:")
         lbl_scope.setStyleSheet(f"color: {ui_theme.TEXT_MUTED}; font-size: 11px;")
@@ -3118,9 +3149,25 @@ class IngestionAuditDialog(QDialog):
         card.mousePressEvent = lambda e, m=mod: self._on_th_card_clicked(m)
         return card
 
+    def _poblar_tenants_th(self, tenants: List[Dict[str, Any]]):
+        """Carga en el selector del radar todos los tenants devueltos por la API, conservando la selección."""
+        if not tenants or not hasattr(self, "cmb_th_tenant"):
+            return
+        actual = self.cmb_th_tenant.currentData() or DEFAULT_TH_CUST_ID
+        self.cmb_th_tenant.blockSignals(True)
+        self.cmb_th_tenant.clear()
+        for t in sorted(tenants, key=lambda x: str(x.get("name", "")).lower()):
+            self.cmb_th_tenant.addItem(f"{t.get('name')} ({str(t['cust_id'])[:8]}…)", t["cust_id"])
+        idx = self.cmb_th_tenant.findData(actual)
+        if idx < 0:
+            self.cmb_th_tenant.insertItem(0, f"Tenant por defecto ({str(actual)[:8]}…)", actual)
+            idx = 0
+        self.cmb_th_tenant.setCurrentIndex(idx)
+        self.cmb_th_tenant.blockSignals(False)
+
     def _get_current_th_scope(self):
         scope_idx = self.cmb_th_scope.currentIndex()
-        cust_id = "e511c3fc54cd4d668bb67612c2ef4b04"
+        cust_id = (self.cmb_th_tenant.currentData() if hasattr(self, "cmb_th_tenant") else None) or DEFAULT_TH_CUST_ID
         target_index = f"*{cust_id}*"
         
         if scope_idx == 0:
@@ -3136,12 +3183,12 @@ class IngestionAuditDialog(QDialog):
             time_filter = None
             scope_desc = "Histórico Total"
             
-        return target_index, time_filter, scope_desc
+        return target_index, time_filter, scope_desc, cust_id
 
     def _refresh_threat_hunting_radar(self):
-        target_index, time_filter, scope_desc = self._get_current_th_scope()
+        target_index, time_filter, scope_desc, cust_id = self._get_current_th_scope()
         self.lbl_th_stats.setText(f"⚡ Escaneando 20 módulos en paralelo [{scope_desc}]...")
-        self.th_worker = ThreatHuntingRadarWorker(target_index, time_filter, scope_desc)
+        self.th_worker = replace_worker(self.th_worker, ThreatHuntingRadarWorker(target_index, time_filter, scope_desc, cust_id))
         self.th_worker.finished.connect(self._on_th_radar_finished)
         self.th_worker.error.connect(self._on_th_radar_error)
         self.th_worker.start()
@@ -3194,7 +3241,7 @@ class IngestionAuditDialog(QDialog):
 
     def _on_th_card_clicked(self, mod: dict):
         self.current_selected_module = mod
-        target_index, time_filter, scope_desc = self._get_current_th_scope()
+        target_index, time_filter, scope_desc, cust_id = self._get_current_th_scope()
         self.lbl_drill_title.setText(f"🔍 Drilldown Forense: {mod['icon']} {mod['name']} ({mod['category']}) — [{scope_desc}]")
         self.btn_copy_th_query.setEnabled(True)
         self.btn_jump_to_filter.setEnabled(True)
@@ -3202,7 +3249,7 @@ class IngestionAuditDialog(QDialog):
         self.txt_drill_actors.setText(f"Consultando agregaciones [{scope_desc}] para {mod['name']}...")
         self.txt_drill_samples.setText(f"Cargando muestra forense de eventos [{scope_desc}]...")
 
-        self.drill_worker = ThreatHuntingDrilldownWorker(mod["name"], mod["query"], target_index, time_filter, scope_desc)
+        self.drill_worker = replace_worker(self.drill_worker, ThreatHuntingDrilldownWorker(mod["name"], mod["query"], target_index, time_filter, scope_desc, cust_id))
         self.drill_worker.finished.connect(self._on_th_drilldown_finished)
         self.drill_worker.error.connect(self._on_th_drilldown_error)
         self.drill_worker.start()
