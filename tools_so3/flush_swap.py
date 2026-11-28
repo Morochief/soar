@@ -1,6 +1,7 @@
+import os
 import sys
 import json
-sys.path.append('soar/tools_so3')
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from so3_client import SO3Client
 
 es_pass = "8!2ePao_Vg5.|v]W;WNfG!@yX)#5@OPYP71_Ryr4-l|Q0v|2n-8GIvjNNB|C;|-G6@=lz>Me"
@@ -10,8 +11,12 @@ with SO3Client() as so:
     out_free_before, _ = so.sudo("free -h")
     print("Antes:\n", out_free_before)
     # Ejecutamos swapoff y swapon para vaciar la swap a la RAM física disponible (hay 5GB de RAM libre)
-    out_swap_clean, err_sc = so.sudo("swapoff -a && swapon -a")
+    # ';' (no '&&'): swapon -a se ejecuta SIEMPRE, aunque swapoff falle a mitad de camino
+    out_swap_clean, err_sc = so.sudo("swapoff -a; swapon -a")
     print("Swapoff/swapon resultado:", out_swap_clean, err_sc)
+    out_swap_show, _ = so.sudo("swapon --show")
+    if not out_swap_show.strip():
+        print("⚠️ ATENCIÓN: el nodo quedó SIN swap activa. Ejecutar 'sudo swapon -a' manualmente.")
     out_free_after, _ = so.sudo("free -h")
     print("Después:\n", out_free_after)
 

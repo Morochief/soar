@@ -36,6 +36,7 @@ if sys.platform == "win32":
 
 # Carga de credenciales y configuración central
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from cortex_case_matching import case_matches_cortex_id, alert_in_month
 try:
     import stellar_alerts_checker
     HOST = stellar_alerts_checker.HOST
@@ -56,16 +57,31 @@ def get_headers() -> Dict[str, str]:
     }
 
 
-def fetch_stellar_cases(tenant_id: str) -> List[Dict[str, Any]]:
-    """Obtiene todos los casos existentes en Stellar Cyber."""
+def fetch_stellar_cases(tenant_id: str, page_size: int = 200, max_cases: int = 20000) -> List[Dict[str, Any]]:
+    """Obtiene TODOS los casos existentes en Stellar Cyber (paginando con limit/skip)."""
     url = f"https://{HOST}/connect/api/v1/cases"
     headers = get_headers()
-    params = {"cust_id": tenant_id, "limit": 200}
-    r = requests.get(url, headers=headers, params=params, verify=False, timeout=30)
-    if r.status_code != 200:
-        raise RuntimeError(f"Error consultando casos de Stellar ({r.status_code}): {r.text[:200]}")
-    data = r.json().get("data", {})
-    return data.get("cases", []) if isinstance(data, dict) else data
+    all_cases: List[Dict[str, Any]] = []
+    seen = set()
+    skip = 0
+    while skip < max_cases:
+        params = {"cust_id": tenant_id, "limit": page_size, "skip": skip}
+        r = requests.get(url, headers=headers, params=params, verify=False, timeout=30)
+        if r.status_code != 200:
+            raise RuntimeError(f"Error consultando casos de Stellar ({r.status_code}): {r.text[:200]}")
+        data = r.json().get("data", {})
+        page = (data.get("cases", []) if isinstance(data, dict) else data) or []
+        nuevos = 0
+        for c in page:
+            cid = c.get("_id")
+            if cid and cid not in seen:
+                seen.add(cid)
+                all_cases.append(c)
+                nuevos += 1
+        if len(page) < page_size or nuevos == 0:
+            break
+        skip += page_size
+    return all_cases
 
 
 def fetch_cortex_alerts(tenant_id: str, month: Optional[str] = None) -> Dict[str, List[Dict[str, Any]]]:
@@ -76,8 +92,7 @@ def fetch_cortex_alerts(tenant_id: str, month: Optional[str] = None) -> Dict[str
     """
     url = f"https://{HOST}/connect/api/data/*ser*{tenant_id}*/_search"
     headers = get_headers()
-    payload = {
-        "size": 500,
+    base_payload = {
         "query": {
             "bool": {
                 "must": [
@@ -90,11 +105,19 @@ def fetch_cortex_alerts(tenant_id: str, month: Optional[str] = None) -> Dict[str
         },
         "sort": [{"timestamp": {"order": "desc"}}]
     }
-    r = requests.get(url, headers=headers, json=payload, timeout=45, verify=False)
-    if r.status_code != 200:
-        raise RuntimeError(f"Error consultando Data Lake de Stellar ({r.status_code}): {r.text[:200]}")
-    
-    hits = r.json().get("hits", {}).get("hits", [])
+    # Paginación (from/size) para no perder incidentes más viejos que las últimas 500 alertas
+    hits: List[Dict[str, Any]] = []
+    offset, page_size, max_hits = 0, 1000, 10000
+    while offset < max_hits:
+        payload = dict(base_payload, **{"from": offset, "size": page_size})
+        r = requests.get(url, headers=headers, json=payload, timeout=45, verify=False)
+        if r.status_code != 200:
+            raise RuntimeError(f"Error consultando Data Lake de Stellar ({r.status_code}): {r.text[:200]}")
+        page = r.json().get("hits", {}).get("hits", [])
+        hits.extend(page)
+        if len(page) < page_size:
+            break
+        offset += page_size
     grouped: Dict[str, List[Dict[str, Any]]] = {}
 
     for h in hits:
@@ -116,7 +139,7 @@ def fetch_cortex_alerts(tenant_id: str, month: Optional[str] = None) -> Dict[str
         ts = src.get("timestamp_utc") or src.get("orig_timestamp_utc") or src.get("timestamp")
 
         # Filtrado por mes si se especifica
-        if month and month not in str(ts):
+        if month and not alert_in_month({"timestamp": ts}, month):
             continue
 
         sev = pan.get("severity") or src.get("event_severity") or "High"
@@ -160,7 +183,8 @@ def create_stellar_case(tenant_id: str, case_id: str, alerts: List[Dict[str, Any
     payload = {
         "name": case_name,
         "cust_id": tenant_id,
-        "severity": first.get("severity", "High"),
+        "severity": max((a.get("severity", "High") for a in alerts),
+                        key=lambda x: {"Low": 0, "Medium": 1, "High": 2, "Critical": 3}.get(x, 2)),
         "status": "New",
         "tags": ["Cortex-XDR", "Sync-Auto", f"Case-{case_id}"],
         "alerts": alert_refs
@@ -200,17 +224,13 @@ def run_sync(tenant_id: str, month: Optional[str] = None, dry_run: bool = False)
         alerts = cortex_alerts_map[cid]
         first = alerts[0]
 
-        # Verificar si ya existe el caso
-        pattern_1 = f"CASE {cid}"
-        pattern_2 = f"CASE_{cid}"
-        pattern_3 = f"Case {cid}"
+        # Verificar si ya existe el caso (coincidencia EXACTA del ID: 'CASE 61' != 'CASE 610').
+        # Antes también aceptaba `str(cid) in description`, que coincidía con cualquier IP u hora
+        # que contuviera esos dígitos y hacía que el caso nunca se creara.
         matched = next((
-            c for c in existing_cases 
-            if pattern_1 in c.get("name", "").upper() 
-            or pattern_2 in c.get("name", "").upper() 
-            or pattern_3 in c.get("name", "")
-            or f"#{cid}" in c.get("name", "")
-            or str(cid) in c.get("description", "")
+            c for c in existing_cases
+            if case_matches_cortex_id(c, cid)
+            or case_matches_cortex_id({"name": c.get("description") or ""}, cid)
         ), None)
 
         if matched:

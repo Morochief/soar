@@ -29,8 +29,23 @@ DEFAULT_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", 1892860303)  # Chat ID de K
 STELLAR_HOST = os.environ.get("STELLAR_HOST", "technoma.stellarcyber.cloud")
 STELLAR_EMAIL = os.environ.get("STELLAR_EMAIL", "kevinmoraes@technoma.com.py")
 STELLAR_TOKEN = os.environ.get("STELLAR_TOKEN", "rOnKd624_hTAvi5TyDDsPmfbiEOf3NThpGMkUL8sR6IrmkBEovOn41EvFdLtdWkTO6XuFSH6d16x0B1J3lJSBQ")
+# Chats autorizados a usar comandos del bot. Cualquier otro chat se ignora
+# (antes el bot respondía /casos, /caso, /ip a cualquiera que le escribiera).
+# Configurable con TELEGRAM_ALLOWED_CHAT_IDS="123,456"; por defecto solo DEFAULT_CHAT_ID.
+ALLOWED_CHAT_IDS = {
+    c.strip() for c in os.environ.get("TELEGRAM_ALLOWED_CHAT_IDS", str(DEFAULT_CHAT_ID)).split(",") if c.strip()
+}
+
+
+def is_authorized_chat(chat_id) -> bool:
+    return chat_id is not None and str(chat_id).strip() in ALLOWED_CHAT_IDS
+
+
 # Estado conocido previo de sensores para alertamiento proactivo
 SENSOR_PREV_STATES = {}
+# Fallos consecutivos al consultar la API de sensores (para avisar si el watchdog queda ciego)
+SENSOR_API_FAILS = 0
+SENSOR_API_FAIL_ALERT_THRESHOLD = 3
 def send_telegram(text: str, chat_id=None, parse_mode="Markdown"):
     target_chat = chat_id or DEFAULT_CHAT_ID
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
@@ -42,6 +57,12 @@ def send_telegram(text: str, chat_id=None, parse_mode="Markdown"):
     }
     try:
         r = requests.post(url, json=payload, timeout=15)
+        if r.status_code == 400 and parse_mode and "parse entities" in r.text.lower():
+            # Nombres de casos/hosts con '_' o '*' rompen el Markdown: reenviar como texto plano
+            payload.pop("parse_mode", None)
+            r = requests.post(url, json=payload, timeout=15)
+        if r.status_code != 200:
+            print(f"[-] Telegram respondió {r.status_code}: {r.text[:200]}")
         return r.status_code == 200
     except Exception as e:
         print(f"[-] Error enviando mensaje a Telegram: {e}")
@@ -320,31 +341,48 @@ def check_sensors_health_alerting():
     Si un sensor operativo pasa a 'disconnected' o falla, dispara una alerta crítica
     inmediata a Telegram con detalles de IP y Tenant. También avisa cuando se recupera.
     """
-    global SENSOR_PREV_STATES
+    global SENSOR_PREV_STATES, SENSOR_API_FAILS
     try:
         jwt = get_jwt()
         headers = {"Authorization": f"Bearer {jwt}", "Content-Type": "application/json"}
         url = f"https://{STELLAR_HOST}/connect/api/v1/data_sensors"
         r = requests.get(url, headers=headers, timeout=20, verify=False)
         if r.status_code != 200:
-            return
-            
+            raise RuntimeError(f"HTTP {r.status_code}")
         sensors = r.json().get("sensors", [])
+    except Exception as e:
+        SENSOR_API_FAILS += 1
+        print(f"[-] Error consultando sensores ({SENSOR_API_FAILS} seguidos): {e}")
+        if SENSOR_API_FAILS == SENSOR_API_FAIL_ALERT_THRESHOLD:
+            send_telegram(
+                "⚠️ *WATCHDOG DE SENSORES SIN DATOS*\n\n"
+                f"No se pudo consultar la API de sensores de Stellar Cyber {SENSOR_API_FAILS} veces seguidas "
+                f"(último error: `{str(e)[:120]}`). Mientras tanto NO se detectan caídas de sensores."
+            )
+        return
+
+    if SENSOR_API_FAILS >= SENSOR_API_FAIL_ALERT_THRESHOLD:
+        send_telegram("🟢 *WATCHDOG DE SENSORES RESTABLECIDO:* la API de sensores vuelve a responder.")
+    SENSOR_API_FAILS = 0
+
+    try:
+        vistos = set()
         for s in sensors:
             h_name = s.get("hostname", "Desconocido")
             if "WIN-MU3B8QGMI6A" in h_name:
                 continue
-                
+            vistos.add(h_name)
+
             ip = s.get("local_ip_address", "N/A")
             cust = s.get("cust_name", "Global")
             conn = str(s.get("connection_status", "unknown")).lower()
             prev_conn = SENSOR_PREV_STATES.get(h_name)
-            
+
             # Registrar primer estado conocido si recién arranca el bot
             if prev_conn is None:
                 SENSOR_PREV_STATES[h_name] = conn
                 continue
-                
+
             # Si cambió de conectado a desconectado
             if prev_conn == "connected" and conn != "connected":
                 SENSOR_PREV_STATES[h_name] = conn
@@ -359,7 +397,7 @@ def check_sensors_health_alerting():
                 )
                 print(f"[!] ALERTA ENVIADA: Sensor {h_name} caído!")
                 send_telegram(alerta)
-                
+
             # Si se recuperó
             elif prev_conn != "connected" and conn == "connected":
                 SENSOR_PREV_STATES[h_name] = conn
@@ -372,9 +410,21 @@ def check_sensors_health_alerting():
                 )
                 print(f"[+] Sensor {h_name} recuperado.")
                 send_telegram(recuperacion)
-                
+
+        # Sensores que desaparecieron de la lista (borrados o sin reportar)
+        for h_name, prev_conn in list(SENSOR_PREV_STATES.items()):
+            if h_name not in vistos and prev_conn != "missing":
+                SENSOR_PREV_STATES[h_name] = "missing"
+                send_telegram(
+                    "🚨 *SENSOR AUSENTE*\n\n"
+                    f"El sensor *{h_name}* ya no aparece en la lista de sensores de Stellar Cyber "
+                    f"(último estado: `{prev_conn}`). Verificar si fue eliminado o dejó de reportar."
+                )
+
     except Exception as e:
         print(f"[-] Error en check_sensors_health_alerting: {e}")
+
+
 def sensor_watchdog_loop(interval_seconds=60):
     """Hilo demonio que ejecuta la verificación periódica de sensores."""
     print(f"[*] Watchdog de Sensores activo (intervalo: {interval_seconds}s)...")
@@ -582,6 +632,10 @@ def run_interactive_listener():
                     chat_id = msg.get("chat", {}).get("id")
                     
                     if not raw_text:
+                        continue
+
+                    if not is_authorized_chat(chat_id):
+                        print(f"[!] Comando ignorado de chat NO autorizado {chat_id}: {raw_text[:40]!r}")
                         continue
                     
                     parts = raw_text.split()

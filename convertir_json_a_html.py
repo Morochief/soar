@@ -71,9 +71,8 @@ def main():
             Path.cwd(),
             Path(__file__).resolve().parent,
             Path(__file__).resolve().parent / "cti_dominios_app",
-            Path(r"C:\Users\kevinmoraes\Desktop\SOC\soar\cti_dominios_app"),
-            Path(r"C:\Users\kevinmoraes\Downloads"),
-            Path(r"C:\Users\kevinmoraes\Documents\SOC_SOAR\soar")
+            Path(__file__).resolve().parent.parent / "cti_dominios_app",
+            Path.home() / "Downloads",
         ]
         candidatos = []
         for d in directorios:

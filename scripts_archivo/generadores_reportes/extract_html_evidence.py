@@ -6,7 +6,8 @@ if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 def check_html_proton_evidence():
-    path = r"c:\Users\kevinmoraes\Documents\soc-env\Dashboard_Timeline_ProtonDrive_FMORA.html"
+    repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    path = sys.argv[1] if len(sys.argv) > 1 else os.path.join(repo_root, "Caso cortex", "Dashboard_Timeline_ProtonDrive_FMORA.html")
     if not os.path.exists(path):
         print("No existe html")
         return

@@ -1,6 +1,7 @@
+import os
 import sys
 import json
-sys.path.append('soar/tools_so3')
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from so3_client import SO3Client
 
 es_pass = "8!2ePao_Vg5.|v]W;WNfG!@yX)#5@OPYP71_Ryr4-l|Q0v|2n-8GIvjNNB|C;|-G6@=lz>Me"

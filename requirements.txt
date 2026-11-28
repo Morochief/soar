@@ -27,3 +27,7 @@ google-generativeai>=0.8.0
 pypdf>=4.0.0
 pdfplumber>=0.11.0
 markdownify>=1.2.0
+
+# Añadidos por fix/modulos-restantes-informe2
+truststore
+tldextract

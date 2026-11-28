@@ -19,7 +19,7 @@ import json
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QThread, Signal
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, QLineEdit,
     QPushButton, QFileDialog, QMessageBox, QFrame, QSplitter,
@@ -68,79 +68,14 @@ _RDAP_CACHE: Dict[str, Dict[str, Optional[str]]] = {}
 
 
 def consultar_asn_abuse_info(asn: Any) -> Optional[Dict[str, str]]:
-    """Consulta el buzón de abuso del Sistema Autónomo BGP vía RDAP aut-num y socket Whois port 43."""
-    if not asn:
-        return None
-    asn_clean = str(asn).upper().replace("AS", "").strip()
-    if not asn_clean.isdigit():
-        return None
-
-    import urllib.request
-    import socket
-
-    endpoints = [
-        f"https://rdap.db.ripe.net/aut-num/AS{asn_clean}",
-        f"https://rdap.org/aut-num/{asn_clean}",
-        f"https://rdap.arin.net/registry/aut-num/{asn_clean}",
-        f"https://rdap.apnic.net/aut-num/{asn_clean}",
-        f"https://rdap.afrinic.net/rdap/aut-num/{asn_clean}"
-    ]
-    for url in endpoints:
-        try:
-            req = urllib.request.Request(url, headers={"User-Agent": "TechnomaSOC/1.0", "Accept": "application/json"})
-            with urllib.request.urlopen(req, timeout=2.5) as resp:
-                if resp.status == 200:
-                    data = json.loads(resp.read().decode("utf-8", errors="ignore"))
-                    # Remarks
-                    for rem in data.get("remarks", []):
-                        for d in rem.get("description", []):
-                            m = re.search(r'([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)', d)
-                            if m and "abuse" in d.lower():
-                                return {"email": m.group(1).strip(), "asn": f"AS{asn_clean}", "holder": data.get("name", "")}
-
-                    # Entities
-                    def _find_abuse(entities):
-                        for ent in entities:
-                            roles = ent.get("roles", [])
-                            vcards = (ent.get("vcardArray") or [[], []])[1]
-                            for card in vcards:
-                                if isinstance(card, list) and len(card) > 3 and card[0] == "email":
-                                    em = str(card[3]).strip()
-                                    if "abuse" in roles or "abuse" in em.lower():
-                                        return em
-                            sub = _find_abuse(ent.get("entities", []))
-                            if sub:
-                                return sub
-                        return None
-
-                    em = _find_abuse(data.get("entities", []))
-                    if em:
-                        return {"email": em, "asn": f"AS{asn_clean}", "holder": data.get("name", "")}
-        except Exception:
-            continue
-
-    # Fallback Socket Port 43
-    for srv in ["whois.ripe.net", "whois.radb.net", "whois.arin.net", "whois.apnic.net"]:
-        try:
-            s = socket.create_connection((srv, 43), timeout=2.5)
-            s.sendall(f"AS{asn_clean}\r\n".encode())
-            raw = b""
-            while True:
-                d = s.recv(4096)
-                if not d:
-                    break
-                raw += d
-            s.close()
-            text = raw.decode("utf-8", errors="ignore")
-            m = re.search(r'abuse-mailbox:\s*([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-.]+)', text, re.I)
-            if m:
-                return {"email": m.group(1).strip(), "asn": f"AS{asn_clean}", "holder": ""}
-            m2 = re.search(r'Abuse contact.*?([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-.]+)', text, re.I)
-            if m2:
-                return {"email": m2.group(1).strip(), "asn": f"AS{asn_clean}", "holder": ""}
-        except Exception:
-            pass
-
+    """
+    Buzón de abuso del Sistema Autónomo BGP (RDAP aut-num + whois puerto 43).
+    Antes esta lógica estaba copiada aquí y en whois_recon.py; ahora se usa una sola implementación.
+    """
+    from whois_recon import get_asn_abuse_contact
+    res = get_asn_abuse_contact(asn)
+    if res and res.get("email"):
+        return {"email": res["email"], "asn": res.get("asn", ""), "holder": res.get("holder", "")}
     return None
 
 
@@ -338,7 +273,8 @@ def registrar_ip_como_reportada(ip_data: Dict[str, Any]) -> bool:
         return False
 
     # 1. Actualizar JSON
-    datos_json = {"updated_at": "2026-10-09T13:50:00-03:00", "analyst": "Kevin Moraes", "reported_ips": []}
+    from datetime import datetime
+    datos_json = {"updated_at": datetime.now().isoformat(), "analyst": "Kevin Moraes", "reported_ips": []}
     if ruta_json.exists():
         try:
             with open(ruta_json, "r", encoding="utf-8") as f:
@@ -356,7 +292,6 @@ def registrar_ip_como_reportada(ip_data: Dict[str, Any]) -> bool:
     if not encontrado:
         lista.append(ip_data)
 
-    from datetime import datetime
     datos_json["updated_at"] = datetime.now().isoformat()
     try:
         ruta_json.parent.mkdir(parents=True, exist_ok=True)
@@ -375,12 +310,18 @@ def registrar_ip_como_reportada(ip_data: Dict[str, Any]) -> bool:
                 num_str = f"{num:02d}"
                 pais = ip_data.get("country", "Desconocido")
                 org = ip_data.get("org", "Desconocido")
-                serv = f"{ip_data.get('service', 'HTTPS')} ({ip_data.get('port', 443)})"
+                serv = f"{ip_data.get('service', 'HTTPS')} ({ip_data.get('port') or 'N/A'})"
+                # Fecha real del registro (antes quedaba fija en 09/10/2026)
+                fecha_reg = ip_data.get("date") or datetime.now().strftime("%Y-%m-%d")
+                try:
+                    fecha_reg = datetime.strptime(fecha_reg, "%Y-%m-%d").strftime("%d/%m/%Y")
+                except ValueError:
+                    pass
                 inc = "Fuerza Bruta" if ip_data.get("incident_type") == "fuerza_bruta" else "Escaneo"
                 recip = ip_data.get("recipient", "abuse@cloudflare.com")
                 bcc = ip_data.get("bcc", "Ivan")
                 subj = ip_data.get("subject", f"Scan - {ip}")
-                nueva_fila = f"| **{num_str}** | `{ip}` | 09/10/2026 | {org} | {pais} | {serv} | {inc} | `{recip}` | `{bcc}` | `{subj}` | 🟢 Notificado |\n"
+                nueva_fila = f"| **{num_str}** | `{ip}` | {fecha_reg} | {org} | {pais} | {serv} | {inc} | `{recip}` | `{bcc}` | `{subj}` | 🟢 Notificado |\n"
 
                 if "\n---\n\n## 🔍 Detalle Técnico" in md_content:
                     md_content = md_content.replace("\n---\n\n## 🔍 Detalle Técnico", f"{nueva_fila}\n---\n\n## 🔍 Detalle Técnico")
@@ -608,10 +549,160 @@ def construir_asunto_y_cuerpo(
 # =============================================================================
 class AbuseReportEngine:
     @staticmethod
-    def parse_payload(raw_text: str) -> List[Dict[str, Any]]:
+    def _formatear_fecha_evento(source: Dict[str, Any]) -> str:
+        """
+        Fecha/hora del evento para el correo. Prioriza los campos de FortiGate (hora local del
+        firewall); si no existen, convierte timestamp_utc/timestamp a GMT-3. Nunca inventa una
+        fecha fija: si no hay dato, lo dice explícitamente.
+        """
+        forti = source.get("fortinet", {}) if isinstance(source.get("fortinet"), dict) else {}
+        fecha = forti.get("date")
+        hora = forti.get("time")
+        if fecha and hora:
+            tz = str(forti.get("tz") or "-0300")
+            tz_label = "GMT-3" if "-0300" in tz else tz
+            return f"{fecha} {hora} {tz_label}"
+
+        from datetime import datetime, timezone, timedelta
+        for key in ("timestamp_utc", "timestamp", "@timestamp", "write_time"):
+            raw = source.get(key)
+            if raw in (None, ""):
+                continue
+            dt = None
+            try:
+                if isinstance(raw, (int, float)) or (isinstance(raw, str) and raw.strip().isdigit()):
+                    val = float(raw)
+                    if val > 1e11:
+                        val /= 1000.0
+                    dt = datetime.fromtimestamp(val, tz=timezone.utc)
+                else:
+                    txt = str(raw).strip().replace("Z", "+00:00")
+                    dt = datetime.fromisoformat(txt)
+                    if dt.tzinfo is None:
+                        dt = dt.replace(tzinfo=timezone.utc)
+            except (ValueError, OverflowError, OSError):
+                dt = None
+            if dt:
+                return dt.astimezone(timezone(timedelta(hours=-3))).strftime("%Y-%m-%d %H:%M:%S GMT-3")
+        return "Fecha no disponible en el log (completar manualmente)"
+
+    @staticmethod
+    def _es_ip_publica(ip: str) -> bool:
+        """Solo se reportan IPs públicas/enrutables: las privadas, reservadas o inválidas se descartan."""
+        import ipaddress
+        try:
+            return ipaddress.ip_address(str(ip).strip()).is_global
+        except ValueError:
+            return False
+
+    @staticmethod
+    def _normalizar_org(asn_org: str) -> str:
+        if "Cloudflare" in asn_org:
+            return "Cloudflare Inc."
+        if "Volcano" in asn_org:
+            return "Beijing Volcano Engine Technology Co., Ltd."
+        if "Datacamp" in asn_org:
+            return "Datacamp Limited"
+        if "DigitalOcean" in asn_org:
+            return "DigitalOcean, LLC"
+        if "Google" in asn_org:
+            return "Google LLC"
+        if "Microsoft" in asn_org:
+            return "Microsoft Corporation"
+        return asn_org
+
+    @staticmethod
+    def _armar_registro(source: Dict[str, Any], enrich: bool) -> Dict[str, Any]:
+        """Construye el registro completo de una IP (mismas claves para JSON y para syslog crudo)."""
+        ip = str(source.get("srcip")).strip()
+        asn_org = source.get("srcip_asn_org") or "Desconocido"
+        asn_num = source.get("srcip_asn") or ""
+        org_raw = AbuseReportEngine._normalizar_org(asn_org)
+
+        # Sin red (enrich=False) solo se usa el catálogo local; el RDAP/whois se hace luego en segundo plano.
+        buzon_abuso, org_label_completa = detectar_buzones_abuso(org_raw, asn_num, ip=ip if enrich else None)
+
+        forti = source.get("fortinet", {}) if isinstance(source.get("fortinet"), dict) else {}
+        dt_str = AbuseReportEngine._formatear_fecha_evento(source)
+        servicio = detectar_servicio_o_protocolo(source)
+        tipo_incidente, tipo_label = detectar_tipo_incidente(source)
+
+        dstip = source.get("dstip") or forti.get("dstip") or ""
+        dstport_raw = source.get("dstport") or forti.get("dstport") or ""
+        try:
+            dstport = int(dstport_raw) if str(dstport_raw).strip() else None
+        except (ValueError, TypeError):
+            dstport = None
+        proto = str(source.get("proto_name") or forti.get("proto") or "tcp")
+
+        raw_msg = source.get("parser_raw_msg") or source.get("msg") or ""
+        log_clean = extraer_log_limpio(raw_msg)
+        if not log_clean:
+            log_clean = f"srcip={ip} dstip={dstip} dstport={dstport_raw} proto={proto} service={servicio}"
+
+        srcip_geo = source.get("srcip_geo") if isinstance(source.get("srcip_geo"), dict) else {}
+        country = source.get("srccountry") or srcip_geo.get("countryName") or "Desconocido"
+        country_code = srcip_geo.get("countryCode") or ("PY" if "paraguay" in str(country).lower() else "")
+        reputation = source.get("srcip_reputation") or "Threat Score " + str(source.get("threat_score", "N/A"))
+
+        sugerencia_plantilla = "03_py" if country_code == "PY" else "04_eng"
+        asunto_es, asunto_en, cuerpo_defecto = construir_asunto_y_cuerpo(
+            tipo_incidente=tipo_incidente, servicio=servicio, ip=ip, org_label=org_label_completa,
+            dt_str=dt_str, log_clean=log_clean, plantilla_id=sugerencia_plantilla
+        )
+        asunto_defecto = asunto_en if sugerencia_plantilla == "04_eng" else asunto_es
+
+        return {
+            "ip": ip,
+            "org": org_label_completa,
+            "org_label": org_label_completa,
+            "org_raw": org_raw,
+            "asn": asn_num,
+            "country": country,
+            "country_code": country_code,
+            "reputation": reputation,
+            "servicio": servicio,
+            "tipo_incidente": tipo_incidente,
+            "tipo_label": tipo_label,
+            "datetime": dt_str,
+            "log": log_clean,
+            "dstip": dstip,
+            "dstport": dstport,
+            "proto": proto,
+            "abuse_email": buzon_abuso,
+            "abuse_enriched": bool(enrich),
+            "plantilla_id": sugerencia_plantilla,
+            "asunto_es": asunto_es,
+            "asunto_en": asunto_en,
+            "asunto": asunto_defecto,
+            "cuerpo": cuerpo_defecto,
+            "correo_completo": f"To: {buzon_abuso}\nSubject: {asunto_defecto}\n\n{cuerpo_defecto}",
+            "hits": 1
+        }
+
+    @staticmethod
+    def enriquecer_registro(rep: Dict[str, Any]) -> Dict[str, Any]:
+        """Consulta RDAP/whois (red, lento) y actualiza buzón, organización, asunto y cuerpo del registro."""
+        buzon, org_label = detectar_buzones_abuso(rep.get("org_raw") or rep.get("org") or "", rep.get("asn"), ip=rep["ip"])
+        rep["abuse_email"] = buzon
+        rep["org"] = org_label
+        rep["org_label"] = org_label
+        asunto_es, asunto_en, cuerpo = construir_asunto_y_cuerpo(
+            tipo_incidente=rep["tipo_incidente"], servicio=rep["servicio"], ip=rep["ip"], org_label=org_label,
+            dt_str=rep["datetime"], log_clean=rep["log"], plantilla_id=rep["plantilla_id"]
+        )
+        rep["asunto_es"], rep["asunto_en"], rep["cuerpo"] = asunto_es, asunto_en, cuerpo
+        rep["asunto"] = asunto_en if rep["plantilla_id"] == "04_eng" else asunto_es
+        rep["correo_completo"] = f"To: {buzon}\nSubject: {rep['asunto']}\n\n{cuerpo}"
+        rep["abuse_enriched"] = True
+        return rep
+
+    @staticmethod
+    def parse_payload(raw_text: str, enrich: bool = True) -> List[Dict[str, Any]]:
         """
         Parsea texto que contenga uno o más objetos JSON de Stellar Cyber / Interflow.
-        Soporta diccionarios directos, arrays, hits de Elasticsearch o Athena.
+        Soporta diccionarios directos, arrays, hits de Elasticsearch o Athena, y syslog crudo FortiGate.
+        Con enrich=False no hace consultas de red (RDAP/whois); usar enriquecer_registro() después.
         """
         if not raw_text or not raw_text.strip():
             return []
@@ -634,17 +725,19 @@ class AbuseReportEngine:
         if not data:
             # 3. Intentar procesar como log crudo de FortiGate si tiene formato key=value
             if "srcip=" in clean_text:
-                return AbuseReportEngine._parse_raw_syslog_fallback(clean_text)
+                return AbuseReportEngine._parse_raw_syslog_fallback(clean_text, enrich=enrich)
             return []
 
         # Normalizar items
         if isinstance(data, dict):
-            if "ctx" in data and "payload" in data["ctx"]:
-                items = data["ctx"]["payload"].get("filtered", [])
+            ctx = data.get("ctx") if isinstance(data.get("ctx"), dict) else {}
+            inner = data.get("data") if isinstance(data.get("data"), dict) else {}
+            if isinstance(ctx.get("payload"), dict):
+                items = ctx["payload"].get("filtered", [])
             elif "hits" in data and isinstance(data["hits"], dict):
                 items = data["hits"].get("hits", [])
-            elif "data" in data and "docs" in data["data"]:
-                items = data["data"].get("docs", [])
+            elif "docs" in inner:
+                items = inner.get("docs", [])
             elif "docs" in data:
                 items = data.get("docs", [])
             else:
@@ -654,180 +747,89 @@ class AbuseReportEngine:
         else:
             items = []
 
-        ips_procesadas: Dict[str, Dict[str, Any]] = {}
+        return AbuseReportEngine._agrupar_por_ip(items, enrich)
 
+    @staticmethod
+    def _agrupar_por_ip(items: List[Any], enrich: bool) -> List[Dict[str, Any]]:
+        ips_procesadas: Dict[str, Dict[str, Any]] = {}
         for item in items:
             source = item.get("_source", item) if isinstance(item, dict) else {}
             if not isinstance(source, dict):
                 continue
-
             ip = source.get("srcip")
-            if not ip:
+            if not ip or not AbuseReportEngine._es_ip_publica(ip):
                 continue
-
-            if ip not in ips_procesadas:
-                asn_org = source.get("srcip_asn_org") or "Desconocido"
-                asn_num = source.get("srcip_asn") or ""
-
-                # Normalizar etiqueta amigable
-                if "Cloudflare" in asn_org:
-                    org_label = "Cloudflare Inc."
-                elif "Volcano" in asn_org:
-                    org_label = "Beijing Volcano Engine Technology Co., Ltd."
-                elif "Datacamp" in asn_org:
-                    org_label = "Datacamp Limited"
-                elif "DigitalOcean" in asn_org:
-                    org_label = "DigitalOcean, LLC"
-                elif "Google" in asn_org:
-                    org_label = "Google LLC"
-                elif "Microsoft" in asn_org:
-                    org_label = "Microsoft Corporation"
-                else:
-                    org_label = asn_org
-
-                # Buzón de abuso oficial y etiqueta combinada (BGP + RDAP titular)
-                buzon_abuso, org_label_completa = detectar_buzones_abuso(org_label, asn_num, ip=ip)
-
-                # Fecha y Hora local (preferencia GMT-3 de FortiGate)
-                forti = source.get("fortinet", {}) if isinstance(source.get("fortinet"), dict) else {}
-                fecha = forti.get("date") or "2026-10-09"
-                hora = forti.get("time") or "08:00:00"
-                tz = forti.get("tz") or "-0300"
-                tz_label = "GMT-3" if "-0300" in tz else tz
-                dt_str = f"{fecha} {hora} {tz_label}"
-
-                # Servicio o protocolo afectado
-                servicio = detectar_servicio_o_protocolo(source)
-
-                # Clasificación de incidente (Fuerza Bruta vs Escaneo)
-                tipo_incidente, tipo_label = detectar_tipo_incidente(source)
-
-                # Log crudo limpio
-                raw_msg = source.get("parser_raw_msg") or source.get("msg") or ""
-                log_clean = extraer_log_limpio(raw_msg)
-                if not log_clean:
-                    # Construir un log sintético mínimo si no vino parser_raw_msg
-                    dstip = source.get("dstip", "")
-                    dstport = source.get("dstport", "")
-                    proto = source.get("proto_name", "tcp")
-                    log_clean = f"srcip={ip} dstip={dstip} dstport={dstport} proto={proto} service={servicio}"
-
-                # País y reputación
-                country = (
-                    source.get("srccountry") or
-                    source.get("srcip_geo", {}).get("countryName") or
-                    "Desconocido"
-                )
-                country_code = (
-                    source.get("srcip_geo", {}).get("countryCode") or
-                    ("PY" if "paraguay" in country.lower() else "")
-                )
-                reputation = source.get("srcip_reputation") or "Threat Score " + str(source.get("threat_score", "N/A"))
-
-                # Plantilla sugerida por defecto: Si es PY -> 03_py; si es extranjera -> 04_eng
-                sugerencia_plantilla = "03_py" if country_code == "PY" else "04_eng"
-
-                asunto_es, asunto_en, cuerpo_defecto = construir_asunto_y_cuerpo(
-                    tipo_incidente=tipo_incidente,
-                    servicio=servicio,
-                    ip=ip,
-                    org_label=org_label_completa,
-                    dt_str=dt_str,
-                    log_clean=log_clean,
-                    plantilla_id=sugerencia_plantilla
-                )
-
-                # El asunto por defecto se rige por el idioma de la plantilla
-                asunto_defecto = asunto_en if sugerencia_plantilla == "04_eng" else asunto_es
-
-                correo_completo = (
-                    f"To: {buzon_abuso}\n"
-                    f"Subject: {asunto_defecto}\n\n"
-                    f"{cuerpo_defecto}"
-                )
-
-                ips_procesadas[ip] = {
-                    "ip": ip,
-                    "org": org_label_completa,
-                    "org_label": org_label_completa,
-                    "asn": asn_num,
-                    "country": country,
-                    "country_code": country_code,
-                    "reputation": reputation,
-                    "servicio": servicio,
-                    "tipo_incidente": tipo_incidente,
-                    "tipo_label": tipo_label,
-                    "datetime": dt_str,
-                    "log": log_clean,
-                    "abuse_email": buzon_abuso,
-                    "plantilla_id": sugerencia_plantilla,
-                    "asunto_es": asunto_es,
-                    "asunto_en": asunto_en,
-                    "asunto": asunto_defecto,
-                    "cuerpo": cuerpo_defecto,
-                    "correo_completo": correo_completo,
-                    "hits": 1
-                }
-            else:
+            ip = str(ip).strip()
+            if ip in ips_procesadas:
                 ips_procesadas[ip]["hits"] += 1
-
+            else:
+                ips_procesadas[ip] = AbuseReportEngine._armar_registro(source, enrich)
         return list(ips_procesadas.values())
 
     @staticmethod
-    def _parse_raw_syslog_fallback(text: str) -> List[Dict[str, Any]]:
-        """Fallback para cuando se pega un syslog sin formato JSON."""
-        srcip_m = re.search(r'srcip=([0-9\.]+)', text)
-        if not srcip_m:
-            return []
-        ip = srcip_m.group(1)
-        country_m = re.search(r'srccountry="?([^"\s]+)"?', text)
-        country = country_m.group(1) if country_m else "Desconocido"
-        date_m = re.search(r'date=([0-9\-]+)', text)
-        time_m = re.search(r'time=([0-9\:]+)', text)
-        dt_str = f"{date_m.group(1) if date_m else '2026-10-09'} {time_m.group(1) if time_m else '08:00:00'} GMT-3"
-
-        log_clean = extraer_log_limpio(text)
-        asunto = f"Scan - {ip}"
-        cuerpo = (
-            f"Hello:\n"
-            f"We have detected unauthorized scanning / connection attempts from an IP under your authority:\n"
-            f"IP: {ip}\n"
-            f"Date/Time: {dt_str}\n\n"
-            f"Attached log for further investigation:\n"
-            f"{log_clean}\n\n"
-            f"We would appreciate your collaboration to address this issue or forward to someone who can.\n"
-            f"Regards,\n"
-            f"Technoma SOC"
-        )
-        buzon, org_res = detectar_buzones_abuso("", ip=ip)
-        asunto = f"Scan - {ip} [{org_res}]"
-        correo_completo = (
-            f"To: {buzon}\n"
-            f"Subject: {asunto}\n\n"
-            f"{cuerpo}"
-        )
-        return [{
-            "ip": ip,
-            "org": org_res,
-            "asn": "",
-            "country": country,
-            "reputation": "N/A",
-            "datetime": dt_str,
-            "hits": 1,
-            "abuse_email": buzon,
-            "asunto": asunto,
-            "cuerpo": cuerpo,
-            "log": log_clean,
-            "correo_completo": correo_completo
-        }]
+    def _parse_raw_syslog_fallback(text: str, enrich: bool = True) -> List[Dict[str, Any]]:
+        """
+        Fallback para syslog FortiGate sin formato JSON. Procesa TODAS las líneas con srcip=
+        y arma registros con las mismas claves que el camino JSON (antes faltaban claves y
+        el widget fallaba con KeyError).
+        """
+        kv_re = re.compile(r'(\w+)=("([^"]*)"|\S+)')
+        items: List[Dict[str, Any]] = []
+        for line in text.splitlines():
+            if "srcip=" not in line:
+                continue
+            kv = {m.group(1): (m.group(3) if m.group(3) is not None else m.group(2)) for m in kv_re.finditer(line)}
+            if not kv.get("srcip"):
+                continue
+            forti = {k: kv[k] for k in ("date", "time", "tz", "dstport", "dstip", "service", "policyname", "proto") if k in kv}
+            items.append({
+                "srcip": kv.get("srcip"),
+                "dstip": kv.get("dstip", ""),
+                "dstport": kv.get("dstport", ""),
+                "srccountry": kv.get("srccountry") or "Desconocido",
+                "fortinet": forti,
+                "parser_raw_msg": line.strip(),
+            })
+        return AbuseReportEngine._agrupar_por_ip(items, enrich)
 
 
 # =============================================================================
 # WIDGET REUTILIZABLE DE GENERACIÓN DE REPORTES DE ABUSO
 # =============================================================================
+class AbuseEnrichWorker(QThread):
+    """
+    Consulta RDAP/whois de cada IP en segundo plano. Antes se hacía en el hilo de la
+    interfaz y la ventana quedaba congelada varios segundos por IP.
+    """
+    item_enriched = Signal(int, int, dict)   # generación, índice, registro actualizado
+    all_done = Signal(int)
+
+    def __init__(self, generation: int, reportes: List[Dict[str, Any]], parent=None):
+        super().__init__(parent)
+        self.generation = generation
+        self.reportes = [dict(r) for r in reportes]
+        self._cancel = False
+
+    def cancel(self):
+        self._cancel = True
+
+    def run(self):
+        for idx, rep in enumerate(self.reportes):
+            if self._cancel:
+                return
+            try:
+                self.item_enriched.emit(self.generation, idx, AbuseReportEngine.enriquecer_registro(rep))
+            except Exception as e:
+                print(f"[AbuseReport] No se pudo enriquecer {rep.get('ip')}: {e}")
+        if not self._cancel:
+            self.all_done.emit(self.generation)
+
+
 class AbuseReportWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._generation = 0
+        self._enrich_workers: List[AbuseEnrichWorker] = []
         self.reportes_actuales: List[Dict[str, Any]] = []
         self.init_ui()
 
@@ -1033,7 +1035,10 @@ class AbuseReportWidget(QWidget):
 
     def cargar_datos_desde_texto(self, raw_text: str) -> int:
         """Parsea el texto y carga los reportes en el widget. Retorna cantidad de IPs."""
-        reportes = AbuseReportEngine.parse_payload(raw_text)
+        # Parseo instantáneo SIN red; el buzón de abuso por RDAP/whois se completa en segundo plano.
+        self._cancelar_enriquecimiento()
+        self._generation += 1
+        reportes = AbuseReportEngine.parse_payload(raw_text, enrich=False)
         self.reportes_actuales = reportes
         self.combo_ips.blockSignals(True)
         self.combo_ips.clear()
@@ -1049,22 +1054,61 @@ class AbuseReportWidget(QWidget):
             return 0
 
         total_hits = sum(r["hits"] for r in reportes)
-        self.lbl_stats.setText(f"Total IPs: {len(reportes)} | Eventos Totales: {total_hits}")
+        self.lbl_stats.setText(f"Total IPs: {len(reportes)} | Eventos Totales: {total_hits} | ⏳ Buscando buzones de abuso (RDAP/Whois)...")
 
         historico_ips = obtener_ips_reportadas_historico()
         for r in reportes:
-            ip = r["ip"]
-            tag_reportada = ""
-            if ip in historico_ips:
-                f_rep = historico_ips[ip].get("date", "Anteriormente")
-                tag_reportada = f" ⚠️ [YA REPORTADA: {f_rep}]"
-            icon = "💥" if r["tipo_incidente"] == "fuerza_bruta" else "🔍"
-            label = f"{icon} {ip} · {r['org']} ({r['country']}) — {r['tipo_label']} {r['servicio']} ({r['hits']} ev.){tag_reportada}"
-            self.combo_ips.addItem(label)
+            self.combo_ips.addItem(self._etiqueta_combo(r, historico_ips))
 
         self.combo_ips.blockSignals(False)
         self._mostrar_reporte(0)
+
+        worker = AbuseEnrichWorker(self._generation, reportes, self)
+        worker.item_enriched.connect(self._on_item_enriched)
+        worker.all_done.connect(self._on_enrich_done)
+        worker.finished.connect(lambda w=worker: self._limpiar_worker(w))
+        self._enrich_workers.append(worker)
+        worker.start()
         return len(reportes)
+
+    def _etiqueta_combo(self, r: Dict[str, Any], historico_ips: Dict[str, Dict[str, Any]]) -> str:
+        tag_reportada = ""
+        if r["ip"] in historico_ips:
+            f_rep = historico_ips[r["ip"]].get("date", "Anteriormente")
+            tag_reportada = f" ⚠️ [YA REPORTADA: {f_rep}]"
+        icon = "💥" if r["tipo_incidente"] == "fuerza_bruta" else "🔍"
+        pendiente = "" if r.get("abuse_enriched") else " ⏳"
+        return f"{icon} {r['ip']} · {r['org']} ({r['country']}) — {r['tipo_label']} {r['servicio']} ({r['hits']} ev.){tag_reportada}{pendiente}"
+
+    def _on_item_enriched(self, generation: int, idx: int, rep: Dict[str, Any]):
+        if generation != self._generation or not (0 <= idx < len(self.reportes_actuales)):
+            return  # resultado de una carga anterior
+        rep["hits"] = self.reportes_actuales[idx].get("hits", rep.get("hits", 1))
+        self.reportes_actuales[idx] = rep
+        self.combo_ips.setItemText(idx, self._etiqueta_combo(rep, obtener_ips_reportadas_historico()))
+        if self.combo_ips.currentIndex() == idx:
+            self._mostrar_reporte(idx)
+
+    def _on_enrich_done(self, generation: int):
+        if generation != self._generation:
+            return
+        total_hits = sum(r["hits"] for r in self.reportes_actuales)
+        self.lbl_stats.setText(f"Total IPs: {len(self.reportes_actuales)} | Eventos Totales: {total_hits}")
+
+    def _cancelar_enriquecimiento(self):
+        for w in self._enrich_workers:
+            w.cancel()
+
+    def _limpiar_worker(self, worker: "AbuseEnrichWorker"):
+        if worker in self._enrich_workers:
+            self._enrich_workers.remove(worker)
+        worker.deleteLater()
+
+    def detener_workers(self, timeout_ms: int = 4000):
+        """Cancela y espera los workers de RDAP (llamar al cerrar la ventana contenedora)."""
+        self._cancelar_enriquecimiento()
+        for w in list(self._enrich_workers):
+            w.wait(timeout_ms)
 
     def _on_ip_selected(self, index: int):
         if 0 <= index < len(self.reportes_actuales):
@@ -1081,7 +1125,7 @@ class AbuseReportWidget(QWidget):
         ip = rep["ip"]
         if ip in historico_ips:
             h = historico_ips[ip]
-            f_rep = h.get("date", "09/10/2026")
+            f_rep = h.get("date", "fecha no registrada")
             recip = h.get("recipient", rep["abuse_email"])
             subj = h.get("subject", "N/A")
             self.lbl_alerta_reportada.setText(
@@ -1130,7 +1174,7 @@ class AbuseReportWidget(QWidget):
             "org": rep.get("org", "Desconocido"),
             "country": rep.get("country", "Desconocido"),
             "service": rep.get("servicio", "HTTPS"),
-            "port": 443,
+            "port": rep.get("dstport"),
             "incident_type": self.combo_tipo.currentData() or rep.get("tipo_incidente", "escaneo"),
             "recipient": self.txt_to.text().strip(),
             "bcc": "Ivan",
@@ -1164,6 +1208,26 @@ class AbuseReportWidget(QWidget):
 
         token = os.environ.get("CLOUDFLARE_API_TOKEN", "")
         account_id = os.environ.get("CLOUDFLARE_ACCOUNT_ID", "")
+        if not token or not account_id:
+            QMessageBox.warning(self, "Cloudflare no configurado",
+                                "Faltan CLOUDFLARE_API_TOKEN y/o CLOUDFLARE_ACCOUNT_ID en el .env.")
+            return
+
+        # Destino REAL del ataque: la IP/puerto atacados según el evento (antes iba fijo 10.11.3.196:443).
+        # Si el evento trae una IP privada (post-NAT), se usa la IP pública configurada en el .env.
+        dst_ip = str(rep.get("dstip") or "").strip()
+        if not AbuseReportEngine._es_ip_publica(dst_ip):
+            dst_ip = os.environ.get("CLOUDFLARE_REPORT_DEST_IP", "").strip()
+        if not AbuseReportEngine._es_ip_publica(dst_ip):
+            QMessageBox.warning(
+                self, "Falta IP destino pública",
+                "El evento no trae una IP de destino pública (está detrás de NAT o no viene en el log).\n\n"
+                "Defina CLOUDFLARE_REPORT_DEST_IP en el .env con la IP pública atacada, o use el correo a abuse@cloudflare.com."
+            )
+            return
+        dst_port = rep.get("dstport")
+        proto = str(rep.get("proto") or "tcp").upper()
+        ports_protocols = f"{dst_port}/{proto}" if dst_port else proto
 
         import urllib.request
         import urllib.error
@@ -1178,12 +1242,12 @@ class AbuseReportWidget(QWidget):
         data = {
             "act": "abuse_network",
             "source_ips": ip,
-            "destination_ips": "10.11.3.196",
-            "ports_protocols": f"{rep.get('port', 443)}/TCP",
+            "destination_ips": dst_ip,
+            "ports_protocols": ports_protocols,
             "justification": f"SOC Technoma Security Report - Raw Log:\n{log_clean}",
-            "name": "Kevin Moraes",
-            "email": "kevinmoraes@technoma.com.py",
-            "company": "Technoma SOC"
+            "name": os.environ.get("ABUSE_REPORTER_NAME", "Kevin Moraes"),
+            "email": os.environ.get("ABUSE_REPORTER_EMAIL", "kevinmoraes@technoma.com.py"),
+            "company": os.environ.get("ABUSE_REPORTER_COMPANY", "Technoma SOC")
         }
 
         try:
@@ -1449,6 +1513,10 @@ class AbuseReportDialog(QDialog):
 
         if initial_text:
             self._process_input()
+
+    def closeEvent(self, event):
+        self.widget_reporte.detener_workers()
+        super().closeEvent(event)
 
     def _process_input(self):
         text = self.input_text.toPlainText().strip()

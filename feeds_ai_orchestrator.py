@@ -146,7 +146,7 @@ class FeedsAIOrchestrator:
             "max_tokens": 4096
         }
 
-        response = requests.post(url, headers=headers, json=payload, timeout=(10, 60), verify=False)
+        response = requests.post(url, headers=headers, json=payload, timeout=(10, 60))
         if response.status_code == 200:
             res_json = response.json()
             return res_json["choices"][0]["message"]["content"]
@@ -193,7 +193,7 @@ class FeedsAIOrchestrator:
             }
         }
 
-        response = requests.post(url, headers=headers, json=payload, timeout=(10, 45), verify=False)
+        response = requests.post(url, headers=headers, json=payload, timeout=(10, 45))
         if response.status_code == 200:
             res_json = response.json()
             candidates = res_json.get("candidates", [])
@@ -225,7 +225,7 @@ class FeedsAIOrchestrator:
             "temperature": 0.1
         }
 
-        response = requests.post(url, headers=headers, json=payload, timeout=(10, 45), verify=False)
+        response = requests.post(url, headers=headers, json=payload, timeout=(10, 45))
         if response.status_code == 200:
             res_json = response.json()
             return res_json["choices"][0]["message"]["content"]

@@ -601,7 +601,7 @@ class RSSFeedParser:
             "Accept-Language": "es-ES,es;q=0.9,en;q=0.8"
         }
         
-        response = requests.get(url, headers=headers, timeout=timeout_sec, verify=False)
+        response = requests.get(url, headers=headers, timeout=timeout_sec)
         response.raise_for_status()
 
         fmt = feed_config.get("format", "")

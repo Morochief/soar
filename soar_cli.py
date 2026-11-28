@@ -87,11 +87,15 @@ def cmd_sla(raw_input: str) -> None:
 def cmd_triage(target: str) -> None:
     from soc_agent import ejecutar_consulta
     p = Path(target)
-    if p.exists() and p.is_file():
-        content = p.read_text(encoding="utf-8", errors="ignore")
-        ejecutar_consulta(f"Analiza la siguiente alerta cruda:\n\n{content}")
-    else:
-        ejecutar_consulta(target)
+    try:
+        if p.exists() and p.is_file():
+            content = p.read_text(encoding="utf-8", errors="ignore")
+            ejecutar_consulta(f"Analiza la siguiente alerta cruda:\n\n{content}")
+        else:
+            ejecutar_consulta(target)
+    except RuntimeError as e:
+        print(f"❌ {e}")
+        sys.exit(1)
 
 
 def main() -> None:

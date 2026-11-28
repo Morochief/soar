@@ -90,10 +90,11 @@ def patch_file(target_path):
         return False
 
 def main():
-    paths = [
-        r"C:\Users\kevinmoraes\Documents\SOC_SOAR\soar\command_center.py",
-        r"c:\Users\kevinmoraes\Documents\soc-env\command_center.py"
-    ]
+    # Rutas por argumento (antes: rutas absolutas de Windows). Script histórico del monolito v6.5.
+    paths = sys.argv[1:]
+    if not paths:
+        print("Uso: python apply_soar_fixes.py <ruta/command_center.py> [...]")
+        return
     for p in paths:
         patch_file(p)
 

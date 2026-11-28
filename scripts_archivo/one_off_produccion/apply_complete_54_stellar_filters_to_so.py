@@ -3,7 +3,13 @@ import paramiko
 import re
 
 # 1. Cargar los 54 filtros de Stellar
-with open(r'c:\Users\kevinmoraes\Desktop\SOC\soar\stellar_54_filters.json', 'r', encoding='utf-8') as f:
+import os, sys
+# Ruta del JSON: argumento, o stellar_54_filters.json en la raíz del repo (antes: ruta absoluta de Windows)
+_repo_root = os.path.dirname(os.path.abspath(__file__))
+while _repo_root != os.path.dirname(_repo_root) and not os.path.exists(os.path.join(_repo_root, "stellar_54_filters.json")):
+    _repo_root = os.path.dirname(_repo_root)
+_filters_json = sys.argv[1] if len(sys.argv) > 1 else os.path.join(_repo_root, "stellar_54_filters.json")
+with open(_filters_json, 'r', encoding='utf-8') as f:
     stellar_filters = json.load(f)
 
 print(f"[*] Analizando {len(stellar_filters)} filtros de Stellar Cyber...")

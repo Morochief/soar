@@ -1,7 +1,9 @@
-import os, datetime
+import os, sys, datetime
 
-path = r'c:\Users\kevinmoraes\Desktop\SOC\soar'
-cutoff = datetime.datetime(2026, 10, 21, 0, 0, 0)
+# Carpeta del propio script (antes: ruta absoluta de Windows). Uso: python list_recent_mods.py [dias]
+path = os.path.dirname(os.path.abspath(__file__))
+dias = int(sys.argv[1]) if len(sys.argv) > 1 and sys.argv[1].isdigit() else 7
+cutoff = datetime.datetime.now() - datetime.timedelta(days=dias)
 
 files = []
 for f in os.listdir(path):

@@ -2,7 +2,8 @@ import csv
 import sys
 import os
 
-tsv_path = r"C:\Users\kevinmoraes\Documents\SOC_SOAR\soar\XQL-QUERY-18508 - 2026_10_15.tsv"
+# Uso: python parse_tsv.py <archivo.tsv>  (antes: ruta absoluta de Windows)
+tsv_path = sys.argv[1] if len(sys.argv) > 1 else "XQL-QUERY-18508 - 2026_10_15.tsv"
 
 if not os.path.exists(tsv_path):
     print("File not found:", tsv_path)
