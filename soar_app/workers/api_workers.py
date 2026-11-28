@@ -164,20 +164,33 @@ class GetCommentsWorker(RunnableBaseApiWorker):
         self.signals.finished_signal.emit({"comments": res.json(), "action": "get_comments"})
 
 class UpdateCaseWorker(BaseApiWorker):
+    def start(self, priority: int = QThread.InheritPriority) -> None:
+        # Si el worker se reutiliza, el comentario de la nueva orden debe publicarse de nuevo
+        self._comment_posted = False
+        super().start(priority)
+
     def _do_work(self, session: requests.Session, headers: Dict[str, str]) -> None:
         case_id = self.params.get("case_id")
         justificacion = self.params.get("comment")
-        if justificacion:
+        # El reintento por 401 de BaseApiWorker vuelve a ejecutar _do_work: no se
+        # vuelve a publicar el comentario si ya se publicó en el primer intento.
+        if justificacion and not getattr(self, "_comment_posted", False):
             comment_url = f"https://{HOST}/connect/api/v1/cases/{case_id}/comments"
             c_res = session.post(comment_url, headers=headers, json={"comment": justificacion}, verify=True, timeout=10)
             c_res.raise_for_status()
-        if self._is_killed: return
-        
+            self._comment_posted = True
+        # Una vez publicado el comentario, el PUT se completa aunque se pida cancelar:
+        # cortar acá dejaría el caso con nota de cierre pero abierto.
         url = f"https://{HOST}/connect/api/v1/cases/{case_id}"
         res = session.put(url, headers=headers, json=self.payload, verify=True, timeout=12)
         res.raise_for_status()
         if self._is_killed: return
-        self.finished_signal.emit({"status": res.status_code, "action": "update"})
+        self.finished_signal.emit({
+            "status": res.status_code,
+            "action": "update",
+            "case_id": case_id,
+            "context": self.params.get("context"),
+        })
 
 class InterflowWorker(BaseApiWorker):
     def _do_work(self, session: requests.Session, headers: Dict[str, str]) -> None:
@@ -280,27 +293,33 @@ class AutoTriageStellarWorker(RunnableBaseApiWorker):
         # 1. Si el API devuelve el texto directamente en alguna llave conocida
         if isinstance(data, dict):
             # Intentar extraer formato nativo v2 de Stellar Cyber (ai_case_triage)
-            ai_triage = data.get("ai_case_triage", {})
+            ai_triage = data.get("ai_case_triage") if isinstance(data.get("ai_case_triage"), dict) else {}
             if "summary" in ai_triage and isinstance(ai_triage["summary"], dict):
                 s_data = ai_triage["summary"]
                 parts = []
-                if "concise_summary" in s_data: parts.append(s_data["concise_summary"])
-                if "hypothesis" in s_data: parts.append(s_data["hypothesis"])
-                if "key_entities_and_relations" in s_data: parts.append(s_data["key_entities_and_relations"])
-                if "recommendations" in s_data: parts.append(s_data["recommendations"])
+                for key in ("concise_summary", "hypothesis", "key_entities_and_relations", "recommendations"):
+                    val = s_data.get(key)
+                    if not val:
+                        continue
+                    if isinstance(val, (list, tuple)):
+                        val = "\n".join(f"- {v}" if not isinstance(v, (dict, list)) else f"- {json.dumps(v, ensure_ascii=False)}" for v in val)
+                    elif isinstance(val, dict):
+                        val = json.dumps(val, indent=2, ensure_ascii=False)
+                    parts.append(str(val))
                 if parts:
                     summary_text = "\n\n".join(parts)
-            
+
             # Buscar en keys comunes si no se encontró el formato ai_case_triage
             if not summary_text:
-                if "summary" in data:
+                if isinstance(data.get("summary"), str) and data["summary"].strip():
                     summary_text = data["summary"]
-                elif "data" in data and isinstance(data["data"], dict) and "summary" in data["data"]:
+                elif isinstance(data.get("data"), dict) and isinstance(data["data"].get("summary"), str):
                     summary_text = data["data"]["summary"]
-                elif "data" in data and isinstance(data["data"], str):
+                elif isinstance(data.get("data"), str):
                     summary_text = data["data"]
-            else:
-                # Fallback: Extraer valores string ignorando listas u otros dicts
+
+            if not summary_text:
+                # Fallback (solo si nada de lo anterior funcionó): extraer valores string largos
                 strings = [str(v) for k, v in data.items() if isinstance(v, str) and len(str(v)) > 50]
                 if strings:
                     summary_text = "\n".join(strings)
@@ -487,8 +506,6 @@ class CveBatchFetchWorker(QThread):
         chunks = []
         curr = start
         while curr < end:
-            next_date = curr + datetime.resolution * delta_days * 86400000000 if False else (curr + pd.Timedelta(days=delta_days).to_pytimedelta() if 'pd' in globals() else curr + (end - curr))
-            import datetime as _dt
             next_date = curr + _dt.timedelta(days=delta_days)
             if next_date > end:
                 next_date = end
@@ -528,34 +545,57 @@ class CveBatchFetchWorker(QThread):
                     )
                     self.progress_signal.emit(int((current_step / total_steps) * 100), f"  -> Ventana: {start_chunk.strftime('%d-%m-%Y')} a {end_chunk.strftime('%d-%m-%Y')}")
 
+                    # NVD devuelve como máximo 2000 CVEs por página: se pagina con startIndex
+                    # hasta cubrir totalResults (antes se perdían CVEs en ventanas grandes).
                     max_retries = 4
-                    chunk_success = False
-                    for attempt in range(max_retries):
+                    chunk_success = True
+                    start_index = 0
+                    total_results = None
+                    while True:
                         if self._is_killed: return
-                        try:
-                            resp = requests.get(url, headers=headers, timeout=40)
-                            if resp.status_code == 200:
-                                data = resp.json()
-                                nuevos = data.get("vulnerabilities", [])
-                                vulnerabilidades.extend(nuevos)
-                                self.progress_signal.emit(int((current_step / total_steps) * 100), f"     [OK] {len(nuevos)} CVEs descargados en este bloque.")
-                                chunk_success = True
-                                break
-                            elif resp.status_code == 429:
-                                self.progress_signal.emit(int((current_step / total_steps) * 100), f"     [RATE-LIMIT] Servidor NVD saturado (429). Esperando 6s...")
-                                time.sleep(6)
-                            elif resp.status_code in (401, 403):
-                                self.progress_signal.emit(int((current_step / total_steps) * 100), f"     [WARN] Código de autenticación NVD {resp.status_code}. Reintentando sin apiKey o con delay...")
+                        page_url = f"{url}&startIndex={start_index}&resultsPerPage=2000"
+                        page_ok = False
+                        nuevos = []
+                        for attempt in range(max_retries):
+                            if self._is_killed: return
+                            try:
+                                resp = requests.get(page_url, headers=headers, timeout=40)
+                                if resp.status_code == 200:
+                                    data = resp.json()
+                                    nuevos = data.get("vulnerabilities", []) or []
+                                    total_results = data.get("totalResults", total_results)
+                                    vulnerabilidades.extend(nuevos)
+                                    self.progress_signal.emit(int((current_step / total_steps) * 100), f"     [OK] {len(nuevos)} CVEs descargados (desde índice {start_index}, total ventana: {total_results}).")
+                                    page_ok = True
+                                    break
+                                elif resp.status_code == 429:
+                                    self.progress_signal.emit(int((current_step / total_steps) * 100), f"     [RATE-LIMIT] Servidor NVD saturado (429). Esperando 6s...")
+                                    time.sleep(6)
+                                elif resp.status_code in (401, 403):
+                                    if "apiKey" in headers:
+                                        headers.pop("apiKey", None)
+                                        self.progress_signal.emit(int((current_step / total_steps) * 100), f"     [WARN] NVD rechazó la apiKey (HTTP {resp.status_code}). Reintentando SIN apiKey (modo público, más lento)...")
+                                    else:
+                                        self.progress_signal.emit(int((current_step / total_steps) * 100), f"     [WARN] NVD respondió HTTP {resp.status_code} sin apiKey. Intento {attempt+1}/{max_retries}")
+                                    time.sleep(6)
+                                else:
+                                    self.progress_signal.emit(int((current_step / total_steps) * 100), f"     [WARN] NVD respondió HTTP {resp.status_code}. Intento {attempt+1}/{max_retries}")
+                                    time.sleep(3)
+                            except Exception as req_err:
+                                self.progress_signal.emit(int((current_step / total_steps) * 100), f"     [NET-ERR] Intento {attempt+1}/{max_retries}: {req_err}")
                                 time.sleep(4)
-                            else:
-                                self.progress_signal.emit(int((current_step / total_steps) * 100), f"     [WARN] NVD respondió HTTP {resp.status_code}. Intento {attempt+1}/{max_retries}")
-                                time.sleep(3)
-                        except Exception as req_err:
-                            self.progress_signal.emit(int((current_step / total_steps) * 100), f"     [NET-ERR] Intento {attempt+1}/{max_retries}: {req_err}")
-                            time.sleep(4)
+
+                        if not page_ok:
+                            chunk_success = False
+                            break
+                        start_index += len(nuevos)
+                        if not nuevos or total_results is None or start_index >= int(total_results):
+                            break
+                        # Ritmo de NVD: ~50 req/30s con apiKey, ~5 req/30s sin ella
+                        time.sleep(1 if "apiKey" in headers else 6)
 
                     if not chunk_success:
-                        self.progress_signal.emit(int((current_step / total_steps) * 100), f"     [ALERTA] Bloque {start_chunk.strftime('%d-%m-%Y')} omitido tras reintentos.")
+                        self.progress_signal.emit(int((current_step / total_steps) * 100), f"     [ALERTA] Bloque {start_chunk.strftime('%d-%m-%Y')} incompleto tras reintentos ({start_index} CVEs leídos de {total_results if total_results is not None else '?'}).")
 
                     current_step += 1
                     pct = min(98, int((current_step / total_steps) * 100))

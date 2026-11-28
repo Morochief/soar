@@ -9,6 +9,43 @@ from soar_app.workers.api_workers import *
 import urllib.parse
 import html
 from PySide6.QtWidgets import QInputDialog
+import ipaddress
+
+
+# -----------------------------------------------------------------------------
+# VALIDACIÓN DE OBJETIVOS ANTES DE ARMAR COMANDOS DE SHELL (ANTI-INYECCIÓN)
+# Los IOCs (URLs, dominios, hostnames) vienen de telemetría y del atacante: nunca
+# se interpolan en PowerShell/bash sin validar. Se rechaza cualquier carácter que
+# pueda romper comillas o disparar expansión ($, `, comillas, paréntesis, etc.).
+# -----------------------------------------------------------------------------
+_SAFE_HOST_RE = re.compile(
+    r"^(?=.{1,253}\.?$)[A-Za-z0-9_](?:[A-Za-z0-9_-]{0,62}[A-Za-z0-9_])?"
+    r"(?:\.[A-Za-z0-9_](?:[A-Za-z0-9_-]{0,62}[A-Za-z0-9_])?)*\.?$"
+)
+# Caracteres permitidos en una URL que se pasa SIEMPRE entre comillas.
+_SAFE_URL_RE = re.compile(r"^https?://[A-Za-z0-9._~:/?#\[\]@!&*+,;=%-]+$", re.IGNORECASE)
+# Término libre para búsquedas (grep / Select-String) entre comillas simples.
+_SAFE_TERM_RE = re.compile(r"^[A-Za-z0-9._~:/@%+=,# -]{1,256}$")
+
+
+def is_safe_host(value: str) -> bool:
+    v = str(value or "").strip()
+    if not v:
+        return False
+    try:
+        ipaddress.ip_address(v)
+        return True
+    except ValueError:
+        pass
+    return bool(_SAFE_HOST_RE.match(v))
+
+
+def is_safe_url(value: str) -> bool:
+    return bool(_SAFE_URL_RE.match(str(value or "").strip()))
+
+
+def is_safe_term(value: str) -> bool:
+    return bool(_SAFE_TERM_RE.match(str(value or "").strip()))
 
 
 class TerminalCtiMixin:
@@ -768,6 +805,21 @@ class TerminalCtiMixin:
         except Exception as e:
             QMessageBox.warning(self, "WSL Terminal", f"No se pudo lanzar la terminal de WSL: {e}")
 
+    def _reject_unsafe_target(self, value: str, kind: str = "host") -> bool:
+        """Devuelve True (y avisa) si el objetivo NO es seguro para usarlo en un comando de shell."""
+        checks = {"host": is_safe_host, "url": is_safe_url, "term": is_safe_term}
+        ok = checks.get(kind, is_safe_host)(value)
+        if not ok:
+            etiquetas = {"host": "IP, dominio u hostname", "url": "URL http(s)", "term": "término de búsqueda"}
+            QMessageBox.warning(
+                self, "Objetivo inválido",
+                f"El objetivo no es un {etiquetas.get(kind, kind)} válido o contiene caracteres no permitidos "
+                f"(comillas, $, `, paréntesis, espacios, etc.).\n\nValor: {value[:200]}\n\n"
+                "Por seguridad no se ejecutó ningún comando."
+            )
+            log_to_file(f"[TERMINAL GUARD] Objetivo rechazado ({kind}): {value[:120]!r}")
+        return not ok
+
     def _get_active_target_or_observable(self) -> str:
         target = self.input_term_target.text().strip()
         if not target:
@@ -788,6 +840,8 @@ class TerminalCtiMixin:
             QMessageBox.warning(self, "Preset DNS", "Ingrese una IP, dominio o hostname en el campo objetivo.")
             return
         clean_target = re.sub(r"^https?://", "", target.strip(), flags=re.IGNORECASE).rstrip("/").split("/")[0].split(":")[0]
+        if self._reject_unsafe_target(clean_target, "host"):
+            return
         obs_type = CtiEngine.detect_observable_type(clean_target)
         engine = self.combo_term_engine.currentData()
 
@@ -858,6 +912,8 @@ class TerminalCtiMixin:
             QMessageBox.warning(self, "Preset PTR", "Ingrese una dirección IP o dominio en el campo objetivo para consultar su resolución inversa (PTR).")
             return
         clean_target = re.sub(r"^https?://", "", target.strip(), flags=re.IGNORECASE).rstrip("/").split("/")[0].split(":")[0]
+        if self._reject_unsafe_target(clean_target, "host"):
+            return
         obs_type = CtiEngine.detect_observable_type(clean_target)
         engine = self.combo_term_engine.currentData()
 
@@ -916,6 +972,8 @@ class TerminalCtiMixin:
             QMessageBox.warning(self, "Preset WHOIS", "Ingrese una IP o dominio en el campo objetivo.")
             return
         clean_target = re.sub(r"^https?://", "", target.strip(), flags=re.IGNORECASE).rstrip("/").split("/")[0].split(":")[0]
+        if self._reject_unsafe_target(clean_target, "host"):
+            return
         engine = self.combo_term_engine.currentData()
         py_exec = os.path.join(SCRIPT_DIR, "venv", "Scripts", "python.exe")
         if not os.path.exists(py_exec):
@@ -934,6 +992,8 @@ class TerminalCtiMixin:
             QMessageBox.warning(self, "Preset Conexión", "Ingrese una IP o host en el campo objetivo.")
             return
         clean_target = re.sub(r"^https?://", "", target.strip(), flags=re.IGNORECASE).rstrip("/").split("/")[0].split(":")[0]
+        if self._reject_unsafe_target(clean_target, "host"):
+            return
         engine = self.combo_term_engine.currentData()
         if engine == "wsl":
             cmd = (
@@ -974,7 +1034,10 @@ class TerminalCtiMixin:
             return
         raw_target = target.strip()
         has_scheme = raw_target.lower().startswith("http://") or raw_target.lower().startswith("https://")
-        clean_target = re.sub(r"^https?://", "", raw_target).rstrip("/")
+        clean_target = re.sub(r"^https?://", "", raw_target, flags=re.IGNORECASE).rstrip("/")
+        # Anti-inyección: la URL completa (con o sin esquema) debe pasar la validación estricta
+        if self._reject_unsafe_target(raw_target if has_scheme else f"http://{clean_target}", "url"):
+            return
         engine = self.combo_term_engine.currentData()
 
         if has_scheme or ":" in clean_target:
@@ -1030,6 +1093,8 @@ class TerminalCtiMixin:
             QMessageBox.warning(self, "Preset Grep", "Ingrese un IOC, IP o término a buscar en los logs.")
             return
         clean_target = target.strip()
+        if self._reject_unsafe_target(clean_target, "term"):
+            return
         engine = self.combo_term_engine.currentData()
         if engine == "wsl":
             cmd = (
@@ -1052,6 +1117,8 @@ class TerminalCtiMixin:
             return
         clean_target = target.strip()
         clean_target = re.sub(r"^https?://", "", clean_target).split("/")[0].split(":")[0]
+        if self._reject_unsafe_target(clean_target, "host"):
+            return
         engine = self.combo_term_engine.currentData()
         if engine == "wsl":
             cmd = (
@@ -1090,6 +1157,8 @@ class TerminalCtiMixin:
         if hasattr(self, "tabs") and hasattr(self, "tab5"):
             self.tabs.setCurrentWidget(self.tab5)
         clean_target = re.sub(r"^https?://", "", target.strip(), flags=re.IGNORECASE).rstrip("/").split("/")[0].split(":")[0]
+        if self._reject_unsafe_target(clean_target, "host"):
+            return
         obs_type = CtiEngine.detect_observable_type(clean_target)
 
         if obs_type == "ip":
@@ -1302,6 +1371,8 @@ class TerminalCtiMixin:
         if hasattr(self, "tabs") and hasattr(self, "tab5"):
             self.tabs.setCurrentWidget(self.tab5)
         clean_target = re.sub(r"^https?://", "", target.strip(), flags=re.IGNORECASE).rstrip("/").split("/")[0].split(":")[0]
+        if self._reject_unsafe_target(clean_target, "host"):
+            return
         obs_type = CtiEngine.detect_observable_type(clean_target)
 
         if obs_type == "ip":
@@ -1484,7 +1555,7 @@ class TerminalCtiMixin:
                 self.txt_terminal_output.moveCursor(QTextCursor.End)
                 self.txt_terminal_output.insertHtml(
                     f"<br><span style='color: #38bdf8; font-weight: bold;'>[🚀 SUITE THREAT HUNTING: IP PRIVADA / LAN]</span> "
-                    f"Objetivo: <b>{clean}</b> (RFC 1918)<br>"
+                    f"Objetivo: <b>{he(clean)}</b> (RFC 1918)<br>"
                     f"<span style='color: #94a3b8;'>Disparando: PTR Local + Port Sweep Rápido + Grep de Casos Internos...</span><br>"
                 )
                 self.txt_terminal_output.moveCursor(QTextCursor.End)
@@ -1494,7 +1565,7 @@ class TerminalCtiMixin:
                 self.txt_terminal_output.moveCursor(QTextCursor.End)
                 self.txt_terminal_output.insertHtml(
                     f"<br><span style='color: #ec4899; font-weight: bold;'>[🚀 SUITE THREAT HUNTING: IP PÚBLICA DE INTERNET]</span> "
-                    f"Objetivo: <b>{clean}</b><br>"
+                    f"Objetivo: <b>{he(clean)}</b><br>"
                     f"<span style='color: #94a3b8;'>Disparando: Tri-Scan CTI (AbuseIPDB + VirusTotal) + PTR Inverso + Conectividad...</span><br>"
                 )
                 self.txt_terminal_output.moveCursor(QTextCursor.End)
@@ -1511,7 +1582,7 @@ class TerminalCtiMixin:
                 self.txt_terminal_output.moveCursor(QTextCursor.End)
                 self.txt_terminal_output.insertHtml(
                     f"<br><span style='color: #f59e0b; font-weight: bold;'>[🚀 SUITE THREAT HUNTING: SUBDOMINIO PAAS / HOSTING PÚBLICO]</span> "
-                    f"Objetivo: <b>{clean}</b><br>"
+                    f"Objetivo: <b>{he(clean)}</b><br>"
                     f"<span style='color: #94a3b8;'>Disparando: Reconocimiento DNS + URLScan.io + VirusTotal (Omitiendo SPF/DMARC de PaaS)...</span><br>"
                 )
                 self.txt_terminal_output.moveCursor(QTextCursor.End)
@@ -1520,7 +1591,7 @@ class TerminalCtiMixin:
                 self.txt_terminal_output.moveCursor(QTextCursor.End)
                 self.txt_terminal_output.insertHtml(
                     f"<br><span style='color: #a855f7; font-weight: bold;'>[🚀 SUITE THREAT HUNTING: DOMINIO CORPORATIVO / PRIVADO]</span> "
-                    f"Objetivo: <b>{clean}</b><br>"
+                    f"Objetivo: <b>{he(clean)}</b><br>"
                     f"<span style='color: #94a3b8;'>Disparando: Desemmascarar Origen (Bypass Cloudflare) + Anti-Spoofing (SPF/DMARC) + Tri-Scan CTI...</span><br>"
                 )
                 self.txt_terminal_output.moveCursor(QTextCursor.End)
@@ -1628,6 +1699,32 @@ class TerminalCtiMixin:
             )
             self.txt_terminal_output.moveCursor(QTextCursor.End)
 
+    # Infraestructura propia / de seguridad: se protege el dominio y TODOS sus subdominios.
+    _PROTECTED_SUFFIXES = (
+        "technoma.com.py", "cajaande.gov.py", "cajaande.local", "stellarcyber.cloud",
+        "windowsupdate.com", "fortiguard.com", "sophos.com",
+    )
+    # Plataformas masivas: se protege solo el dominio raíz exacto (un subdominio de
+    # phishing tipo sites.google.com sí puede bloquearse).
+    _PROTECTED_EXACT = (
+        "google.com", "googleapis.com", "microsoft.com", "office.com", "office365.com",
+        "outlook.com", "live.com", "microsoftonline.com", "cloudflare.com", "amazonaws.com",
+    )
+
+    def _is_protected_block_target(self, target: str) -> bool:
+        t = str(target or "").strip().lower().rstrip(".")
+        extra = [x.strip().lower() for x in os.environ.get("SOAR_BLOCK_ALLOWLIST", "").split(",") if x.strip()]
+        for prot in list(self._PROTECTED_SUFFIXES) + extra:
+            if t == prot or t.endswith("." + prot):
+                return True
+        if t in self._PROTECTED_EXACT or t.removeprefix("www.") in self._PROTECTED_EXACT:
+            return True
+        try:
+            ip = ipaddress.ip_address(t)
+            return ip.is_private or ip.is_loopback or ip.is_reserved
+        except ValueError:
+            return False
+
     def execute_fortigate_block(self, target_type: str = "domain"):
         """
         Ejecuta la orden de contención activa en FortiGate vía Stellar Cyber 7.0.0s (AELDEV-67465).
@@ -1654,6 +1751,16 @@ class TerminalCtiMixin:
             return
 
         target_to_block = val.strip()
+        if self._reject_unsafe_target(target_to_block, "host" if target_type == "domain" else "url"):
+            return
+        if target_type == "domain" and self._is_protected_block_target(target_to_block):
+            QMessageBox.critical(
+                self, "Bloqueo no permitido",
+                f"'{target_to_block}' está en la lista de dominios/IPs protegidos (infraestructura propia o "
+                "servicios críticos). No se envía la orden de bloqueo.\n\n"
+                "Si realmente corresponde, ajuste SOAR_BLOCK_ALLOWLIST en el .env."
+            )
+            return
         confirm = QMessageBox.question(
             self,
             "Confirmar Bloqueo Perimetral FortiGate",

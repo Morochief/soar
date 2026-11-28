@@ -15,6 +15,23 @@ import urllib3
 from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, Any, Optional, List, Tuple
 from datetime import datetime
+import html as _html
+
+
+def _html_safe(value: Any) -> Any:
+    """
+    Escapa recursivamente todos los strings de un resultado CTI antes de armar HTML.
+    Títulos de página, banners, nombres de pulsos OTX, etc. los controla el atacante
+    (ej. <title> de un sitio de phishing) y se insertaban sin escapar → XSS en el
+    dashboard web (innerHTML) y HTML inyectado en la consola Qt.
+    """
+    if isinstance(value, str):
+        return _html.escape(value, quote=True)
+    if isinstance(value, dict):
+        return {k: _html_safe(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return type(value)(_html_safe(v) for v in value)
+    return value
 
 # Desactivar advertencias SSL en consultas CTI perimetrales
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -629,6 +646,7 @@ class CtiEngine:
 
     @classmethod
     def format_terminal_report_html(cls, report: Dict[str, Any]) -> str:
+        report = _html_safe(report or {})
         obs = report.get("observable", "N/A")
         obs_type = report.get("type", "N/A").upper()
         ts = report.get("timestamp", "")
@@ -735,6 +753,7 @@ class CtiEngine:
 
     @classmethod
     def format_urlscan_detailed_html(cls, us: Dict[str, Any]) -> str:
+        us = _html_safe(us or {})
         if us.get("status") == "not_found":
             target = us.get("target", "")
             return f"""
@@ -834,6 +853,7 @@ class CtiEngine:
 
     @classmethod
     def format_mxtoolbox_detailed_html(cls, report: Dict[str, Any]) -> str:
+        report = _html_safe(report or {})
         if "spf" in report and "dmarc" in report:
             domain = report.get("domain", "")
             risk = report.get("spoofing_risk", "N/A")
@@ -1134,6 +1154,7 @@ class CtiEngine:
 
     @classmethod
     def format_cve_detailed_html(cls, res: Dict[str, Any]) -> str:
+        res = _html_safe(res or {})
         """Genera una ficha visual completa de la vulnerabilidad CVE para la consola DFIR."""
         if res.get("status") == "not_found":
             cve_id = res.get("cve_id", "N/A")

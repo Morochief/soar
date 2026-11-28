@@ -12,6 +12,101 @@ from soar_app.core.infra import *
 from soar_app.workers.api_workers import *
 
 # -----------------------------------------------------------------------------
+# HELPERS COMUNES DE AUTO-REMEDIACIÓN
+# -----------------------------------------------------------------------------
+# Tamaño de página al descargar alertas de un caso y tope máximo auditable.
+# Si un caso supera el tope, la auto-remediación se aborta (nunca se cierra
+# un caso sin haber auditado el 100% de sus alertas).
+ALERTS_PAGE_SIZE = 100
+MAX_AUDITED_ALERTS = int(os.environ.get("SOAR_MAX_AUDITED_ALERTS", "2000") or 2000)
+
+# Marca de trazabilidad que se agrega al comentario de cierre automático.
+# Dejar la variable de entorno vacía ("") para desactivarla.
+AUTO_CLOSE_MARKER = os.environ.get("SOAR_AUTO_CLOSE_MARKER", "[Cierre automático SOAR - verificación Ley de Oro]")
+
+
+def _extract_alert_docs(alerts_data: Any) -> Tuple[List[dict], Optional[int]]:
+    """Normaliza la respuesta de /cases/{id}/alerts → (docs, total_declarado_o_None)."""
+    docs: List[dict] = []
+    total = None
+    if isinstance(alerts_data, dict):
+        data_inner = alerts_data.get("data", alerts_data)
+        if isinstance(data_inner, dict):
+            docs = data_inner.get("docs", []) or []
+            for k in ("total", "count", "total_count", "totalCount"):
+                v = data_inner.get(k)
+                if isinstance(v, dict):
+                    v = v.get("value")
+                if isinstance(v, (int, float)):
+                    total = int(v)
+                    break
+        elif isinstance(data_inner, list):
+            docs = data_inner
+    elif isinstance(alerts_data, list):
+        docs = alerts_data
+    return [d for d in docs if isinstance(d, dict)], total
+
+
+def fetch_all_case_alerts(session: requests.Session, headers: dict, url_alerts: str,
+                          is_killed=lambda: False) -> Tuple[List[dict], bool]:
+    """
+    Descarga TODAS las alertas de un caso paginando con limit/skip.
+    Devuelve (docs, completo). completo=False si se alcanzó MAX_AUDITED_ALERTS,
+    si se canceló o si la API devolvió menos de lo que declaraba.
+    """
+    all_docs: List[dict] = []
+    skip = 0
+    declared_total = None
+    while True:
+        if is_killed():
+            return all_docs, False
+        r = session.get(url_alerts, headers=headers,
+                        params={"limit": str(ALERTS_PAGE_SIZE), "skip": str(skip)},
+                        verify=True, timeout=15)
+        r.raise_for_status()
+        page, total = _extract_alert_docs(r.json())
+        if total is not None:
+            declared_total = total
+        if not page:
+            break
+        all_docs.extend(page)
+        skip += len(page)
+        # No se corta por "página corta": si la API limita el tamaño de página en
+        # silencio, una página corta no significa fin. Se sigue hasta página vacía.
+        if declared_total is not None and skip >= declared_total:
+            break
+        if skip >= MAX_AUDITED_ALERTS:
+            return all_docs, False
+    if declared_total is not None and len(all_docs) < declared_total:
+        return all_docs, False
+    return all_docs, True
+
+
+def _to_int(value: Any) -> Optional[int]:
+    """Convierte event_id/puertos que pueden venir como int o string ('4776') a int."""
+    try:
+        return int(str(value).strip())
+    except (TypeError, ValueError):
+        return None
+
+
+def _norm_identity(user: str) -> str:
+    """'DOMINIO\\usuario' → 'usuario' (minúsculas). Conserva 'usuario@dominio'."""
+    u = str(user or "").strip().lower()
+    if "\\" in u:
+        u = u.split("\\", 1)[1]
+    return u
+
+
+def post_resolution_comment(session: requests.Session, headers: dict, case_id: str, comment: str) -> None:
+    """Publica la justificación de cierre y lanza excepción si falla (no se cierra un caso sin nota)."""
+    if AUTO_CLOSE_MARKER:
+        comment = f"{comment}\n\n{AUTO_CLOSE_MARKER}"
+    url_comment = f"https://{HOST}/connect/api/v1/cases/{case_id}/comments"
+    r = session.post(url_comment, headers=headers, json={"comment": comment}, verify=True, timeout=10)
+    r.raise_for_status()
+
+# -----------------------------------------------------------------------------
 # TRABAJADOR DE AUTO-REMEDIACIÓN HEALTHMAILBOX (SOAR HYPER-AUTOMATION)
 # -----------------------------------------------------------------------------
 class HealthMailboxAutoRemediatorWorker(QThread):
@@ -47,6 +142,19 @@ class HealthMailboxAutoRemediatorWorker(QThread):
         "de dominio rechaza la solicitud de manera limpia con el código de error 0x6 (KDC_ERR_C_PRINCIPAL_UNKNOWN)."
     )
 
+    @classmethod
+    def _is_healthmailbox_identity(cls, user: str) -> bool:
+        """
+        Acepta la identidad completa de la whitelist (usuario@dominio) o solo la parte local
+        (en eventos 4776 TargetUserName suele venir sin dominio, o como DOMINIO\\usuario).
+        """
+        u = _norm_identity(user)
+        if u in cls.HEALTH_MAILBOX_WHITELIST:
+            return True
+        if "@" not in u:
+            return u in {w.split("@", 1)[0] for w in cls.HEALTH_MAILBOX_WHITELIST}
+        return False
+
     def __init__(self, case_obj: dict, session: requests.Session, headers: dict):
         super().__init__()
         self.case_obj = case_obj
@@ -65,46 +173,76 @@ class HealthMailboxAutoRemediatorWorker(QThread):
 
             # 2. Descargar lote de alertas crudas de Interflow para auditar la "Ley de Oro"
             url_alerts = f"https://{HOST}/connect/api/v1/cases/{case_id}/alerts"
-            r_alerts = self.session.get(url_alerts, headers=self.headers, params={"limit": "50", "skip": "0"}, verify=True, timeout=15)
-            r_alerts.raise_for_status()
-            alerts_data = r_alerts.json()
-            docs = []
-            if isinstance(alerts_data, dict):
-                data_inner = alerts_data.get("data", alerts_data)
-                if isinstance(data_inner, dict):
-                    docs = data_inner.get("docs", [])
-                elif isinstance(data_inner, list):
-                    docs = data_inner
-            elif isinstance(alerts_data, list):
-                docs = alerts_data
+            docs, complete = fetch_all_case_alerts(
+                self.session, self.headers, url_alerts, lambda: self._is_killed
+            )
+            if self._is_killed: return
+            if not complete:
+                # Ley de Oro: si no se pudo auditar el 100% del lote, NUNCA auto-cerrar.
+                self.remediation_failed.emit(
+                    t_id,
+                    f"No se pudo descargar la totalidad de las alertas del caso ({len(docs)} leídas, "
+                    f"límite de auditoría {MAX_AUDITED_ALERTS}). Se aborta la auto-resolución: requiere triaje manual."
+                )
+                return
 
             if self._is_killed: return
 
+            if not docs:
+                self.remediation_failed.emit(
+                    t_id,
+                    "Ley de Oro no superada: el caso no contiene alertas auditables. Requiere revisión manual."
+                )
+                return
+
             # 3. Comprobación estricta de la Ley de Oro (100% solo HealthMailbox)
+            #    Se evalúa CADA alerta por separado: todas deben tener identidad HealthMailbox
+            #    y ser NTLM (4776) o Kerberos (4768). Una sola alerta fuera de patrón aborta.
             detected_users = set()
             protocols = set()
+            unauthorized = set()
+            out_of_pattern = []
 
             for doc in docs:
                 src = doc.get("_source", {}) if isinstance(doc, dict) else {}
-                event_data = src.get("event_data", {})
+                event_data = src.get("event_data", {}) or {}
 
                 candidates = [
                     src.get("username"),
                     src.get("srcip_username"),
                     event_data.get("TargetUserName")
                 ]
+                doc_users = set()
                 for c in candidates:
                     if c and str(c).strip() and str(c).strip() != "-":
-                        detected_users.add(str(c).strip().lower())
+                        doc_users.add(str(c).strip().lower())
+                detected_users |= doc_users
 
-                event_id = src.get("event_id")
-                sub_name = str(src.get("xdr_event", {}).get("subtype", {}).get("name", "")).lower()
+                event_id = _to_int(src.get("event_id"))
+                sub_name = str((src.get("xdr_event", {}) or {}).get("subtype", {}).get("name", "")).lower()
+                doc_proto = None
                 if event_id == 4776 or "ntlm" in sub_name:
-                    protocols.add("NTLM")
+                    doc_proto = "NTLM"
                 elif event_id == 4768 or "kerberos" in sub_name:
-                    protocols.add("KERBEROS")
+                    doc_proto = "KERBEROS"
 
-            unauthorized = detected_users - self.HEALTH_MAILBOX_WHITELIST
+                bad_users = {u for u in doc_users if not self._is_healthmailbox_identity(u)}
+                unauthorized |= bad_users
+                if not doc_users or bad_users or doc_proto is None:
+                    out_of_pattern.append(
+                        f"event_id={src.get('event_id')} usuarios={sorted(doc_users) or 'N/A'} protocolo={doc_proto or 'N/A'}"
+                    )
+                else:
+                    protocols.add(doc_proto)
+
+            if out_of_pattern and not unauthorized:
+                self.remediation_failed.emit(
+                    t_id,
+                    f"Ley de Oro no superada: {len(out_of_pattern)} alerta(s) sin identidad o fuera de NTLM 4776 / "
+                    f"Kerberos 4768 (ej: {out_of_pattern[0]}). Requiere triaje manual."
+                )
+                return
+
             if unauthorized:
                 # ABORTAR AUTO-RESOLUCIÓN: Hay otros usuarios detectados (posible fuerza bruta genuina)
                 self.remediation_failed.emit(
@@ -129,10 +267,15 @@ class HealthMailboxAutoRemediatorWorker(QThread):
             elif "KERBEROS" in protocols and "NTLM" not in protocols:
                 resolution_comment = self.MSG_KERBEROS
                 proto_label = "Kerberos (4768 / 0x6)"
-            else:
-                # Mixto o predominante
+            elif "NTLM" in protocols and "KERBEROS" in protocols:
                 resolution_comment = f"{self.MSG_NTLM}\n\nAsimismo, respecto a los registros asociados a Kerberos:\n{self.MSG_KERBEROS}"
                 proto_label = "NTLM/Kerberos Mixto"
+            else:
+                self.remediation_failed.emit(
+                    t_id,
+                    "Ley de Oro no superada: no se identificó protocolo NTLM/Kerberos en las alertas. Requiere triaje manual."
+                )
+                return
 
             # 4. Breve pausa realista antes de cerrar (simulación operativa de MTTR)
             for _ in range(5):
@@ -140,10 +283,8 @@ class HealthMailboxAutoRemediatorWorker(QThread):
                 time.sleep(1)
 
             # 5. Inyectar nota de justificación técnica formal (estilo 100% analista humano, sin marcas de automatización)
-            url_comment = f"https://{HOST}/connect/api/v1/cases/{case_id}/comments"
-            self.session.post(url_comment, headers=self.headers, json={"comment": resolution_comment}, verify=True, timeout=10)
-
-            if self._is_killed: return
+            post_resolution_comment(self.session, self.headers, case_id, resolution_comment)
+            # Publicada la nota, el cierre se completa aunque se pida cancelar (evita nota sin cierre)
 
             # 6. Cerrar caso como Resolved / False Positive asignado al operador
             resolve_payload = {
@@ -182,12 +323,17 @@ class SophosTranslateAutoRemediatorWorker(QThread):
     remediation_failed = Signal(str, str) # ticket_id, error_msg
     alert_non_translate = Signal(dict)    # ticket_id, alert_info
 
-    TRANSLATE_DOMAINS = {
-        "translate.google.com",
-        "translate.google.",
-        "https://translate.google.com",
-        "http://translate.google.com"
-    }
+    # Hosts EXACTOS aceptados. Se compara el hostname completo (no substring), así
+    # "translate.google.com.evil.ru" o "translate.google.xyz" NO son aceptados.
+    TRANSLATE_HOSTS = {"translate.google.com", "translate.googleapis.com"}
+    _HOST_RE = re.compile(r"(?<![a-z0-9-])((?:[a-z0-9-]+\.)+[a-z]{2,})(?![a-z0-9-])")
+
+    @classmethod
+    def _translate_verdict(cls, text: str) -> bool:
+        """True si el texto menciona hosts de Google Translate y TODOS los hosts 'translate.google*' son exactos."""
+        hosts = set(cls._HOST_RE.findall(text.lower()))
+        tr_hosts = {h for h in hosts if "translate.google" in h}
+        return bool(tr_hosts) and all(h in cls.TRANSLATE_HOSTS for h in tr_hosts)
 
     def __init__(self, case_obj: dict, session: requests.Session, headers: dict):
         super().__init__()
@@ -207,18 +353,18 @@ class SophosTranslateAutoRemediatorWorker(QThread):
 
             # 2. Descargar lote de alertas crudas de Interflow
             url_alerts = f"https://{HOST}/connect/api/v1/cases/{case_id}/alerts"
-            r_alerts = self.session.get(url_alerts, headers=self.headers, params={"limit": "50", "skip": "0"}, verify=True, timeout=15)
-            r_alerts.raise_for_status()
-            alerts_data = r_alerts.json()
-            docs = []
-            if isinstance(alerts_data, dict):
-                data_inner = alerts_data.get("data", alerts_data)
-                if isinstance(data_inner, dict):
-                    docs = data_inner.get("docs", [])
-                elif isinstance(data_inner, list):
-                    docs = data_inner
-            elif isinstance(alerts_data, list):
-                docs = alerts_data
+            docs, complete = fetch_all_case_alerts(
+                self.session, self.headers, url_alerts, lambda: self._is_killed
+            )
+            if self._is_killed: return
+            if not complete:
+                # Ley de Oro: si no se pudo auditar el 100% del lote, NUNCA auto-cerrar.
+                self.remediation_failed.emit(
+                    t_id,
+                    f"No se pudo descargar la totalidad de las alertas del caso ({len(docs)} leídas, "
+                    f"límite de auditoría {MAX_AUDITED_ALERTS}). Se aborta la auto-resolución: requiere triaje manual."
+                )
+                return
 
             if self._is_killed: return
 
@@ -271,13 +417,13 @@ class SophosTranslateAutoRemediatorWorker(QThread):
                 raw_combined = f"{event_name} {threat_name} {xdr_desc} {subtype_name}".lower()
 
                 # ¿Es Google Translate?
-                is_translate = any(d in raw_combined for d in self.TRANSLATE_DOMAINS)
+                is_translate = self._translate_verdict(raw_combined)
 
-                # ¿Es violación de control web / proxies?
+                # ¿Es violación de control web / proxies? ("user execution" es la técnica
+                # MITRE T1204 y por sí sola NO alcanza para considerarla un bloqueo web)
                 is_web_control = (
-                    "webcontrolviolation" in raw_combined or 
-                    "proxies & translators" in raw_combined or
-                    "user execution" in raw_combined
+                    "webcontrolviolation" in raw_combined or
+                    "proxies & translators" in raw_combined
                 )
 
                 if is_translate and is_web_control:
@@ -330,10 +476,8 @@ class SophosTranslateAutoRemediatorWorker(QThread):
                 time.sleep(1)
 
             # 7. Publicar justificación formal en el caso
-            url_comment = f"https://{HOST}/connect/api/v1/cases/{case_id}/comments"
-            self.session.post(url_comment, headers=self.headers, json={"comment": resolution_comment}, verify=True, timeout=10)
-
-            if self._is_killed: return
+            post_resolution_comment(self.session, self.headers, case_id, resolution_comment)
+            # Publicada la nota, el cierre se completa aunque se pida cancelar (evita nota sin cierre)
 
             # 8. Cerrar caso como Resolved / False Positive asignado al operador
             resolve_payload = {
@@ -376,6 +520,13 @@ class SatiDnsAutoRemediatorWorker(QThread):
 
     VALID_DNS_PORTS = {53, "53"}
     VALID_DNS_IPS = {"10.11.1.1", "10.11.1.2"}
+    SATI_ACCOUNT = "sati"
+
+    @classmethod
+    def _is_sati_identity(cls, user: str) -> bool:
+        """'sati', 'DOMINIO\\sati' o 'sati@dominio' (comparación exacta, no substring)."""
+        u = _norm_identity(user)
+        return u == cls.SATI_ACCOUNT or u.split("@", 1)[0] == cls.SATI_ACCOUNT
 
     def __init__(self, case_obj: dict, session: requests.Session, headers: dict):
         super().__init__()
@@ -396,18 +547,18 @@ class SatiDnsAutoRemediatorWorker(QThread):
             url_case = f"https://{HOST}/connect/api/v1/cases/{case_id}"
             url_alerts = f"https://{HOST}/connect/api/v1/cases/{case_id}/alerts"
 
-            r_alerts = self.session.get(url_alerts, headers=self.headers, params={"limit": "100", "skip": "0"}, verify=True, timeout=15)
-            r_alerts.raise_for_status()
-            alerts_data = r_alerts.json()
-            docs = []
-            if isinstance(alerts_data, dict):
-                data_inner = alerts_data.get("data", alerts_data)
-                if isinstance(data_inner, dict):
-                    docs = data_inner.get("docs", [])
-                elif isinstance(data_inner, list):
-                    docs = data_inner
-            elif isinstance(alerts_data, list):
-                docs = alerts_data
+            docs, complete = fetch_all_case_alerts(
+                self.session, self.headers, url_alerts, lambda: self._is_killed
+            )
+            if self._is_killed: return
+            if not complete:
+                # Ley de Oro: si no se pudo auditar el 100% del lote, NUNCA auto-cerrar.
+                self.remediation_failed.emit(
+                    t_id,
+                    f"No se pudo descargar la totalidad de las alertas del caso ({len(docs)} leídas, "
+                    f"límite de auditoría {MAX_AUDITED_ALERTS}). Se aborta la auto-resolución: requiere triaje manual."
+                )
+                return
 
             if self._is_killed: return
 
@@ -437,13 +588,12 @@ class SatiDnsAutoRemediatorWorker(QThread):
                     src.get("user_name"),
                     src.get("dstip_username")
                 ]
-                user_found = None
+                doc_users = set()
                 for u in user_candidates:
                     if u and str(u).strip() and str(u).strip() != "-":
                         u_clean = str(u).strip()
                         detected_users.add(u_clean)
-                        if "sati" in u_clean.lower():
-                            user_found = u_clean
+                        doc_users.add(u_clean)
 
                 # Extraer host
                 comp = src.get("computer_name") or src.get("srcip_host") or src.get("host_name")
@@ -467,25 +617,18 @@ class SatiDnsAutoRemediatorWorker(QThread):
                 port_str = str(dst_port).strip() if dst_port is not None else ""
                 dst_ip_str = str(dst_ip).strip() if dst_ip else ""
 
-                # Comprobar si es puerto DNS
-                is_dns_port = (
-                    port_str in self.VALID_DNS_PORTS or 
-                    "domain" in str(src.get("service", "")).lower() or 
-                    "dns" in str(src.get("app", "")).lower()
-                )
-                is_internal_dns = (dst_ip_str in self.VALID_DNS_IPS) or (not dst_ip_str)
+                # Criterios estrictos POR ALERTA (sin estado acumulado entre alertas):
+                #  - puerto destino exactamente 53
+                #  - IP destino es uno de los DNS internos autorizados (si falta, NO se asume interna)
+                #  - todas las identidades de ESTA alerta son la cuenta 'sati'
+                is_dns_port = _to_int(port_str) == 53
+                is_internal_dns = dst_ip_str in self.VALID_DNS_IPS
+                is_sati = bool(doc_users) and all(self._is_sati_identity(u) for u in doc_users)
 
-                # Verificar si es usuario sati
-                is_sati = bool(user_found) or any("sati" in str(u).lower() for u in detected_users)
-                if not is_sati:
-                    raw_str = json.dumps(src).lower()
-                    if "sati" in raw_str:
-                        is_sati = True
-
-                if is_dns_port and is_sati:
+                if is_dns_port and is_internal_dns and is_sati:
                     valid_dns_count += 1
                 else:
-                    reason = f"Dest: {dst_ip_str}:{port_str} | Users: {list(detected_users)}"
+                    reason = f"Dest: {dst_ip_str or 'N/A'}:{port_str or 'N/A'} | Users: {sorted(doc_users) or 'N/A'}"
                     non_sati_or_non_dns_events.append(reason)
 
             # Comprobacion estricta de seguridad
@@ -539,10 +682,8 @@ class SatiDnsAutoRemediatorWorker(QThread):
                 time.sleep(1)
 
             # Publicar comentario formal en el caso
-            url_comment = f"https://{HOST}/connect/api/v1/cases/{case_id}/comments"
-            self.session.post(url_comment, headers=self.headers, json={"comment": resolution_comment}, verify=True, timeout=10)
-
-            if self._is_killed: return
+            post_resolution_comment(self.session, self.headers, case_id, resolution_comment)
+            # Publicada la nota, el cierre se completa aunque se pida cancelar (evita nota sin cierre)
 
             # Cerrar caso directamente como Resolved / False Positive asignado al operador
             resolve_payload = {
@@ -586,6 +727,16 @@ class DPAPIStorageAutoRemediatorWorker(QThread):
     remediation_failed = Signal(str, str) # ticket_id, error_msg
     alert_non_dpapi = Signal(dict)        # ticket_id, alert_info
 
+    # Patrones de cuentas privilegiadas que nunca se auto-cierran (ampliable con la
+    # variable de entorno SOAR_DPAPI_PRIVILEGED_USERS="usuario1,usuario2").
+    _PRIVILEGED_RE = re.compile(r"^(adm[-_.]|admin|administrador|administrator|domain admin|krbtgt)", re.IGNORECASE)
+
+    @classmethod
+    def _is_privileged_user(cls, user: str) -> bool:
+        u = _norm_identity(user)
+        extra = {x.strip().lower() for x in os.environ.get("SOAR_DPAPI_PRIVILEGED_USERS", "").split(",") if x.strip()}
+        return bool(cls._PRIVILEGED_RE.match(u)) or u in extra or u.split("@", 1)[0] in extra
+
     def __init__(self, case_obj: dict, session: requests.Session, headers: dict):
         super().__init__()
         self.case_obj = case_obj
@@ -605,18 +756,18 @@ class DPAPIStorageAutoRemediatorWorker(QThread):
             url_case = f"https://{HOST}/connect/api/v1/cases/{case_id}"
             url_alerts = f"https://{HOST}/connect/api/v1/cases/{case_id}/alerts"
 
-            r_alerts = self.session.get(url_alerts, headers=self.headers, params={"limit": "100", "skip": "0"}, verify=True, timeout=15)
-            r_alerts.raise_for_status()
-            alerts_data = r_alerts.json()
-            docs = []
-            if isinstance(alerts_data, dict):
-                data_inner = alerts_data.get("data", alerts_data)
-                if isinstance(data_inner, dict):
-                    docs = data_inner.get("docs", [])
-                elif isinstance(data_inner, list):
-                    docs = data_inner
-            elif isinstance(alerts_data, list):
-                docs = alerts_data
+            docs, complete = fetch_all_case_alerts(
+                self.session, self.headers, url_alerts, lambda: self._is_killed
+            )
+            if self._is_killed: return
+            if not complete:
+                # Ley de Oro: si no se pudo auditar el 100% del lote, NUNCA auto-cerrar.
+                self.remediation_failed.emit(
+                    t_id,
+                    f"No se pudo descargar la totalidad de las alertas del caso ({len(docs)} leídas, "
+                    f"límite de auditoría {MAX_AUDITED_ALERTS}). Se aborta la auto-resolución: requiere triaje manual."
+                )
+                return
 
             if self._is_killed: return
 
@@ -645,7 +796,9 @@ class DPAPIStorageAutoRemediatorWorker(QThread):
                     src.get("srcip_username") or 
                     src.get("username")
                 )
-                if user and str(user).strip() and str(user).strip() != "-":
+                if not (user and str(user).strip() and str(user).strip() != "-"):
+                    user = None
+                if user:
                     domain = event_data.get("SubjectDomainName")
                     u_str = f"{domain}\\{user}" if domain else str(user)
                     detected_users.add(u_str)
@@ -670,15 +823,21 @@ class DPAPIStorageAutoRemediatorWorker(QThread):
                 desc = str(xdr_event.get("description", "")).lower()
 
                 # Criterios estrictos:
-                is_5145 = (event_id == 5145) or ("5145" in str(src.get("stellar", {}).get("task", "")))
+                is_5145 = (_to_int(event_id) == 5145) or ("5145" in str(src.get("stellar", {}).get("task", "")))
                 is_protected_storage = "protected_storage" in target_name or "protected_storage" in subtype_name or "protected_storage" in desc
                 is_ipc = "ipc$" in share_name or "ipc$" in desc
-                is_vmbase8 = ("VMBASE8" in comp_upper) or ("172.16.201.8" in detected_dst_ips) or ("172.16.201.8" in str(dst_ip))
+                # Por alerta (sin usar el set acumulado detected_dst_ips de alertas previas)
+                is_vmbase8 = ("VMBASE8" in comp_upper) or (str(dst_ip or "").strip() == "172.16.201.8")
 
-                if is_5145 and is_protected_storage and is_ipc and is_vmbase8:
+                # El mismo pipe \\protected_storage es el que usan herramientas de robo de la
+                # clave de respaldo DPAPI del dominio (ej. lsadump::backupkeys). Si el acceso
+                # viene de una cuenta privilegiada, NO se auto-cierra.
+                is_privileged = bool(user) and self._is_privileged_user(str(user))
+
+                if is_5145 and is_protected_storage and is_ipc and is_vmbase8 and user and not is_privileged:
                     valid_dpapi_count += 1
                 else:
-                    reason = f"Evento fuera de patrón DPAPI: ID={event_id}, Share={share_name}, Target={target_name}, Host={comp}"
+                    reason = f"Evento fuera de patrón DPAPI: ID={event_id}, Share={share_name}, Target={target_name}, Host={comp}, Usuario={user or 'N/A'}{' (PRIVILEGIADO)' if is_privileged else ''}"
                     non_dpapi_events.append(reason)
 
             if non_dpapi_events:
@@ -725,10 +884,8 @@ class DPAPIStorageAutoRemediatorWorker(QThread):
                 time.sleep(1)
 
             # Comentario formal en el ticket
-            url_comment = f"https://{HOST}/connect/api/v1/cases/{case_id}/comments"
-            self.session.post(url_comment, headers=self.headers, json={"comment": resolution_comment}, verify=True, timeout=10)
-
-            if self._is_killed: return
+            post_resolution_comment(self.session, self.headers, case_id, resolution_comment)
+            # Publicada la nota, el cierre se completa aunque se pida cancelar (evita nota sin cierre)
 
             # Resolver caso
             resolve_payload = {
@@ -822,8 +979,9 @@ class CaseIdentityProbeWorker(QThread):
                 elif event_id == 4768 or "kerberos" in sub_name:
                     protocols.add("KERBEROS")
 
-            pure_hm = bool(detected_users and (detected_users <= self.HEALTH_MAILBOX_WHITELIST))
-            has_hm = any(u in self.HEALTH_MAILBOX_WHITELIST for u in detected_users)
+            _is_hm = HealthMailboxAutoRemediatorWorker._is_healthmailbox_identity
+            pure_hm = bool(detected_users) and all(_is_hm(u) for u in detected_users)
+            has_hm = any(_is_hm(u) for u in detected_users)
 
             if self._is_killed: return
             self.probe_finished.emit({
